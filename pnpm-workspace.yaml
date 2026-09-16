@@ -1,7 +1,13 @@
 packages: []
 
+# CI and Corepack install the packageManager version declared in package.json.
+# Do not make an already-installed pnpm download a second copy before each command.
+pmOnFail: ignore
+
 allowBuilds:
   esbuild: true
   lightningcss: true
+  sharp: true
   unrs-resolver: true
   msw: false
+  workerd: true

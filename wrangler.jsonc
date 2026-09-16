@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tanbase-core-local",
+  "main": "src/server.ts",
+  "compatibility_date": "2026-09-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+    },
+  },
+  "vars": {
+    "APP_ENV": "local",
+  },
+  "env": {
+    "preview": {
+      "name": "tanbase-core-preview",
+      "vars": {
+        "APP_ENV": "preview",
+      },
+    },
+    "production": {
+      "name": "tanbase-core",
+      "vars": {
+        "APP_ENV": "production",
+      },
+    },
+  },
+}

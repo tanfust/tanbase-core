@@ -1,0 +1,20 @@
+---
+status: active
+audience: contributors, maintainers, agents
+last_verified: 2026-09-16
+---
+
+# Architecture decision records
+
+ADRs preserve decisions that should outlive an implementation PR. Copy
+[the template](TEMPLATE.md), use the next four-digit number, and set its status
+to `proposed`, `accepted`, `superseded`, or `rejected`.
+
+Accepted decisions:
+
+- [ADR-0001: Cloudflare Workers runtime and custom entry](0001-cloudflare-workers-runtime.md)
+- [ADR-0002: Preview-to-production promotion](0002-preview-production-promotion.md)
+- [ADR-0003: Documentation source hierarchy](0003-documentation-source-hierarchy.md)
+
+Never rewrite an accepted decision to hide a later change. Add a replacement ADR
+and link the superseded record to it.
