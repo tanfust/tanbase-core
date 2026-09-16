@@ -8,8 +8,8 @@ last_verified: 2026-09-16
 
 TanBase Core is an open-source application foundation for TanStack Start on
 Cloudflare Workers. The current foundation runs server-rendered React and static
-assets in the Workers runtime, with isolated preview and production Workers,
-repeatable verification, and a deployment approval gate.
+assets in the Workers runtime, with versioned branch previews, repeatable
+verification, and Cloudflare-owned deployments.
 
 The longer-term product is a working task application that demonstrates D1,
 authentication, files, realtime collaboration, background work, AI, and MCP.
@@ -41,10 +41,10 @@ pnpm cf:dry-run:preview
 
 - TanStack Start SSR with an explicit server entry
 - Cloudflare Workers development and deployment through the Vite plugin
-- Separate local, preview, and production environment configuration
+- Local, preview, and production configuration targeting one Worker
 - Public `GET /api/health` foundation endpoint
 - CI verification, generated binding-type drift detection, and deploy dry run
-- Preview-first deployment with protected production approval
+- Cloudflare branch previews and automatic production deployment from `main`
 - Maintained human and AI documentation
 
 D1 and every other Cloudflare binding are intentionally deferred to later

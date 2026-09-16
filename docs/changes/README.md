@@ -13,6 +13,7 @@ preview, and production states separate.
 Records:
 
 - [2026-09-16: Cloudflare foundation](2026-09-16-cloudflare-foundation.md)
+- [2026-09-16: Cloudflare-owned deployments](2026-09-16-cloudflare-owned-deployments.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

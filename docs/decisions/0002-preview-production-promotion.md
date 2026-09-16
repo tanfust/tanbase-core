@@ -1,10 +1,12 @@
 ---
-status: accepted
+status: superseded
 audience: contributors, maintainers, operators, agents
 last_verified: 2026-09-16
 ---
 
 # ADR-0002: Preview-to-production promotion
+
+Superseded by [ADR-0004: Cloudflare-owned branch deployments](0004-cloudflare-owned-branch-deployments.md).
 
 ## Context
 

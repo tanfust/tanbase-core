@@ -32,6 +32,8 @@ must still be reviewed in the lockfile.
 | `pnpm cf:typegen`                                | Regenerate Worker binding types                                          |
 | `pnpm cf:dry-run:preview`                        | Build preview configuration and run Wrangler dry run                     |
 | `pnpm cf:dry-run:production`                     | Build production configuration and run Wrangler dry run                  |
+| `pnpm cf:upload:preview`                         | Upload an unpromoted preview version; changes remote state               |
+| `pnpm cf:deploy:production`                      | Build and deploy production; changes live remote state                   |
 | `pnpm smoke -- --url <url> --environment <name>` | Verify health and root SSR contracts                                     |
 
 ## Generated files

@@ -6,26 +6,37 @@ last_verified: 2026-09-16
 
 # Deployment runbook
 
-Preview and production are separate Workers built from the same commit. The
-Cloudflare environment is selected during `vite build`, because the Vite plugin
-emits flattened environment-specific configuration at build time.
+Cloudflare Workers Builds owns every remote deployment. GitHub Actions verifies
+the repository but never receives Cloudflare credentials and never deploys.
 
-## Required GitHub configuration
+Preview and production builds select their Cloudflare environment during
+`vite build`, because the Vite plugin emits flattened environment-specific
+configuration at build time. Both configurations target the `tanbase-core`
+Worker. Preview builds upload a new version without promoting it; production
+builds deploy the active version.
 
-Create `preview` and `production` GitHub environments. Each environment holds:
+## Required Cloudflare configuration
 
-- Secret `CLOUDFLARE_ACCOUNT_ID`
-- Secret `CLOUDFLARE_API_TOKEN`
-- Variable `APP_URL`, including `https://`
+Connect the GitHub repository to the `tanbase-core` Worker, then open
+**Settings > Build** and configure:
 
-Use least-privilege Cloudflare tokens. Configure required reviewers on the
-`production` environment; workflow YAML cannot create or enforce that rule.
-Never store credentials in this repository.
+| Setting                              | Value                       |
+| ------------------------------------ | --------------------------- |
+| Production branch                    | `main`                      |
+| Build command                        | `pnpm verify`               |
+| Deploy command                       | `pnpm cf:deploy:production` |
+| Non-production branch builds         | Enabled                     |
+| Non-production branch deploy command | `pnpm cf:upload:preview`    |
+| Root directory                       | Repository root             |
 
-Worker names are fixed:
+Cloudflare automatically creates and stores the Workers Builds API token. Do
+not add `CLOUDFLARE_API_TOKEN` or `CLOUDFLARE_ACCOUNT_ID` to GitHub for this
+flow. Review the generated token's scope in Cloudflare and keep one consistent
+token for this Worker.
 
-- Preview: `tanbase-core-preview`
-- Production: `tanbase-core`
+Under **Settings > Domains & Routes**, keep Preview URLs enabled. Preview URLs
+are public by default; use Cloudflare Access before putting private or customer
+data in a preview environment.
 
 ## Local gates
 
@@ -38,62 +49,94 @@ pnpm cf:dry-run:preview
 pnpm cf:dry-run:production
 ```
 
+The preview dry run uses `wrangler versions upload --dry-run`. The production
+dry run uses `wrangler deploy --dry-run`. Neither changes remote state.
+
 ## Automated flow
 
-On a push to `main`, `.github/workflows/deploy.yml`:
+For a non-production branch, Workers Builds:
 
-1. Checks out the triggering commit and verifies it.
-2. Builds and deploys the preview Worker.
-3. Runs the remote preview smoke test.
-4. Stops before production if any preview step fails.
-5. Waits for approval through the protected `production` environment.
-6. Checks out the same commit, rebuilds for production, deploys, and smokes it.
+1. Installs the pinned package manager and dependencies.
+2. Runs `pnpm verify`.
+3. Builds with `CLOUDFLARE_ENV=preview`.
+4. Uploads an unpromoted version of `tanbase-core`.
+5. Publishes the versioned preview URL in the build details and pull request.
 
-Environment selection belongs in the build commands:
+For `main`, Workers Builds:
+
+1. Installs dependencies and runs `pnpm verify`.
+2. Builds with `CLOUDFLARE_ENV=production`.
+3. Deploys the resulting version as the active production deployment.
+
+Production deployment is automatic after a push to `main`; this topology has no
+manual production approval gate. Protect `main` and require successful CI and
+review before merge.
+
+Do not enable a second remote deployment workflow in GitHub Actions. Two
+deployment owners can race and make commit-to-deployment evidence ambiguous.
+
+## Manual commands
+
+These commands change Cloudflare state and are for recovery or explicit manual
+operations, not the normal release path:
 
 ```sh
-pnpm cf:deploy:preview
+pnpm cf:upload:preview
 pnpm cf:deploy:production
 ```
 
-Do not build once and switch environments afterward.
+Cloudflare environment selection belongs inside those build commands. Do not
+build once and attempt to switch the environment during upload or deployment.
 
 ## Smoke checks
 
+Copy a branch preview URL from its Cloudflare build details or pull-request
+comment, then run:
+
 ```sh
-pnpm smoke -- --url https://preview.example.com --environment preview
-pnpm smoke -- --url https://example.com --environment production
+pnpm smoke -- --url <versioned-preview-url> --environment preview
+pnpm smoke -- --url <production-url> --environment production
 ```
 
 The script checks the exact health schema and environment, `Cache-Control:
 no-store`, root SSR document HTML, head content, hydration scripts, and absence
 of a server-error page.
 
-After the first successful deployment, update [status](STATUS.md) and the
-[foundation change record](changes/2026-09-16-cloudflare-foundation.md) with the
+After the first successful preview upload or production deployment, update
+[status](STATUS.md) and the active
+[change record](changes/2026-09-16-cloudflare-owned-deployments.md) with the
 commit SHA, URL, UTC date, and smoke result. Keep each target separate.
 
 ## Rollback
 
-Prefer Cloudflare's deployment rollback to restore the last known healthy
-version quickly. Then revert the faulty repository commit, allow preview to
-deploy and pass smoke checks, and approve production only after the repaired
-commit is healthy. Record both the rollback and the repaired deployment.
+Use Cloudflare's deployment rollback to restore the last known healthy active
+version, then revert the faulty repository commit. Do not retry production from
+an unverified local working tree. Record the rollback and repaired deployment.
 
-If configuration changed, roll back code and configuration together. Never run
-an old bundle against newly introduced bindings unless its compatibility was
-explicitly verified.
+If configuration or bindings changed, roll back code and configuration
+together. A Worker rollback does not roll back data stored in connected
+resources.
 
 ## Recovery
 
-- Build failure: reproduce with the environment-specific build, fix, and rerun
-  the dry run. Do not approve production.
-- Deploy failure: inspect Wrangler and Cloudflare deployment logs without
+- Build failure: reproduce with `pnpm verify` and the environment-specific dry
+  run, fix the branch, and push a new commit.
+- Preview upload failure: inspect the Cloudflare build and Wrangler logs without
   copying tokens into an issue or change record.
-- Smoke failure: preserve the failed deployment evidence, inspect Worker logs,
-  and roll back if the target previously served a healthy release.
-- Generated-type drift: run `pnpm cf:typegen`, review and commit the result.
+- Preview smoke failure: leave the version unpromoted, fix the branch, and use
+  the next generated preview URL.
+- Production smoke failure: roll back to the last healthy deployment, revert or
+  repair on a branch, and merge only after a new preview passes.
+- Generated-type drift: run `pnpm cf:typegen`, review, and commit the result.
+
+## Known limitation
+
+Cloudflare does not generate preview URLs for Workers that implement Durable
+Objects. Revisit ADR-0004 before implementing the Durable Objects roadmap slice;
+do not silently remove preview coverage.
 
 References: [TanStack Start on Workers](https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/),
-[Cloudflare build environments](https://developers.cloudflare.com/workers/vite-plugin/reference/cloudflare-environments/),
-and [GitHub Actions requirements](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/).
+[Workers Builds configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/),
+[build branches](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/),
+[preview URLs](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/),
+and [Cloudflare build environments](https://developers.cloudflare.com/workers/vite-plugin/reference/cloudflare-environments/).

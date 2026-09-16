@@ -13,8 +13,9 @@ to `proposed`, `accepted`, `superseded`, or `rejected`.
 Accepted decisions:
 
 - [ADR-0001: Cloudflare Workers runtime and custom entry](0001-cloudflare-workers-runtime.md)
-- [ADR-0002: Preview-to-production promotion](0002-preview-production-promotion.md)
+- [ADR-0002: Preview-to-production promotion](0002-preview-production-promotion.md) — superseded by ADR-0004
 - [ADR-0003: Documentation source hierarchy](0003-documentation-source-hierarchy.md)
+- [ADR-0004: Cloudflare-owned branch deployments](0004-cloudflare-owned-branch-deployments.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

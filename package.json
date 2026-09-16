@@ -22,9 +22,9 @@
     "cf:typegen": "wrangler types src/worker-configuration.d.ts",
     "cf:build:preview": "cross-env CLOUDFLARE_ENV=preview vite build",
     "cf:build:production": "cross-env CLOUDFLARE_ENV=production vite build",
-    "cf:dry-run:preview": "pnpm cf:build:preview && wrangler deploy --dry-run",
+    "cf:dry-run:preview": "pnpm cf:build:preview && wrangler versions upload --dry-run",
     "cf:dry-run:production": "pnpm cf:build:production && wrangler deploy --dry-run",
-    "cf:deploy:preview": "pnpm cf:build:preview && wrangler deploy",
+    "cf:upload:preview": "pnpm cf:build:preview && wrangler versions upload",
     "cf:deploy:production": "pnpm cf:build:production && wrangler deploy",
     "smoke": "node scripts/smoke.mjs"
   },

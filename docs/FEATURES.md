@@ -47,12 +47,13 @@ preventing unused infrastructure from entering the template.
 - [x] `pnpm dev` runs TanStack Start inside the Workers runtime
 - [x] `wrangler.jsonc` uses the custom `src/server.ts` entry
 - [x] Direct dependency versions and package manager are pinned
-- [x] Local, preview, and production environments have explicit names and `APP_ENV`
+- [x] Local, preview, and production configurations have explicit `APP_ENV` values
 - [x] `GET /api/health` returns the exact foundation contract without caching
 - [x] Worker binding types are generated and committed
 - [x] Server-only import protection is enforced and tested with a deliberate violation
-- [x] Preview deploy and remote smoke test succeed
-- [ ] Production deploy of the same commit passes manual approval and remote smoke
+- [x] Legacy isolated preview deploy and remote smoke test succeeded
+- [ ] A same-Worker preview version uploads and passes remote smoke
+- [ ] Production deploy from `main` passes remote smoke
 
 #### F-001B: Product-backed binding slices
 
@@ -72,19 +73,20 @@ preventing unused infrastructure from entering the template.
 
 **Module:** platform | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-001A
 
-**What:** Every pull request and push gets verification and a Cloudflare dry run.
-`main` deploys the isolated preview Worker, smokes it, then waits for protected
-production approval before rebuilding and deploying the same commit.
+**What:** GitHub Actions verifies every pull request and push without deployment
+credentials. Cloudflare Workers Builds owns remote deployment: non-production
+branches upload unpromoted versions of `tanbase-core`, while `main` deploys the
+production configuration.
 
 **Acceptance criteria**
 
 - [x] GitHub Actions runs the repository verification command on pull requests and pushes
 - [x] CI regenerates Worker types and detects drift
 - [x] CI performs a preview deployment dry run without deployment credentials
-- [x] A push to `main` deploys and smokes preview before production can start
-- [x] Production uses a protected GitHub environment and checks out the same commit
-- [ ] GitHub `preview` and protected `production` environments are configured
-- [ ] The first preview and production workflow run succeeds
+- [x] GitHub Actions contains no remote deployment job or Cloudflare credential reference
+- [x] Cloudflare Workers Builds uses `main` as the production branch
+- [x] Non-production branch builds are enabled with an unpromoted version upload command
+- [ ] The first same-Worker preview and production builds pass remote smoke checks
 
 ---
 
