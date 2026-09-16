@@ -51,7 +51,7 @@ preventing unused infrastructure from entering the template.
 - [x] `GET /api/health` returns the exact foundation contract without caching
 - [x] Worker binding types are generated and committed
 - [x] Server-only import protection is enforced and tested with a deliberate violation
-- [ ] Preview deploy and remote smoke test succeed
+- [x] Preview deploy and remote smoke test succeed
 - [ ] Production deploy of the same commit passes manual approval and remote smoke
 
 #### F-001B: Product-backed binding slices

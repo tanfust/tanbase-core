@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: active
 audience: contributors, maintainers, operators, agents
 last_verified: 2026-09-16
 ---
@@ -30,6 +30,8 @@ truth.
   smoke checks, and a negative server-only import test.
 - Adds CI and preview-first, manually approved production workflows.
 - Establishes maintained docs, ADRs, change records, and agent context.
+- Establishes a Prettier baseline and keeps registry-generated UI components
+  under narrowly scoped ESLint compatibility rules.
 
 ## Migrations and environment changes
 
@@ -42,16 +44,36 @@ described in the [deployment runbook](../DEPLOYMENT.md).
 
 ## Validation evidence
 
-Evidence will be updated after the final local and dry-run suite. A successful
-local result will not be recorded as a preview or production deployment.
+Local evidence:
+
+- `pnpm install --frozen-lockfile --trust-lockfile` — passed.
+- `pnpm cf:typegen` — passed; generated runtime and `APP_ENV` types.
+- `pnpm verify` — passed formatting, lint, docs, TypeScript, four tests, the
+  deliberate import-protection failure, and the default Worker build.
+- `pnpm cf:dry-run:preview` — passed with Worker `tanbase-core-preview` and
+  `APP_ENV=preview`.
+- `pnpm cf:dry-run:production` — passed with Worker `tanbase-core` and
+  `APP_ENV=production`.
+- `pnpm smoke -- --url http://localhost:3004 --environment local` — passed. The
+  development server selected 3004 because ports 3000 through 3003 were already
+  occupied; those unrelated processes were not stopped.
+
+Preview evidence:
+
+- `pnpm cf:deploy:preview` — deployed successfully at 2026-09-16 21:05 UTC.
+- `pnpm smoke -- --url https://tanbase-core-preview.tanfust.workers.dev --environment preview`
+  — passed the exact health and SSR contract.
+
+Production evidence: not run. Local and preview success do not authorize or
+represent a production deployment.
 
 ## Deployment state
 
-| Target     | Commit       | URL                     | Date       | Result                            |
-| ---------- | ------------ | ----------------------- | ---------- | --------------------------------- |
-| Local      | Pending      | `http://localhost:3000` | 2026-09-16 | Final suite pending               |
-| Preview    | Not deployed | Not assigned            | —          | Not run                           |
-| Production | Not deployed | Not assigned            | —          | Not run; manual approval required |
+| Target     | Commit                                   | URL                                                | Date                 | Result                                                                  |
+| ---------- | ---------------------------------------- | -------------------------------------------------- | -------------------- | ----------------------------------------------------------------------- |
+| Local      | Uncommitted tree based on `2522a336f0bd` | `http://localhost:3004`                            | 2026-09-16 21:03 UTC | Verify and smoke passed                                                 |
+| Preview    | Same tree based on `2522a336f0bd`        | `https://tanbase-core-preview.tanfust.workers.dev` | 2026-09-16 21:05 UTC | Deploy and smoke passed; version `7dd0dc57-8002-48c4-8fe8-f501fbc48067` |
+| Production | Not deployed                             | Not assigned                                       | —                    | Not run; manual approval required                                       |
 
 ## Rollback notes
 
@@ -61,7 +83,7 @@ change, then require preview verification before approving production again.
 
 ## Remaining work
 
-- Complete and record local verification and both environment dry runs.
-- Deploy and smoke preview when Cloudflare credentials are available.
+- Commit the verified working tree so automation can promote one exact commit.
+- Configure the GitHub `preview` and protected `production` environments.
 - Deploy production only after the protected environment approval.
 - Add D1 as the next product-backed vertical slice.

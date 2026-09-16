@@ -8,7 +8,7 @@ last_verified: 2026-09-16
 
 ## Prerequisites
 
-- Node.js `^22.13.0`, `^24.0.0`, or `>=26.0.0`
+- Node.js `^22.13.0` or `>=24.0.0`
 - pnpm `12.4.1`
 - A Cloudflare account only for remote deployment
 

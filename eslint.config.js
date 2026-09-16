@@ -15,6 +15,20 @@ export default [
     },
   },
   {
-    ignores: ["eslint.config.js", ".prettierrc"],
+    ignores: [
+      "eslint.config.js",
+      ".prettierrc",
+      "src/routeTree.gen.ts",
+      "src/worker-configuration.d.ts",
+    ],
+  },
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "import/consistent-type-specifier-style": "off",
+      "no-shadow": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+    },
   },
 ]
