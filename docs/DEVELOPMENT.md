@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-17
 ---
 
 # Development
@@ -9,18 +9,17 @@ last_verified: 2026-09-16
 ## Prerequisites
 
 - Node.js `^22.13.0` or `>=24.0.0`
-- pnpm `12.4.1`
+- pnpm `10.11.1`
 - A Cloudflare account only for remote deployment
 
 Install from the reviewed lockfile:
 
 ```sh
-pnpm install --frozen-lockfile --trust-lockfile
+pnpm install --frozen-lockfile
 ```
 
-`--trust-lockfile` tells pnpm to accept the committed lockfile without applying
-registry release-age policy during a deterministic install. Dependency updates
-must still be reviewed in the lockfile.
+The package-manager version matches Cloudflare Workers Builds. Do not bypass
+lockfile or supply-chain validation in contributor or CI instructions.
 
 ## Commands
 

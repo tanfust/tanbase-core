@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-17
 ---
 
 # Change records
@@ -14,6 +14,7 @@ Records:
 
 - [2026-09-16: Cloudflare foundation](2026-09-16-cloudflare-foundation.md)
 - [2026-09-16: Cloudflare-owned deployments](2026-09-16-cloudflare-owned-deployments.md)
+- [2026-09-17: Align pnpm with Cloudflare Workers Builds](2026-09-17-pnpm-cloudflare-build-alignment.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

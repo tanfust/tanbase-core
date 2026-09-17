@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-17
 ---
 
 # TanBase Core
@@ -17,10 +17,10 @@ Those capabilities are roadmap items—not claims about the current repository.
 
 ## Quick start
 
-Prerequisites: Node.js 22.13 or newer on a supported line, and pnpm 12.4.1.
+Prerequisites: Node.js 22.13 or newer on a supported line, and pnpm 10.11.1.
 
 ```sh
-pnpm install --frozen-lockfile --trust-lockfile
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 

@@ -1,7 +1,7 @@
 ---
 status: active
 audience: maintainers, operators, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-17
 ---
 
 # Deployment runbook
@@ -41,7 +41,7 @@ data in a preview environment.
 ## Local gates
 
 ```sh
-pnpm install --frozen-lockfile --trust-lockfile
+pnpm install --frozen-lockfile
 pnpm verify
 pnpm cf:typegen
 git diff --exit-code -- src/worker-configuration.d.ts

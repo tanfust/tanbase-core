@@ -1,9 +1,19 @@
 packages: []
 
 # CI and Corepack install the packageManager version declared in package.json.
-# Do not make an already-installed pnpm download a second copy before each command.
+# Cloudflare Workers Builds currently uses this same pnpm version by default.
 pmOnFail: ignore
 
+# pnpm 10.11 reads this allowlist. Keep it aligned with the true entries in
+# allowBuilds so local, GitHub, and Cloudflare installs execute the same scripts.
+onlyBuiltDependencies:
+  - esbuild
+  - lightningcss
+  - sharp
+  - unrs-resolver
+  - workerd
+
+# Newer pnpm versions read this map instead.
 allowBuilds:
   esbuild: true
   lightningcss: true

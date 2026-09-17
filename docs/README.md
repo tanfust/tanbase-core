@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-17
 ---
 
 # Documentation index

@@ -2,7 +2,7 @@
   "name": "tanbase-core",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@12.4.1",
+  "packageManager": "pnpm@10.11.1",
   "engines": {
     "node": "^22.13.0 || >=24.0.0"
   },
