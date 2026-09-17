@@ -9,11 +9,12 @@ function option(name) {
 
 const baseUrl = option("url")
 const environment = option("environment")
+const expectMarkdown = args.includes("--expect-markdown")
 const allowedEnvironments = new Set(["local", "preview", "production"])
 
 if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
   console.error(
-    "Usage: pnpm smoke -- --url <url> --environment <local|preview|production>"
+    "Usage: pnpm smoke -- --url <url> --environment <local|preview|production> [--expect-markdown]"
   )
   process.exit(1)
 }
@@ -23,8 +24,11 @@ const canonicalOrigin = "https://tanbase-core.tanfust.com"
 const cacheControl = "public, max-age=300"
 const contentSignal = "ai-train=no, search=yes, ai-input=yes"
 
-function fetchWithTimeout(resource) {
-  return fetch(resource, { signal: AbortSignal.timeout(15_000) })
+function fetchWithTimeout(resource, init = {}) {
+  return fetch(resource, {
+    ...init,
+    signal: AbortSignal.timeout(15_000),
+  })
 }
 
 const healthResponse = await fetchWithTimeout(new URL("/api/health", url))
@@ -138,13 +142,11 @@ assert.match(
 if (environment === "production") {
   assert.match(
     robots,
-    /^Allow: \/$/m,
-    "production robots.txt must allow crawling"
-  )
-  assert.doesNotMatch(
-    robots,
-    /^Disallow:/m,
-    "production robots.txt must not block crawling"
+    new RegExp(
+      `^User-agent: \\*\\r?\\nContent-Signal: ${contentSignal}\\r?\\nAllow: \\/$`,
+      "m"
+    ),
+    "production robots.txt must allow crawling in the application wildcard group"
   )
   assert.match(
     robots,
@@ -192,5 +194,52 @@ assert.ok(
   llms.includes("does not currently expose a public application API"),
   "llms.txt must state the current capability boundary"
 )
+
+if (expectMarkdown) {
+  const markdownResponse = await fetchWithTimeout(new URL("/", url), {
+    headers: { Accept: "text/markdown" },
+  })
+  const markdown = await markdownResponse.text()
+
+  assert.equal(
+    markdownResponse.status,
+    200,
+    "Markdown negotiation must return HTTP 200"
+  )
+  assert.match(
+    markdownResponse.headers.get("content-type") ?? "",
+    /^text\/markdown\b/,
+    "Markdown negotiation must return Markdown"
+  )
+  assert.ok(
+    (markdownResponse.headers.get("vary") ?? "")
+      .split(",")
+      .some((value) => value.trim().toLowerCase() === "accept"),
+    "Markdown negotiation must vary caches by Accept"
+  )
+  assert.equal(
+    markdownResponse.headers.get("content-signal"),
+    contentSignal,
+    "Markdown negotiation must preserve the origin Content Signals policy"
+  )
+
+  const markdownTokens = markdownResponse.headers.get("x-markdown-tokens")
+  assert.ok(
+    markdownTokens !== null &&
+      /^\d+$/.test(markdownTokens) &&
+      Number(markdownTokens) > 0,
+    "Markdown negotiation must report a positive x-markdown-tokens value"
+  )
+  assert.match(
+    markdown,
+    /^# TanBase Core$/m,
+    "negotiated Markdown must contain the page heading"
+  )
+  assert.doesNotMatch(
+    markdown,
+    /<html[\s>]/i,
+    "negotiated Markdown must not return the HTML document"
+  )
+}
 
 console.log(`Smoke checks passed for ${environment}: ${url.origin}`)

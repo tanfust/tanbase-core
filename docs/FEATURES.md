@@ -370,6 +370,7 @@ production configuration.
 - [ ] JSON-LD (`SoftwareSourceCode`) on the landing page
 - [x] Truthful `llms.txt` served as Markdown
 - [x] Homepage canonical URL, discovery `Link` headers, and Content Signals
+- [ ] Cloudflare Markdown for Agents enabled and smoke-tested on production
 
 **Current slice:** Public discovery is documented in
 [Agent discovery](AGENT_DISCOVERY.md). API, OAuth, MCP, skill, WebMCP, ARD, and

@@ -8,9 +8,9 @@ last_verified: 2026-09-17
 
 TanBase Core publishes a small discovery surface that describes only current,
 public capabilities. The canonical production origin is
-`https://tanbase-core.tanfust.com`. Production remains unverified until that
-origin resolves, serves a valid certificate, and passes the repository smoke
-command.
+`https://tanbase-core.tanfust.com`. The hostname, certificate, HTTP redirect,
+and HTML discovery baseline were activated and smoke-tested on 2026-09-17;
+Markdown negotiation remains a separate gated capability.
 
 ## Published resources
 
@@ -24,6 +24,12 @@ command.
 Production `robots.txt` allows crawling. Local and preview environments use
 `Disallow: /` and do not advertise the production sitemap. All discovery
 documents use `Cache-Control: public, max-age=300`.
+
+Cloudflare may prepend zone-managed `robots.txt` groups for named AI training
+crawlers. Production validation therefore checks the application's exact
+`User-agent: *` group rather than rejecting every bot-specific `Disallow:`
+directive. The application group still allows general crawling and advertises
+the canonical sitemap.
 
 The homepage advertises these truthful HTTP links:
 
@@ -47,13 +53,33 @@ the homepage and `llms.txt`. The policy allows search indexing and agent-time AI
 input while reserving the content from model training. Content Signals express
 a preference and do not technically prevent access.
 
+## Markdown negotiation
+
+Markdown for Agents is a Cloudflare zone-edge capability, not an application
+route or Worker binding. Once enabled for `tanbase-core.tanfust.com`, a request
+to `/` with `Accept: text/markdown` must return the converted page with:
+
+- `Content-Type: text/markdown; charset=utf-8`
+- `Vary` containing `Accept`
+- A positive `x-markdown-tokens` value
+- The origin `Content-Signal: ai-train=no, search=yes, ai-input=yes` policy
+
+Requests without the Markdown accept header must continue to receive the HTML
+document. The feature is not complete until the canonical production URL passes
+the live smoke command with `--expect-markdown`; local Worker previews do not
+simulate Cloudflare's zone-level conversion.
+
+The `tanfust.com` zone was confirmed on the Free plan on 2026-09-17. Its
+Cloudflare dashboard marks Markdown for Agents as disabled and Pro-only, and a
+live `Accept: text/markdown` request currently returns HTTP 500. Do not claim
+Markdown negotiation until the zone is upgraded, the edge feature is enabled,
+and the opt-in smoke gate passes.
+
 ## Capability gates
 
 Do not publish empty, speculative, or scanner-only metadata. Add each resource
 only when the named capability exists and can be verified:
 
-- Enable Markdown content negotiation only after the Cloudflare zone supports
-  and enables Markdown for Agents. HTML remains the origin default.
 - Publish an API catalog and `service-doc` relation only with a supported public
   API and stable OpenAPI or service documentation.
 - Publish OAuth/OIDC authorization-server metadata only if TanBase operates the
@@ -75,13 +101,20 @@ only when the named capability exists and can be verified:
 
 ## Production activation
 
-In Cloudflare, attach `tanbase-core.tanfust.com` as a custom domain for the
-`tanbase-core` Worker. Add a hostname-scoped redirect from HTTP to the same HTTPS
-host while preserving the path and query string. Then verify DNS, TLS, the HTTP
-redirect, discovery resources, and application behavior with:
+`tanbase-core.tanfust.com` is attached to the production `tanbase-core` Worker.
+Cloudflare terminates TLS and redirects the HTTP root to the exact HTTPS URL.
+Verify the active HTML discovery baseline with:
 
 ```sh
 pnpm smoke -- --url https://tanbase-core.tanfust.com --environment production
+```
+
+After the zone supports the feature, enable **Markdown for Agents** in **AI
+Crawl Control** or through a Configuration Rule scoped to
+`tanbase-core.tanfust.com`, then run the additional negotiation gate:
+
+```sh
+pnpm smoke -- --url https://tanbase-core.tanfust.com --environment production --expect-markdown
 ```
 
 Record the deployed commit, URL, UTC date, and smoke result in

@@ -65,16 +65,29 @@ Local evidence:
 - `curl -I --max-time 15 https://tanbase-core.tanfust.com/` — failed with
   `Could not resolve host` in both the restricted and unrestricted host checks.
 
-Preview and production deployment were not run and are not claimed. The local
-production-mode smoke proves the built behavior, not a remote deployment.
+At initial validation, preview and production deployment were not run. The local
+production-mode smoke proved the built behavior, not a remote deployment.
+
+Post-deployment evidence added on 2026-09-17:
+
+- Cloudflare Workers Builds deployed commit `efd9161` as active Worker version
+  `d91d365d`.
+- `tanbase-core.tanfust.com` was attached as the production custom domain.
+- HTTP returned `301` to the exact HTTPS root; HTTPS returned the Worker SSR
+  document with a valid edge connection.
+- `pnpm smoke -- --url https://tanbase-core.tanfust.com --environment production`
+  passed after the smoke assertion was corrected to distinguish Cloudflare's
+  managed training-bot groups from the application's crawlable wildcard group.
+- Markdown negotiation remained outside this baseline and is tracked in the
+  follow-up change record.
 
 ## Deployment state
 
-| Target     | Commit                          | URL                                | Date       | Result                                      |
-| ---------- | ------------------------------- | ---------------------------------- | ---------- | ------------------------------------------- |
-| Local      | Working tree based on `819ddcd` | Local only                         | 2026-09-17 | Verify, dry runs, and smoke checks passed   |
-| Preview    | —                               | —                                  | —          | Not uploaded                                |
-| Production | —                               | `https://tanbase-core.tanfust.com` | 2026-09-17 | DNS unresolved; no deployment or live smoke |
+| Target     | Commit                          | URL                                | Date                 | Result                                    |
+| ---------- | ------------------------------- | ---------------------------------- | -------------------- | ----------------------------------------- |
+| Local      | Working tree based on `819ddcd` | Local only                         | 2026-09-17           | Verify, dry runs, and smoke checks passed |
+| Preview    | —                               | —                                  | —                    | Not uploaded                              |
+| Production | `efd9161` / version `d91d365d`  | `https://tanbase-core.tanfust.com` | 2026-09-17 16:42 UTC | HTML discovery smoke passed               |
 
 ## Rollback notes
 
@@ -84,7 +97,8 @@ environment policy is also removed.
 
 ## Remaining work
 
-- Attach and validate the canonical production domain and HTTPS redirect.
+- Enable Markdown for Agents at the Cloudflare zone edge and pass production
+  smoke with `--expect-markdown`.
 - Upload and smoke a branch preview, then deploy and smoke the reviewed commit.
 - Complete the remaining F-016 landing-page, SEO helper, noindex, and JSON-LD
   acceptance criteria.

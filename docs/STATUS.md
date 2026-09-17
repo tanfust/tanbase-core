@@ -11,41 +11,42 @@ deployment history are the current operational record.
 
 ## Milestone
 
-The Worker foundation and authentic agent-discovery baseline are locally
-implemented. Cloudflare Workers Builds owns remote deployment: branch previews
-and production target one Worker, with preview code uploaded as unpromoted
-versions. The repository now includes the pnpm alignment prepared after the
-first failed production build, but a successful remote retry is not recorded.
-The canonical production hostname has been selected but does not currently
-resolve. D1 remains the next product slice.
+The Worker foundation and authentic agent-discovery baseline are deployed on
+the canonical production hostname. Cloudflare Workers Builds owns remote
+deployment: branch previews and production target one Worker, with preview code
+uploaded as unpromoted versions. The first successful production build and live
+HTML discovery smoke are recorded below. Cloudflare Markdown for Agents remains
+gated by the zone plan. The live readiness scan reports level 2, Bot-Aware;
+truthful deferred capabilities remain unpublished. D1 remains the next product
+slice.
 
 ## Verification snapshot
 
-| Target         | Commit                                   | URL                                                | Date                 | Evidence                                                                 |
-| -------------- | ---------------------------------------- | -------------------------------------------------- | -------------------- | ------------------------------------------------------------------------ |
-| Local          | Working tree based on `819ddcd`          | Local development and production-mode preview      | 2026-09-17           | Verify, both dry runs, and local and production-mode smoke checks passed |
-| Branch preview | Not uploaded                             | Generated per Worker version                       | —                    | Branch builds and preview URLs configured; first upload/smoke is pending |
-| Production     | No deployment recorded                   | `https://tanbase-core.tanfust.com`                 | 2026-09-17           | DNS resolution failed; HTTPS redirect and live smoke remain unverified   |
-| Legacy preview | Uncommitted tree based on `2522a336f0bd` | `https://tanbase-core-preview.tanfust.workers.dev` | 2026-09-16 21:05 UTC | Smoke passed; version `7dd0dc57-8002-48c4-8fe8-f501fbc48067`             |
+| Target         | Commit                                   | URL                                                | Date                 | Evidence                                                                                                  |
+| -------------- | ---------------------------------------- | -------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Local          | Working tree based on `efd9161`          | Local development and production-mode preview      | 2026-09-17           | Verify and diff check passed; earlier preview and production dry runs passed                              |
+| Branch preview | Not uploaded                             | Generated per Worker version                       | —                    | Branch builds and preview URLs configured; first upload/smoke is pending                                  |
+| Production     | `efd9161` / Worker version `d91d365d`    | `https://tanbase-core.tanfust.com`                 | 2026-09-17 16:42 UTC | DNS, TLS, exact HTTP-to-HTTPS redirect, and HTML discovery smoke passed; Markdown negotiation returns 500 |
+| Legacy preview | Uncommitted tree based on `2522a336f0bd` | `https://tanbase-core-preview.tanfust.workers.dev` | 2026-09-16 21:05 UTC | Smoke passed; version `7dd0dc57-8002-48c4-8fe8-f501fbc48067`                                              |
 
 The legacy preview belongs to the superseded two-Worker topology. It is not
 evidence that the active same-Worker branch-preview flow works.
 
 ## Known blockers
 
-- Commit and push the agent-discovery change on a non-production branch, then
-  smoke its generated preview URL before merge.
-- Attach `tanbase-core.tanfust.com` to the production Worker, wait for DNS and
-  TLS activation, and configure the hostname-scoped HTTP-to-HTTPS redirect.
-- Merge only after preview verification, then smoke the canonical production
-  URL and record the deployed commit and UTC time.
+- Upload and smoke the first same-Worker branch preview; production success is
+  not evidence for the unpromoted preview path.
+- Upgrade the `tanfust.com` Free zone to a supported plan before enabling
+  Cloudflare Markdown for Agents, then pass the production smoke check with
+  `--expect-markdown`.
 - The public health endpoint is intentionally minimal until the hardening slice.
 - Preview URLs will need a replacement strategy before Durable Objects are added.
 
 ## Last known deployed commits
 
 - Same-Worker branch preview: none recorded.
-- Production: none recorded.
+- Production: commit `efd9161`, active Worker version `d91d365d`, live smoke
+  passed at 2026-09-17 16:42 UTC.
 - Legacy isolated preview: uncommitted tree based on `2522a336f0bd`; Cloudflare
   version `7dd0dc57-8002-48c4-8fe8-f501fbc48067`.
 

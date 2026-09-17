@@ -58,6 +58,28 @@ curl --head http://tanbase-core.tanfust.com/
 The response must be `301` or `308` with
 `Location: https://tanbase-core.tanfust.com/`.
 
+### Markdown for Agents
+
+Markdown negotiation is configured on the `tanfust.com` Cloudflare zone, not in
+Worker source or `wrangler.jsonc`. After the custom domain is active:
+
+1. Confirm the zone is on a supported Pro, Business, or Enterprise plan.
+2. Open **AI Crawl Control** for the zone.
+3. Enable **Markdown for Agents**. If the setting should not apply zone-wide,
+   create a Configuration Rule matching host `tanbase-core.tanfust.com` and set
+   **Markdown for Agents** to **On**.
+4. Run the production smoke command with `--expect-markdown`.
+
+As of 2026-09-17, `tanfust.com` is on the Free plan and the dashboard exposes
+Markdown for Agents as a disabled Pro feature. The HTML discovery baseline can
+ship independently, but the Markdown gate must remain pending until the plan
+and setting change.
+
+Cloudflare must return Markdown only when `Accept: text/markdown` is requested,
+include `Vary: Accept`, add the token-count headers, and preserve the origin
+Content Signals policy. Do not add an application-side HTML converter as a
+fallback; it would differ from the production edge behavior.
+
 ## Local gates
 
 ```sh
@@ -116,12 +138,18 @@ comment, then run:
 ```sh
 pnpm smoke -- --url <versioned-preview-url> --environment preview
 pnpm smoke -- --url <production-url> --environment production
+# Run only after Cloudflare Markdown for Agents is enabled:
+pnpm smoke -- --url <production-url> --environment production --expect-markdown
 ```
 
 The script checks the exact health schema and environment, `Cache-Control:
 no-store`, root SSR document HTML, canonical metadata, discovery headers,
 sitemap, environment-aware robots policy, truthful `llms.txt`, hydration
-scripts, and absence of a server-error page.
+scripts, and absence of a server-error page. Cloudflare may prepend managed
+training-bot groups to production `robots.txt`, so the smoke check validates the
+application's exact wildcard group instead of rejecting unrelated bot-specific
+blocks. The opt-in Markdown command additionally checks HTML-to-Markdown
+negotiation, cache variation, token count, and Content Signals preservation.
 
 After the first successful preview upload or production deployment, update
 [status](STATUS.md) and the active
