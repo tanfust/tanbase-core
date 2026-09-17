@@ -1,0 +1,31 @@
+# TanBase Core
+
+TanBase Core is an open-source TanStack Start application foundation for
+Cloudflare Workers.
+
+## Canonical resources
+
+- Production origin: https://tanbase-core.tanfust.com/
+- Source repository: https://github.com/tanfust/tanbase-core
+- Public overview: https://github.com/tanfust/tanbase-core/blob/main/README.md
+- Architecture: https://github.com/tanfust/tanbase-core/blob/main/docs/OVERVIEW.md
+- Feature roadmap: https://github.com/tanfust/tanbase-core/blob/main/docs/FEATURES.md
+- Current status: https://github.com/tanfust/tanbase-core/blob/main/docs/STATUS.md
+- Deployment runbook: https://github.com/tanfust/tanbase-core/blob/main/docs/DEPLOYMENT.md
+
+## Current capabilities
+
+The implemented foundation provides server-rendered React, static assets,
+environment-specific Worker builds, observability, a public health check, CI,
+and preview-first deployment automation. The public sitemap, robots policy, and
+this discovery document describe only currently implemented resources.
+
+Production deployment is not verified until the canonical URL passes the
+repository smoke checks and that evidence is recorded in the status snapshot.
+
+## Capabilities not currently offered
+
+TanBase Core does not currently expose a public application API, an OAuth or
+OpenID Connect authorization server, a protected agent resource, an MCP
+endpoint, a public agent registration flow, or a public product-skill catalog.
+Those capabilities remain roadmap work and are not advertised as available.

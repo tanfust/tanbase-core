@@ -38,6 +38,26 @@ Under **Settings > Domains & Routes**, keep Preview URLs enabled. Preview URLs
 are public by default; use Cloudflare Access before putting private or customer
 data in a preview environment.
 
+### Canonical production domain
+
+Under **Settings > Domains & Routes**, add `tanbase-core.tanfust.com` as a custom
+domain for the `tanbase-core` Worker. Cloudflare must provision the DNS route and
+edge certificate before the production URL is considered available.
+
+In the `tanfust.com` zone, create a hostname-scoped redirect rule for requests
+whose scheme is HTTP and host is `tanbase-core.tanfust.com`. Redirect to the same
+host over HTTPS while preserving the complete path and query string. Do not use
+application middleware as a substitute for edge DNS, TLS, or redirect setup.
+
+Confirm the redirect independently before the application smoke check:
+
+```sh
+curl --head http://tanbase-core.tanfust.com/
+```
+
+The response must be `301` or `308` with
+`Location: https://tanbase-core.tanfust.com/`.
+
 ## Local gates
 
 ```sh
@@ -99,8 +119,9 @@ pnpm smoke -- --url <production-url> --environment production
 ```
 
 The script checks the exact health schema and environment, `Cache-Control:
-no-store`, root SSR document HTML, head content, hydration scripts, and absence
-of a server-error page.
+no-store`, root SSR document HTML, canonical metadata, discovery headers,
+sitemap, environment-aware robots policy, truthful `llms.txt`, hydration
+scripts, and absence of a server-error page.
 
 After the first successful preview upload or production deployment, update
 [status](STATUS.md) and the active

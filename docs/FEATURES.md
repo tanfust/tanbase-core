@@ -365,9 +365,16 @@ production configuration.
 
 - [ ] Landing page for TanBase Core: what it is, primitive map, cost model, deploy button placeholder
 - [ ] `seo()` head helper: title, description, canonical, OG tags
-- [ ] `sitemap.xml` and `robots.txt` routes; app routes marked noindex
+- [x] `sitemap.xml` and environment-aware `robots.txt` routes
+- [ ] App routes marked noindex
 - [ ] JSON-LD (`SoftwareSourceCode`) on the landing page
-- [ ] `llms.txt`
+- [x] Truthful `llms.txt` served as Markdown
+- [x] Homepage canonical URL, discovery `Link` headers, and Content Signals
+
+**Current slice:** Public discovery is documented in
+[Agent discovery](AGENT_DISCOVERY.md). API, OAuth, MCP, skill, WebMCP, ARD, and
+DNS-AID metadata remain gated on real capabilities rather than placeholder
+responses.
 
 ---
 

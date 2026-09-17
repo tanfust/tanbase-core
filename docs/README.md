@@ -17,6 +17,11 @@ last_verified: 2026-09-17
 | Product planning     | [Features](FEATURES.md)       | Roadmap, dependencies, and acceptance criteria    |
 | Agents               | [AGENTS](../AGENTS.md)        | Required reading order and operating contract     |
 
+## Public discovery
+
+- [Agent discovery](AGENT_DISCOVERY.md) documents the public discovery
+  resources, content-use policy, capability gates, and production checks.
+
 ## Current state and history
 
 - [Status](STATUS.md) is a dated snapshot of local, preview, and production

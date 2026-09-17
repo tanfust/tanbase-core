@@ -15,6 +15,7 @@ Records:
 - [2026-09-16: Cloudflare foundation](2026-09-16-cloudflare-foundation.md)
 - [2026-09-16: Cloudflare-owned deployments](2026-09-16-cloudflare-owned-deployments.md)
 - [2026-09-17: Align pnpm with Cloudflare Workers Builds](2026-09-17-pnpm-cloudflare-build-alignment.md)
+- [2026-09-17: Authentic agent discovery baseline](2026-09-17-agent-discovery-baseline.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

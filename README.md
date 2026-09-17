@@ -43,6 +43,8 @@ pnpm cf:dry-run:preview
 - Cloudflare Workers development and deployment through the Vite plugin
 - Local, preview, and production configuration targeting one Worker
 - Public `GET /api/health` foundation endpoint
+- Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
+- Homepage discovery links and Content Signals for agent-readable resources
 - CI verification, generated binding-type drift detection, and deploy dry run
 - Cloudflare branch previews and automatic production deployment from `main`
 - Maintained human and AI documentation
