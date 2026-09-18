@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-17
+last_verified: 2026-09-18
 ---
 
 # Development
@@ -23,17 +23,21 @@ lockfile or supply-chain validation in contributor or CI instructions.
 
 ## Commands
 
-| Command                                          | Purpose                                                                  |
-| ------------------------------------------------ | ------------------------------------------------------------------------ |
-| `pnpm dev`                                       | Run TanStack Start inside the Workers runtime on port 3000               |
-| `pnpm verify`                                    | Format check, lint, docs, types, tests, boundary test, and default build |
-| `pnpm docs:check`                                | Validate frontmatter, required sections, and internal links              |
-| `pnpm cf:typegen`                                | Regenerate Worker binding types                                          |
-| `pnpm cf:dry-run:preview`                        | Build preview configuration and run Wrangler dry run                     |
-| `pnpm cf:dry-run:production`                     | Build production configuration and run Wrangler dry run                  |
-| `pnpm cf:upload:preview`                         | Upload an unpromoted preview version; changes remote state               |
-| `pnpm cf:deploy:production`                      | Build and deploy production; changes live remote state                   |
-| `pnpm smoke -- --url <url> --environment <name>` | Verify health and root SSR contracts                                     |
+| Command                                          | Purpose                                                              |
+| ------------------------------------------------ | -------------------------------------------------------------------- |
+| `pnpm dev`                                       | Run TanStack Start inside the Workers runtime on port 3000           |
+| `pnpm verify`                                    | Format, lint, docs, migration, type, test, boundary, and build gates |
+| `pnpm docs:check`                                | Validate frontmatter, required sections, and internal links          |
+| `pnpm db:generate`                               | Generate a migration from the Drizzle schema                         |
+| `pnpm db:check`                                  | Check generated Drizzle migration history                            |
+| `pnpm db:migrate:local`                          | Apply pending migrations to isolated local preview storage           |
+| `pnpm db:seed:local`                             | Idempotently add local-only project and task fixtures                |
+| `pnpm cf:typegen`                                | Regenerate Worker binding types                                      |
+| `pnpm cf:dry-run:preview`                        | Build preview configuration and run Wrangler dry run                 |
+| `pnpm cf:dry-run:production`                     | Build production configuration and run Wrangler dry run              |
+| `pnpm cf:upload:preview`                         | Upload an unpromoted preview version; changes remote state           |
+| `pnpm cf:deploy:production`                      | Build and deploy production; changes live remote state               |
+| `pnpm smoke -- --url <url> --environment <name>` | Verify health and root SSR contracts                                 |
 
 ## Generated files
 
@@ -43,6 +47,26 @@ lockfile or supply-chain validation in contributor or CI instructions.
 Both are committed. CI regenerates Worker types and fails when the working tree
 changes. Never hand-edit generated files.
 
+Drizzle schema snapshots and SQL under `drizzle/migrations/` are also committed.
+Generate them with `pnpm db:generate`, review the SQL, then apply the SQL with
+Wrangler. Do not use Drizzle's migration runner against D1.
+
+## Local database workflow
+
+The local database uses the `preview` Wrangler environment and its isolated
+`.wrangler` persistence. It never connects to production unless a command
+explicitly includes `--remote`.
+
+```sh
+pnpm db:migrate:local
+pnpm db:seed:local
+pnpm dev
+```
+
+The seed uses stable IDs and `INSERT OR IGNORE`, so rerunning it creates no
+duplicates. Tests use `@cloudflare/vitest-plugin`, apply the real generated SQL,
+and receive an isolated D1 database for each test file.
+
 ## Server-only boundaries
 
 TanStack import protection runs with error behavior in development and builds.
@@ -50,6 +74,9 @@ Files matching `*.server.*`, files under `src/db/`, and files under
 `src/platform/` must not enter the client graph. Route-importable RPC definition
 files stay unsuffixed; their platform, database, secret, and binding
 implementations belong behind the protected boundary.
+
+`pnpm test:boundaries` also rejects a `getDb()` import anywhere except
+`src/db/` and `src/modules/*/repository.server.ts`.
 
 `pnpm test:boundaries` copies the project to a temporary directory, introduces a
 deliberate forbidden import, and proves that the build rejects it.

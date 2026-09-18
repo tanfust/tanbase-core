@@ -1,0 +1,102 @@
+import { and, asc, eq } from "drizzle-orm"
+
+import { getDb } from "@/db"
+import { projects, tasks } from "@/db/schema"
+import type { Project, Task, TaskStatus } from "@/db/schema"
+
+export interface CreateProjectInput {
+  name: string
+}
+
+export interface CreateTaskInput {
+  projectId: string
+  parentId?: string | null
+  title: string
+  notes?: string | null
+  status?: TaskStatus
+  position?: number
+  dueAt?: number | null
+}
+
+export async function createProject(
+  userId: string,
+  input: CreateProjectInput,
+  database?: D1Database
+): Promise<Project> {
+  const db = getDb(database)
+  const project: Project = {
+    id: crypto.randomUUID(),
+    userId,
+    name: input.name,
+    createdAt: Date.now(),
+  }
+
+  await db.insert(projects).values(project)
+
+  return project
+}
+
+export async function getProject(
+  userId: string,
+  projectId: string,
+  database?: D1Database
+): Promise<Project | null> {
+  const db = getDb(database)
+  const project = await db.query.projects.findFirst({
+    where: and(eq(projects.id, projectId), eq(projects.userId, userId)),
+  })
+
+  return project ?? null
+}
+
+export async function listProjects(
+  userId: string,
+  database?: D1Database
+): Promise<Project[]> {
+  const db = getDb(database)
+
+  return db.query.projects.findMany({
+    where: eq(projects.userId, userId),
+    orderBy: [asc(projects.createdAt), asc(projects.id)],
+  })
+}
+
+export async function createTask(
+  userId: string,
+  input: CreateTaskInput,
+  database?: D1Database
+): Promise<Task> {
+  const db = getDb(database)
+  const now = Date.now()
+  const task: Task = {
+    id: crypto.randomUUID(),
+    projectId: input.projectId,
+    userId,
+    parentId: input.parentId ?? null,
+    title: input.title,
+    notes: input.notes ?? null,
+    status: input.status ?? "todo",
+    position: input.position ?? 0,
+    dueAt: input.dueAt ?? null,
+    reminderSentAt: null,
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  await db.insert(tasks).values(task)
+
+  return task
+}
+
+export async function listTasksByProject(
+  userId: string,
+  projectId: string,
+  database?: D1Database
+): Promise<Task[]> {
+  const db = getDb(database)
+
+  return db.query.tasks.findMany({
+    where: and(eq(tasks.userId, userId), eq(tasks.projectId, projectId)),
+    orderBy: [asc(tasks.status), asc(tasks.position), asc(tasks.id)],
+  })
+}

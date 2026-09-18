@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-17
+last_verified: 2026-09-18
 ---
 
 # TanBase Core
@@ -11,9 +11,9 @@ Cloudflare Workers. The current foundation runs server-rendered React and static
 assets in the Workers runtime, with versioned branch previews, repeatable
 verification, and Cloudflare-owned deployments.
 
-The longer-term product is a working task application that demonstrates D1,
-authentication, files, realtime collaboration, background work, AI, and MCP.
-Those capabilities are roadmap items—not claims about the current repository.
+The repository now includes the first data-backed slice: D1, Drizzle migrations,
+and ownership-scoped project and task repositories. Authentication, files,
+realtime collaboration, background work, AI, and MCP remain roadmap items.
 
 ## Quick start
 
@@ -21,6 +21,8 @@ Prerequisites: Node.js 22.13 or newer on a supported line, and pnpm 10.11.1.
 
 ```sh
 pnpm install --frozen-lockfile
+pnpm db:migrate:local
+pnpm db:seed:local
 pnpm dev
 ```
 
@@ -42,15 +44,17 @@ pnpm cf:dry-run:preview
 - TanStack Start SSR with an explicit server entry
 - Cloudflare Workers development and deployment through the Vite plugin
 - Local, preview, and production configuration targeting one Worker
-- Public `GET /api/health` foundation endpoint
+- D1 and Drizzle schemas for projects and tasks, with local migrations and seed data
+- Ownership-scoped server repositories backed by composite database constraints
+- Public `GET /api/health` endpoint with a live database check
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
 - Homepage discovery links and Content Signals for agent-readable resources
 - CI verification, generated binding-type drift detection, and deploy dry run
 - Cloudflare branch previews and automatic production deployment from `main`
 - Maintained human and AI documentation
 
-D1 and every other Cloudflare binding are intentionally deferred to later
-vertical slices.
+Preview and production use separate D1 databases. Every later Cloudflare
+binding remains deferred until its owning product feature is implemented.
 
 ## Documentation
 

@@ -6,7 +6,7 @@ import { createHealthResponse } from "@/lib/health"
 export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
-      GET: () => createHealthResponse(env.APP_ENV),
+      GET: () => createHealthResponse(env.APP_ENV, env.DB),
     },
   },
 })

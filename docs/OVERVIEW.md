@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-18
 ---
 
 # TanBase Core
@@ -11,16 +11,16 @@ last_verified: 2026-09-16
 
 Open-source full-stack starter for TanStack Start on Cloudflare. The current
 repository proves the Worker runtime, SSR, static assets, environment selection,
-observability, health checks, and deployment automation. The task application
-and Cloudflare data bindings described below are planned features unless marked
-done in [FEATURES.md](FEATURES.md).
+observability, deployment automation, and a D1/Drizzle project-and-task data
+slice. The remaining application capabilities described below are planned
+unless marked done in [FEATURES.md](FEATURES.md).
 
-|              |                                                                      |
-| ------------ | -------------------------------------------------------------------- |
-| Status       | Cloudflare foundation implemented locally; remote deployment pending |
-| License      | MIT                                                                  |
-| Repo         | github.com/tanfust/tanbase-core (public)                             |
-| Last updated | 2026-09-16                                                           |
+|              |                                                           |
+| ------------ | --------------------------------------------------------- |
+| Status       | D1 foundation verified locally; remote D1 rollout pending |
+| License      | MIT                                                       |
+| Repo         | github.com/tanfust/tanbase-core (public)                  |
+| Last updated | 2026-09-18                                                |
 
 ---
 
@@ -95,7 +95,7 @@ Subtasks are tasks with a `parent_id`.
 | Feature                                    | Primitive                                            | Binding                         |
 | ------------------------------------------ | ---------------------------------------------------- | ------------------------------- |
 | Rendering, server functions, static assets | Workers + TanStack Start                             | (built in)                      |
-| Projects, tasks, attachment metadata       | D1 + Drizzle                                         | `DB`                            |
+| Projects and tasks                         | D1 + Drizzle                                         | `DB`                            |
 | Sign in, sessions                          | Better Auth on D1, KV as session secondary storage   | `DB`, `KV`                      |
 | Bot protection on auth forms               | Turnstile                                            | `TURNSTILE_SECRET_KEY` (secret) |
 | Abuse limits on auth and AI                | Rate Limiting                                        | `AUTH_LIMITER`, `AI_LIMITER`    |
@@ -147,9 +147,10 @@ export default {
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "tanbase-core",
+      "database_name": "tanbase-core-preview",
       "database_id": "<id>",
       "migrations_dir": "drizzle",
+      "migrations_pattern": "drizzle/migrations/*.sql",
     },
   ],
   "kv_namespaces": [{ "binding": "KV", "id": "<id>" }],
@@ -220,10 +221,17 @@ CLAUDE.md
 
 ### Data layer
 
-- Drizzle schema per module in `src/db/schema/`. Migrations in `drizzle/`, applied with `wrangler d1 migrations apply`.
-- `getDb()` returns a Drizzle client for the current request.
+- Project and task schemas are implemented under `src/db/schema/`. Attachment
+  schema belongs to F-010 and AI usage schema belongs to F-013.
+- Drizzle generates nested migrations in `drizzle/migrations/`; Wrangler is the
+  only tool that applies them.
+- `getDb()` returns a new Drizzle client for the current request and is never
+  retained at module scope.
 - Routes and server functions never import `getDb()`. They call module repositories whose first argument is a required `userId`. A CI check enforces this.
 - IDs are text (`crypto.randomUUID()`), timestamps are integer milliseconds.
+- Composite foreign keys enforce project ownership and subtask scope in D1.
+- Preview and production use separate databases bound as `DB`; local development
+  uses isolated Wrangler persistence with the preview configuration.
 - Related writes go through `db.batch()`.
 
 ### Auth
@@ -285,17 +293,17 @@ Initial targets. Adjust after the first measurements in F-019.
 
 ## Tech stack
 
-| Layer           | Choice                                                                   |
-| --------------- | ------------------------------------------------------------------------ |
-| Framework       | TanStack Start (React), TanStack Router, TanStack Query                  |
-| Runtime         | Cloudflare Workers, `@cloudflare/vite-plugin`, Wrangler                  |
-| UI              | Tailwind CSS v4, shadcn/ui                                               |
-| Validation      | Zod                                                                      |
-| Database        | Cloudflare D1, Drizzle ORM                                               |
-| Auth            | Better Auth                                                              |
-| Email           | React Email, Resend                                                      |
-| Testing         | Vitest with `@cloudflare/vitest-pool-workers`, Playwright for end-to-end |
-| Package manager | pnpm                                                                     |
+| Layer           | Choice                                                             |
+| --------------- | ------------------------------------------------------------------ |
+| Framework       | TanStack Start (React), TanStack Router, TanStack Query            |
+| Runtime         | Cloudflare Workers, `@cloudflare/vite-plugin`, Wrangler            |
+| UI              | Tailwind CSS v4, shadcn/ui                                         |
+| Validation      | Zod                                                                |
+| Database        | Cloudflare D1, Drizzle ORM                                         |
+| Auth            | Better Auth                                                        |
+| Email           | React Email, Resend                                                |
+| Testing         | Vitest with `@cloudflare/vitest-plugin`, Playwright for end-to-end |
+| Package manager | pnpm                                                               |
 
 Exact versions are pinned in F-001.
 

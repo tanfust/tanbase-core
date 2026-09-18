@@ -48,6 +48,7 @@ assert.deepEqual(await healthResponse.json(), {
   status: "ok",
   service: "tanbase-core",
   environment,
+  checks: { database: "ok" },
 })
 
 const rootResponse = await fetchWithTimeout(new URL("/", url))

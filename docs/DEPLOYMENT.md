@@ -1,7 +1,7 @@
 ---
 status: active
 audience: maintainers, operators, agents
-last_verified: 2026-09-17
+last_verified: 2026-09-18
 ---
 
 # Deployment runbook
@@ -32,7 +32,27 @@ Connect the GitHub repository to the `tanbase-core` Worker, then open
 Cloudflare automatically creates and stores the Workers Builds API token. Do
 not add `CLOUDFLARE_API_TOKEN` or `CLOUDFLARE_ACCOUNT_ID` to GitHub for this
 flow. Review the generated token's scope in Cloudflare and keep one consistent
-token for this Worker.
+token for this Worker. It must also have the minimum D1 edit permission needed
+to apply migrations from the repository deploy commands.
+
+### D1 databases
+
+Create `tanbase-core-preview` and `tanbase-core-production` in the same
+Cloudflare account that owns the `tanbase-core` Worker. Bind each as `DB` in its
+matching Wrangler environment and commit the resulting database IDs. Never bind
+preview to production data, and do not run a remote migration while the target
+account or database ID is unresolved.
+
+Drizzle generates SQL under `drizzle/migrations/`, but only Wrangler applies it:
+
+```sh
+pnpm db:migrate:preview
+pnpm db:migrate:production
+```
+
+The upload and deploy scripts run the matching migration command before code is
+uploaded. Remote migrations must be backward-compatible with the currently
+active Worker. Destructive changes require a later expand/contract rollout.
 
 Under **Settings > Domains & Routes**, keep Preview URLs enabled. Preview URLs
 are public by default; use Cloudflare Access before putting private or customer
@@ -85,6 +105,7 @@ fallback; it would differ from the production edge behavior.
 ```sh
 pnpm install --frozen-lockfile
 pnpm verify
+pnpm db:check
 pnpm cf:typegen
 git diff --exit-code -- src/worker-configuration.d.ts
 pnpm cf:dry-run:preview
@@ -101,14 +122,16 @@ For a non-production branch, Workers Builds:
 1. Installs the pinned package manager and dependencies.
 2. Runs `pnpm verify`.
 3. Builds with `CLOUDFLARE_ENV=preview`.
-4. Uploads an unpromoted version of `tanbase-core`.
-5. Publishes the versioned preview URL in the build details and pull request.
+4. Applies pending migrations to `tanbase-core-preview`.
+5. Uploads an unpromoted version of `tanbase-core`.
+6. Publishes the versioned preview URL in the build details and pull request.
 
 For `main`, Workers Builds:
 
 1. Installs dependencies and runs `pnpm verify`.
 2. Builds with `CLOUDFLARE_ENV=production`.
-3. Deploys the resulting version as the active production deployment.
+3. Applies pending additive migrations to `tanbase-core-production`.
+4. Deploys the same verified commit as the active production deployment.
 
 Production deployment is automatic after a push to `main`; this topology has no
 manual production approval gate. Protect `main` and require successful CI and
@@ -142,8 +165,8 @@ pnpm smoke -- --url <production-url> --environment production
 pnpm smoke -- --url <production-url> --environment production --expect-markdown
 ```
 
-The script checks the exact health schema and environment, `Cache-Control:
-no-store`, root SSR document HTML, canonical metadata, discovery headers,
+The script checks the exact health schema, environment, and D1 check,
+`Cache-Control: no-store`, root SSR document HTML, canonical metadata, discovery headers,
 sitemap, environment-aware robots policy, truthful `llms.txt`, hydration
 scripts, and absence of a server-error page. Cloudflare may prepend managed
 training-bot groups to production `robots.txt`, so the smoke check validates the

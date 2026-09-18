@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-18
 ---
 
 # TanBase Core: Features
@@ -57,11 +57,12 @@ preventing unused infrastructure from entering the template.
 
 #### F-001B: Product-backed binding slices
 
-**Status:** 🔲 Todo
+**Status:** 🟡 In Progress
 
 **Acceptance criteria**
 
-- [ ] Add D1 with the first data-backed feature and migration path
+- [ ] Add D1 with the first data-backed feature and verify its migration path in
+      local, preview, and production environments
 - [ ] Add KV, R2, Durable Objects, Workflows, Queues, AI, Cron, and MCP only when
       their owning product feature is implemented
 - [ ] Extend health or focused diagnostics for each added binding
@@ -94,19 +95,23 @@ production configuration.
 
 ### F-003: Data layer with scoped repositories
 
-**Module:** data | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-001
+**Module:** data | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-001
 
 **What:** Drizzle schema, migrations, a per-request client, and the ownership rule that replaces row-level security.
 
 **Acceptance criteria**
 
-- [ ] Schema for `project`, `task`, `attachment`, `ai_usage` in `src/db/schema/`
-- [ ] Migrations generated into `drizzle/` and applied locally and remotely with `wrangler d1 migrations apply`
-- [ ] `getDb()` creates a Drizzle client per request
-- [ ] Repositories take a required `userId` first argument
-- [ ] CI check fails if `getDb` is imported outside `src/db/` and `src/modules/*/repository.ts`
-- [ ] Indexes on `task(user_id, project_id, status, position)` and `task(due_at, reminder_sent_at)`
-- [ ] Seed script for local development
+- [x] Schema for `project` and `task` in `src/db/schema/`
+- [ ] Migrations generated into `drizzle/` and applied in local, preview, and
+      production with `wrangler d1 migrations apply`
+- [x] `getDb()` creates a Drizzle client per request
+- [x] Repositories take a required `userId` first argument
+- [x] CI check fails if `getDb` is imported outside `src/db/` and
+      `src/modules/*/repository.server.ts`
+- [x] Indexes on `task(user_id, project_id, status, position)` and
+      `task(due_at, reminder_sent_at)`
+- [x] Idempotent seed script for local development
+- [x] Health checks D1 through the real Worker binding without exposing errors
 
 **Technical notes**
 
@@ -115,7 +120,8 @@ production configuration.
 
 **Tests**
 
-- Repository tests against local D1, including a cross-user read that must return nothing
+- Workers-runtime repository tests against migrated D1 cover deterministic
+  listing, constraints, cascade deletion, and cross-user reads and writes
 
 ---
 
@@ -240,6 +246,8 @@ production configuration.
 
 **Acceptance criteria**
 
+- [ ] Attachment metadata schema and ownership constraints are added to D1 with
+      this feature, not before it
 - [ ] Upload from task detail, streamed through the Worker into `FILES`
 - [ ] 10 MB cap and content-type allowlist enforced server-side
 - [ ] Download route checks ownership before streaming the object
@@ -306,6 +314,8 @@ production configuration.
 
 **Acceptance criteria**
 
+- [ ] `ai_usage` schema and quota indexes are added to D1 with this feature, not
+      before it
 - [ ] AI Gateway created; every Workers AI call passes the gateway id
 - [ ] `AI_MODEL` and `AI_GATEWAY_ID` environment variables
 - [ ] Per-user daily quota in `ai_usage`, configurable, with a clear limit message

@@ -8,14 +8,33 @@ export function normalizeAppEnvironment(value: string): AppEnvironment {
     : "local"
 }
 
-export function createHealthResponse(environment: string): Response {
+export async function createHealthResponse(
+  environment: string,
+  database: D1Database
+): Promise<Response> {
+  try {
+    await database.prepare("SELECT 1 AS healthy").first()
+
+    return healthResponse(environment, "ok", 200)
+  } catch {
+    return healthResponse(environment, "error", 503)
+  }
+}
+
+function healthResponse(
+  environment: string,
+  database: "ok" | "error",
+  status: 200 | 503
+): Response {
   return Response.json(
     {
-      status: "ok",
+      status: database === "ok" ? "ok" : "error",
       service: "tanbase-core",
       environment: normalizeAppEnvironment(environment),
+      checks: { database },
     },
     {
+      status,
       headers: {
         "Cache-Control": "no-store",
       },

@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, operators, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-18
 ---
 
 # 2026-09-16: Cloudflare-owned deployments
@@ -63,7 +63,12 @@ Cloudflare dashboard evidence:
 - Non-production version command: `pnpm cf:upload:preview`.
 - Non-production branch builds and version preview URLs: enabled.
 
-Preview evidence: not run. A local dry run is not a remote preview upload.
+Preview evidence: `pnpm cf:upload:preview` was attempted on 2026-09-18 from
+commit `d6a81bc32d0d79b6b56dd835ebbe0ee9446bb081`. Wrangler returned “You cannot
+upload a new version of a Worker that does not yet exist” and generated no URL.
+Account inventory checks confirmed that neither accessible Cloudflare account
+contains `tanbase-core`, so the preview smoke could not run. This remains a
+failed gate, not preview evidence.
 
 Production evidence: not run. A local dry run is not a production deployment.
 
@@ -72,7 +77,7 @@ Production evidence: not run. A local dry run is not a production deployment.
 | Target     | Commit                               | URL        | Date                 | Result                          |
 | ---------- | ------------------------------------ | ---------- | -------------------- | ------------------------------- |
 | Local      | Working tree based on `4cb88ea7bf4f` | Local only | 2026-09-16 21:43 UTC | Verify and both dry runs passed |
-| Preview    | —                                    | —          | —                    | Not uploaded                    |
+| Preview    | `d6a81bc32d0d79`                     | No URL     | 2026-09-18           | Blocked: target Worker missing  |
 | Production | —                                    | —          | —                    | Not deployed                    |
 
 ## Rollback notes
