@@ -47,12 +47,10 @@ preventing unused infrastructure from entering the template.
 - [x] `pnpm dev` runs TanStack Start inside the Workers runtime
 - [x] `wrangler.jsonc` uses the custom `src/server.ts` entry
 - [x] Direct dependency versions and package manager are pinned
-- [x] Local, preview, and production configurations have explicit `APP_ENV` values
+- [x] Local and production configurations have explicit `APP_ENV` values
 - [x] `GET /api/health` returns the exact foundation contract without caching
 - [x] Worker binding types are generated and committed
 - [x] Server-only import protection is enforced and tested with a deliberate violation
-- [x] Legacy isolated preview deploy and remote smoke test succeeded
-- [ ] A same-Worker preview version uploads and passes remote smoke
 - [ ] Production deploy from `main` passes remote smoke
 
 #### F-001B: Product-backed binding slices
@@ -61,33 +59,32 @@ preventing unused infrastructure from entering the template.
 
 **Acceptance criteria**
 
-- [ ] Add D1 with the first data-backed feature and verify its migration path in
-      local, preview, and production environments
+- [ ] Add D1 with the first data-backed feature and verify its migration path
+      locally and in production
 - [ ] Add KV, R2, Durable Objects, Workflows, Queues, AI, Cron, and MCP only when
       their owning product feature is implemented
 - [ ] Extend health or focused diagnostics for each added binding
-- [ ] Verify every binding locally, in preview, and in production
+- [ ] Verify every binding locally and in production
 
 ---
 
-### F-002: CI and preview-first deployment
+### F-002: CI and production deployment
 
 **Module:** platform | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-001A
 
 **What:** GitHub Actions verifies every pull request and push without deployment
-credentials. Cloudflare Workers Builds owns remote deployment: non-production
-branches upload unpromoted versions of `tanbase-core`, while `main` deploys the
-production configuration.
+credentials. Cloudflare Workers Builds owns remote deployment from `main`;
+non-production branch builds are optional and disabled by default.
 
 **Acceptance criteria**
 
 - [x] GitHub Actions runs the repository verification command on pull requests and pushes
 - [x] CI regenerates Worker types and detects drift
-- [x] CI performs a preview deployment dry run without deployment credentials
+- [x] CI performs a production packaging dry run without deployment credentials
 - [x] GitHub Actions contains no remote deployment job or Cloudflare credential reference
 - [x] Cloudflare Workers Builds uses `main` as the production branch
-- [x] Non-production branch builds are enabled with an unpromoted version upload command
-- [ ] The first same-Worker preview and production builds pass remote smoke checks
+- [ ] Non-production branch builds and Preview URLs are disabled in Cloudflare
+- [ ] The first production build passes remote smoke checks
 
 ---
 
@@ -102,8 +99,8 @@ production configuration.
 **Acceptance criteria**
 
 - [x] Schema for `project` and `task` in `src/db/schema/`
-- [ ] Migrations generated into `drizzle/` and applied in local, preview, and
-      production with `wrangler d1 migrations apply`
+- [ ] Migrations generated into `drizzle/` and applied locally and in production
+      with `wrangler d1 migrations apply`
 - [x] `getDb()` creates a Drizzle client per request
 - [x] Repositories take a required `userId` first argument
 - [x] CI check fails if `getDb` is imported outside `src/db/` and
@@ -172,7 +169,7 @@ production configuration.
 
 **Tests**
 
-- Playwright happy path against a preview URL
+- Playwright happy path locally and a production smoke journey after deployment
 
 ---
 
@@ -234,7 +231,7 @@ production configuration.
 - [ ] Magic link sign-in through the email module
 - [ ] Google OAuth sign-in
 - [ ] Account linking when the Google email matches an existing verified account
-- [ ] Callback URLs documented for local, preview and production
+- [ ] Callback URLs documented for local and production
 
 ---
 
@@ -424,7 +421,7 @@ responses.
 
 **Acceptance criteria**
 
-- [ ] Lighthouse CI on the landing page against each preview
+- [ ] Lighthouse CI on the production build and canonical production URL
 - [ ] Bundle size check for the landing page
 - [ ] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`
 - [ ] Smart Placement tested on and off, decision recorded

@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, maintainers, operators, agents
-last_verified: 2026-09-17
+last_verified: 2026-09-18
 ---
 
 # Agent discovery
@@ -21,8 +21,8 @@ Markdown negotiation remains a separate gated capability.
 | `/llms.txt`    | Public product summary, documentation links, and capability boundaries   |
 | `/`            | Canonical and Open Graph URL plus HTTP discovery and Content Signals     |
 
-Production `robots.txt` allows crawling. Local and preview environments use
-`Disallow: /` and do not advertise the production sitemap. All discovery
+Production `robots.txt` allows crawling. The local environment uses
+`Disallow: /` and does not advertise the production sitemap. All discovery
 documents use `Cache-Control: public, max-age=300`.
 
 Cloudflare may prepend zone-managed `robots.txt` groups for named AI training
@@ -66,7 +66,7 @@ to `/` with `Accept: text/markdown` must return the converted page with:
 
 Requests without the Markdown accept header must continue to receive the HTML
 document. The feature is not complete until the canonical production URL passes
-the live smoke command with `--expect-markdown`; local Worker previews do not
+the live smoke command with `--expect-markdown`; local Worker runs do not
 simulate Cloudflare's zone-level conversion.
 
 The `tanfust.com` zone was confirmed on the Free plan on 2026-09-17. Its

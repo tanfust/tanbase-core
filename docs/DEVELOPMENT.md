@@ -30,12 +30,10 @@ lockfile or supply-chain validation in contributor or CI instructions.
 | `pnpm docs:check`                                | Validate frontmatter, required sections, and internal links          |
 | `pnpm db:generate`                               | Generate a migration from the Drizzle schema                         |
 | `pnpm db:check`                                  | Check generated Drizzle migration history                            |
-| `pnpm db:migrate:local`                          | Apply pending migrations to isolated local preview storage           |
+| `pnpm db:migrate:local`                          | Apply pending migrations to isolated local D1 storage                |
 | `pnpm db:seed:local`                             | Idempotently add local-only project and task fixtures                |
 | `pnpm cf:typegen`                                | Regenerate Worker binding types                                      |
-| `pnpm cf:dry-run:preview`                        | Build preview configuration and run Wrangler dry run                 |
 | `pnpm cf:dry-run:production`                     | Build production configuration and run Wrangler dry run              |
-| `pnpm cf:upload:preview`                         | Upload an unpromoted preview version; changes remote state           |
 | `pnpm cf:deploy:production`                      | Build and deploy production; changes live remote state               |
 | `pnpm smoke -- --url <url> --environment <name>` | Verify health and root SSR contracts                                 |
 
@@ -53,9 +51,9 @@ Wrangler. Do not use Drizzle's migration runner against D1.
 
 ## Local database workflow
 
-The local database uses the `preview` Wrangler environment and its isolated
-`.wrangler` persistence. It never connects to production unless a command
-explicitly includes `--remote`.
+The local database uses the base Wrangler configuration and isolated
+`.wrangler` persistence. It never connects to production because local commands
+explicitly use `--local` and never use `--remote`.
 
 ```sh
 pnpm db:migrate:local
@@ -88,4 +86,4 @@ deliberate forbidden import, and proves that the build rejects it.
 3. Update active docs and add a [change record](changes/TEMPLATE.md).
 4. Run `pnpm cf:typegen` when Worker configuration changed.
 5. Run `pnpm verify` and the relevant deployment dry run.
-6. Record actual evidence. A local pass is not a preview or production deploy.
+6. Record actual evidence. A local pass is not a production deploy.

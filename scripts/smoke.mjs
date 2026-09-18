@@ -10,11 +10,11 @@ function option(name) {
 const baseUrl = option("url")
 const environment = option("environment")
 const expectMarkdown = args.includes("--expect-markdown")
-const allowedEnvironments = new Set(["local", "preview", "production"])
+const allowedEnvironments = new Set(["local", "production"])
 
 if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
   console.error(
-    "Usage: pnpm smoke -- --url <url> --environment <local|preview|production> [--expect-markdown]"
+    "Usage: pnpm smoke -- --url <url> --environment <local|production> [--expect-markdown]"
   )
   process.exit(1)
 }

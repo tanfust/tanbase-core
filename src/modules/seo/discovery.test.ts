@@ -50,7 +50,7 @@ describe("robots policy", () => {
     )
   })
 
-  it.each(["local", "preview", "unknown"])(
+  it.each(["local", "unknown"])(
     "blocks %s crawling without advertising a sitemap",
     (environment) => {
       const robots = createRobotsTxt(environment)

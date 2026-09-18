@@ -42,4 +42,4 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm cf:typegen
       - run: git diff --exit-code -- src/worker-configuration.d.ts
-      - run: pnpm cf:dry-run:preview
+      - run: pnpm cf:dry-run:production

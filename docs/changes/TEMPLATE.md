@@ -25,14 +25,13 @@ state that none are required.
 
 ## Validation evidence
 
-Record exact commands and results. Separate local, preview, and production.
+Record exact commands and results. Separate local and production.
 
 ## Deployment state
 
 | Target     | Commit | URL | Date | Result       |
 | ---------- | ------ | --- | ---- | ------------ |
 | Local      | —      | —   | —    | Not run      |
-| Preview    | —      | —   | —    | Not deployed |
 | Production | —      | —   | —    | Not deployed |
 
 ## Rollback notes

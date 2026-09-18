@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 import { createHealthResponse, normalizeAppEnvironment } from "./health"
 
 describe("health response", () => {
-  it.each(["local", "preview", "production"] as const)(
+  it.each(["local", "production"] as const)(
     "returns the exact contract for %s",
     async (environment) => {
       const response = await createHealthResponse(environment, env.DB)

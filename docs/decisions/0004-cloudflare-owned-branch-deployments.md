@@ -1,10 +1,13 @@
 ---
-status: accepted
+status: superseded
 audience: contributors, maintainers, operators, agents
-last_verified: 2026-09-16
+last_verified: 2026-09-18
 ---
 
 # ADR-0004: Cloudflare-owned branch deployments
+
+Superseded by
+[ADR-0005: Production-only default deployment](0005-production-only-default-deployment.md).
 
 ## Context
 

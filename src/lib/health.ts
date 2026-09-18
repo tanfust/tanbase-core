@@ -1,4 +1,4 @@
-export const appEnvironments = ["local", "preview", "production"] as const
+export const appEnvironments = ["local", "production"] as const
 
 export type AppEnvironment = (typeof appEnvironments)[number]
 

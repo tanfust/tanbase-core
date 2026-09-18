@@ -1,7 +1,7 @@
 ---
 status: active
 audience: agents, contributors, maintainers
-last_verified: 2026-09-16
+last_verified: 2026-09-18
 ---
 
 # AI agent operating contract
@@ -30,8 +30,8 @@ change note as current truth. A superseded ADR must link to its replacement.
 
 ## Required working practices
 
-- Preserve the distinction between local verification, preview deployment, and
-  production deployment. Never infer deployment from a local build or dry run.
+- Preserve the distinction between local verification and production
+  deployment. Never infer deployment from a local build or dry run.
 - Run `pnpm verify` for implementation changes. Run the relevant Cloudflare dry
   run for deployment changes.
 - Regenerate `src/worker-configuration.d.ts` with `pnpm cf:typegen` whenever
@@ -48,10 +48,11 @@ change note as current truth. A superseded ADR must link to its replacement.
 
 ## Foundation boundaries
 
-The current milestone includes Worker SSR, static assets, environments,
-observability, health checks, and deployment automation. D1, KV, R2, Queues,
-Workflows, Durable Objects, AI, and MCP are not configured yet. The public health
-endpoint is temporary and will be reduced or protected during hardening.
+The current milestone includes Worker SSR, static assets, local and production
+environments, observability, deployment automation, and D1-backed project/task
+repositories. KV, R2, Queues, Workflows, Durable Objects, AI, and MCP are not
+configured yet. The public health endpoint includes a minimal D1 check and will
+be reduced or protected during hardening.
 
 ## Definition of done
 

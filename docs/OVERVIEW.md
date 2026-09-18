@@ -15,12 +15,12 @@ observability, deployment automation, and a D1/Drizzle project-and-task data
 slice. The remaining application capabilities described below are planned
 unless marked done in [FEATURES.md](FEATURES.md).
 
-|              |                                                           |
-| ------------ | --------------------------------------------------------- |
-| Status       | D1 foundation verified locally; remote D1 rollout pending |
-| License      | MIT                                                       |
-| Repo         | github.com/tanfust/tanbase-core (public)                  |
-| Last updated | 2026-09-18                                                |
+|              |                                                          |
+| ------------ | -------------------------------------------------------- |
+| Status       | Local D1 foundation verified; production rollout pending |
+| License      | MIT                                                      |
+| Repo         | github.com/tanfust/tanbase-core (public)                 |
+| Last updated | 2026-09-18                                               |
 
 ---
 
@@ -147,7 +147,7 @@ export default {
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "tanbase-core-preview",
+      "database_name": "tanbase-core-production",
       "database_id": "<id>",
       "migrations_dir": "drizzle",
       "migrations_pattern": "drizzle/migrations/*.sql",
@@ -187,7 +187,7 @@ export default {
   "triggers": { "crons": ["0 * * * *"] },
 
   // Rate limiting bindings (AUTH_LIMITER, AI_LIMITER): add in F-006, check current config key
-  // Environments: preview and demo get their own D1, KV, R2 and queues (F-002, F-022)
+  // Production uses distinct remote resources; optional previews must do the same.
 }
 ```
 
@@ -230,8 +230,8 @@ CLAUDE.md
 - Routes and server functions never import `getDb()`. They call module repositories whose first argument is a required `userId`. A CI check enforces this.
 - IDs are text (`crypto.randomUUID()`), timestamps are integer milliseconds.
 - Composite foreign keys enforce project ownership and subtask scope in D1.
-- Preview and production use separate databases bound as `DB`; local development
-  uses isolated Wrangler persistence with the preview configuration.
+- Local and production use separate databases bound as `DB`; local development
+  uses isolated Wrangler persistence and production uses the remote database.
 - Related writes go through `db.batch()`.
 
 ### Auth
@@ -274,7 +274,7 @@ CLAUDE.md
 - **Security:** CSP, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, frame-ancestors.
 - **Errors:** root error boundary, 404 page, structured logs with a request id.
 - **Analytics:** PostHog, loaded only when `POSTHOG_KEY` is set.
-- **CI:** GitHub Actions runs typecheck, lint and tests. Workers Builds deploys a preview per pull request and production from `main`.
+- **CI:** GitHub Actions runs verification, generated-type drift detection, and a production packaging dry run. Workers Builds deploys production from `main`; branch previews are optional.
 - **Agent layer:** `AGENTS.md` (stack, module map, rules, commands), `CLAUDE.md` pointing to it, skills in `.claude/skills/`.
 
 ### Performance budgets

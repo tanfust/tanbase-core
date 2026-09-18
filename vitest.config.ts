@@ -14,7 +14,6 @@ export default defineConfig({
       main: "./test/worker.ts",
       wrangler: {
         configPath: "./wrangler.jsonc",
-        environment: "preview",
       },
       miniflare: {
         bindings: {
