@@ -17,6 +17,7 @@ Accepted decisions:
 - [ADR-0003: Documentation source hierarchy](0003-documentation-source-hierarchy.md)
 - [ADR-0004: Cloudflare-owned branch deployments](0004-cloudflare-owned-branch-deployments.md) — superseded by ADR-0005
 - [ADR-0005: Production-only default deployment](0005-production-only-default-deployment.md)
+- [ADR-0006: D1 as the Better Auth session store](0006-d1-auth-session-storage.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

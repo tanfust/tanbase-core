@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import {
   createProject,
   createTask,
+  ensureDefaultProject,
   getProject,
   listProjects,
   listTasksByProject,
@@ -17,6 +18,14 @@ describe("project and task repositories", () => {
     expect(first.id).toMatch(/^[0-9a-f-]{36}$/)
     expect(first.createdAt).toEqual(expect.any(Number))
     expect(await listProjects("user-a", env.DB)).toEqual([first, second])
+  })
+
+  it("creates the default project idempotently", async () => {
+    const first = await ensureDefaultProject("new-user", env.DB)
+    const second = await ensureDefaultProject("new-user", env.DB)
+
+    expect(second).toEqual(first)
+    expect(await listProjects("new-user", env.DB)).toEqual([first])
   })
 
   it("returns nothing when another user reads a project or its tasks", async () => {

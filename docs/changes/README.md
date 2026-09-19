@@ -20,6 +20,7 @@ Records:
 - [2026-09-18: D1 and Drizzle foundation](2026-09-18-d1-drizzle-foundation.md)
 - [2026-09-18: Production-only default deployment](2026-09-18-production-only-default.md)
 - [2026-09-19: Cloudflare transactional email foundation](2026-09-19-cloudflare-email-foundation.md)
+- [2026-09-19: Better Auth D1 core](2026-09-19-better-auth-d1-core.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

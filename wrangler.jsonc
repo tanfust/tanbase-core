@@ -13,6 +13,7 @@
   },
   "vars": {
     "APP_ENV": "local",
+    "BETTER_AUTH_URL": "http://localhost:3000",
     "EMAIL_FROM": "",
   },
   "d1_databases": [
@@ -29,6 +30,7 @@
       "name": "tanbase-core",
       "vars": {
         "APP_ENV": "production",
+        "BETTER_AUTH_URL": "https://tanbase-core.tanfust.com",
         "EMAIL_FROM": "",
       },
       "d1_databases": [

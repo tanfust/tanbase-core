@@ -52,9 +52,11 @@ The current milestone includes Worker SSR, static assets, local and production
 environments, observability, deployment automation, and D1-backed project/task
 repositories. The server-only email module renders typed React Email templates,
 logs safe metadata when no sender is configured, and sends through the native
-Cloudflare Email Service binding without an API key. KV, R2, Queues, Workflows,
-Durable Objects, AI, and MCP are not configured yet. The public health endpoint
-includes a minimal D1 check and will be reduced or protected during hardening.
+Cloudflare Email Service binding without an API key. Better Auth uses
+request-scoped D1 storage for users, accounts, sessions, and verification state;
+KV is intentionally not configured for auth. R2, Queues, Workflows, Durable
+Objects, AI, and MCP are not configured yet. The public health endpoint includes
+a minimal D1 check and will be reduced or protected during hardening.
 
 ## Definition of done
 

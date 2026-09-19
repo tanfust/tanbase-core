@@ -93,21 +93,21 @@ Subtasks are tasks with a `parent_id`.
 
 ### Feature to primitive map
 
-| Feature                                    | Primitive                                          | Binding                         |
-| ------------------------------------------ | -------------------------------------------------- | ------------------------------- |
-| Rendering, server functions, static assets | Workers + TanStack Start                           | (built in)                      |
-| Projects and tasks                         | D1 + Drizzle                                       | `DB`                            |
-| Sign in, sessions                          | Better Auth on D1, KV as session secondary storage | `DB`, `KV`                      |
-| Bot protection on auth forms               | Turnstile                                          | `TURNSTILE_SECRET_KEY` (secret) |
-| Abuse limits on auth and AI                | Rate Limiting                                      | `AUTH_LIMITER`, `AI_LIMITER`    |
-| Attachments                                | R2                                                 | `FILES`                         |
-| Live board                                 | Durable Object per project, WebSocket Hibernation  | `BOARD`                         |
-| Task breakdown                             | Workflows                                          | `BREAKDOWN`                     |
-| AI inference                               | Workers AI through AI Gateway                      | `AI`                            |
-| Reminders                                  | Cron Triggers -> Queues -> email                   | `EMAIL_QUEUE`                   |
-| Email                                      | Cloudflare Email Service                           | `EMAIL`                         |
-| Agent access                               | MCP server (Cloudflare Agents SDK)                 | `MCP_OBJECT`                    |
-| Logs                                       | Workers Logs                                       | `observability`                 |
+| Feature                                    | Primitive                                         | Binding                         |
+| ------------------------------------------ | ------------------------------------------------- | ------------------------------- |
+| Rendering, server functions, static assets | Workers + TanStack Start                          | (built in)                      |
+| Projects and tasks                         | D1 + Drizzle                                      | `DB`                            |
+| Sign in, sessions                          | Better Auth with authoritative D1 storage         | `DB`                            |
+| Bot protection on auth forms               | Turnstile                                         | `TURNSTILE_SECRET_KEY` (secret) |
+| Abuse limits on auth and AI                | Rate Limiting                                     | `AUTH_LIMITER`, `AI_LIMITER`    |
+| Attachments                                | R2                                                | `FILES`                         |
+| Live board                                 | Durable Object per project, WebSocket Hibernation | `BOARD`                         |
+| Task breakdown                             | Workflows                                         | `BREAKDOWN`                     |
+| AI inference                               | Workers AI through AI Gateway                     | `AI`                            |
+| Reminders                                  | Cron Triggers -> Queues -> email                  | `EMAIL_QUEUE`                   |
+| Email                                      | Cloudflare Email Service                          | `EMAIL`                         |
+| Agent access                               | MCP server (Cloudflare Agents SDK)                | `MCP_OBJECT`                    |
+| Logs                                       | Workers Logs                                      | `observability`                 |
 
 ### Worker entry
 
@@ -154,7 +154,6 @@ export default {
       "migrations_pattern": "drizzle/migrations/*.sql",
     },
   ],
-  "kv_namespaces": [{ "binding": "KV", "id": "<id>" }],
   "r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files" }],
 
   "durable_objects": {
@@ -240,8 +239,15 @@ CLAUDE.md
 - Better Auth mounted at `src/routes/api/auth/$.ts` as a server route with GET and POST handlers, not a server function.
 - `tanstackStartCookies()` is the last plugin in the array.
 - The protected area is a pathless `_app` layout that checks the session in `beforeLoad`.
-- v1 methods: email and password with verification, password reset, magic link, Google.
-- Sessions cached in KV through Better Auth secondary storage.
+- Core methods are email and password with verification and password reset;
+  magic link and Google arrive in F-009.
+- Sessions and one-time verification state remain in D1. Cloudflare KV is not
+  used as Better Auth secondary storage because its eventual-consistency model
+  cannot provide the atomic consume and increment operations required by the
+  current adapter contract. See
+  [ADR-0006](decisions/0006-d1-auth-session-storage.md).
+- Verification and reset delivery are scheduled with Worker `waitUntil()`
+  through the replaceable email module.
 
 ### Realtime
 
@@ -370,7 +376,7 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 
 | Risk                                                                          | Mitigation                                                                                                       |
 | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Requests hanging on Workers have been reported with Better Auth on this stack | Prove the full auth flow in production during F-005 before building on it                                        |
+| Requests hanging on Workers have been reported with Better Auth on this stack | Workers-runtime tests cover the core; prove the full browser flow in production before completing F-005          |
 | Custom entry not picked up                                                    | `main` points to `./src/server.ts`; the F-001 health check exercises every handler                               |
 | Too many primitives make forks heavy                                          | Module removal documented and verified in F-021                                                                  |
 | Cloudflare Email Service is in beta                                           | Keep the provider boundary in `sendEmail()` and verify delivery before auth rollout                              |

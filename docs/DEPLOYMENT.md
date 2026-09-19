@@ -49,6 +49,25 @@ pnpm db:migrate:production
 then deploys the generated Worker. Migrations must remain compatible with the
 currently active code; destructive changes require an expand/contract rollout.
 
+### Better Auth
+
+The production URL is committed as `BETTER_AUTH_URL`; the secret is not. Create
+a unique production secret of at least 32 characters and store it as the
+Worker secret `BETTER_AUTH_SECRET` in Cloudflare. For a manual setup:
+
+```sh
+pnpm exec wrangler secret put BETTER_AUTH_SECRET --env production
+```
+
+Do not place the secret in `wrangler.jsonc`, Workers Builds variables, source,
+documentation, or logs. Better Auth stores users, accounts, sessions, and
+verification records in D1. No KV namespace is required for auth; the reason is
+recorded in [ADR-0006](decisions/0006-d1-auth-session-storage.md).
+
+Apply the auth migration before deploying the code. Do not make the auth UI
+public until transactional email delivery, Turnstile, and the auth rate limit
+have passed their own production checks.
+
 ### Transactional email
 
 The email module uses the native `EMAIL` binding and needs no provider API key.

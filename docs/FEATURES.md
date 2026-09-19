@@ -147,29 +147,36 @@ non-production branch builds are optional and disabled by default.
 
 ### F-005: Auth core
 
-**Module:** auth | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-003, F-004
+**Module:** auth | **Priority:** P0 | **Status:** 🚧 In progress | **Depends on:** F-003, F-004
 
 **What:** Email and password sign-up with verification and reset, sessions, and a protected app area.
 
 **Acceptance criteria**
 
-- [ ] Better Auth on D1 through the Drizzle adapter; auth tables added to migrations
-- [ ] Server route `src/routes/api/auth/$.ts` with GET and POST handlers
-- [ ] `tanstackStartCookies()` is the last plugin
-- [ ] KV configured as session secondary storage
+- [x] Better Auth on D1 through the Drizzle adapter; auth tables added to migrations
+- [x] Server route `src/routes/api/auth/$.ts` with GET and POST handlers
+- [x] `tanstackStartCookies()` is the last plugin
+- [x] Sessions and verification state use authoritative D1 storage; KV is not
+      used because it cannot satisfy Better Auth's atomic secondary-storage
+      contract ([ADR-0006](decisions/0006-d1-auth-session-storage.md))
 - [ ] Sign up, verify, sign in, sign out, forgot and reset password all work **in production**, not only locally
 - [ ] Pathless `_app` layout redirects to `/login` without a session and returns to the original URL after sign-in
-- [ ] A default project is created on first sign-in
+- [x] A default project is created idempotently on first sign-in
 
 **Technical notes**
 
 - Auth instance created per request
 - `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` set per environment
+- The pathless layout already preserves the original URL in the login search;
+  consuming it after sign-in belongs to the auth UI follow-up
 - Hanging requests have been reported with this stack; watch Workers Logs during the production check
 
 **Tests**
 
-- Playwright happy path locally and a production smoke journey after deployment
+- Workers-runtime coverage for sign-up, verification, sign-in, session,
+  sign-out, password reset, and default-project provisioning
+- Playwright happy path locally and a production smoke journey after the auth
+  UI and email sender are enabled
 
 ---
 

@@ -21,3 +21,5 @@ allowBuilds:
   unrs-resolver: true
   msw: false
   workerd: true
+  "@prisma/client": false
+  better-sqlite3: false

@@ -79,6 +79,30 @@ set `remote: true`. Use only controlled recipients if you deliberately enable a
 remote binding. Templates render both HTML and plain text at send time and have
 Workers-runtime snapshot coverage.
 
+## Local authentication workflow
+
+Authentication uses D1 for users, accounts, sessions, and one-time
+verification records. Apply the migrations, then put a development-only secret
+of at least 32 characters in the ignored `.dev.vars` file:
+
+```dotenv
+BETTER_AUTH_SECRET=<generate-a-development-secret>
+```
+
+Generate the value locally with a cryptographically secure password generator;
+never copy a production secret into local development. `BETTER_AUTH_URL` is
+already `http://localhost:3000` in the base Wrangler configuration.
+
+```sh
+pnpm db:migrate:local
+pnpm dev
+```
+
+With `EMAIL_FROM` empty, verification and reset messages use the safe metadata
+fallback and do not expose their links. Workers-runtime tests inject a fake
+sender and exercise the complete core flow without real delivery. The `/login`
+route is intentionally a placeholder until the auth UI slice.
+
 ## Server-only boundaries
 
 TanStack import protection runs with error behavior in development and builds.

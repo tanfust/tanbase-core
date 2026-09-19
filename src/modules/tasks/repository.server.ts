@@ -36,6 +36,28 @@ export async function createProject(
   return project
 }
 
+export async function ensureDefaultProject(
+  userId: string,
+  database?: D1Database
+): Promise<Project> {
+  const db = getDb(database)
+  const project: Project = {
+    id: `default:${userId}`,
+    userId,
+    name: "My Project",
+    createdAt: Date.now(),
+  }
+
+  await db.insert(projects).values(project).onConflictDoNothing()
+
+  const savedProject = await getProject(userId, project.id, database)
+  if (!savedProject) {
+    throw new Error("Default project could not be created")
+  }
+
+  return savedProject
+}
+
 export async function getProject(
   userId: string,
   projectId: string,
