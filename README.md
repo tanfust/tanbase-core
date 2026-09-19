@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-19
 ---
 
 # TanBase Core
@@ -11,9 +11,11 @@ Cloudflare Workers. The current foundation runs server-rendered React and static
 assets in the Workers runtime, with repeatable verification and
 Cloudflare-owned production deployments.
 
-The repository now includes the first data-backed slice: D1, Drizzle migrations,
-and ownership-scoped project and task repositories. Authentication, files,
-realtime collaboration, background work, AI, and MCP remain roadmap items.
+The repository now includes the first data-backed slice plus the transactional
+email foundation: D1, Drizzle migrations, ownership-scoped project and task
+repositories, typed React Email templates, and native Cloudflare Email Service
+delivery. Authentication, files, realtime collaboration, background work, AI,
+and MCP remain roadmap items.
 
 ## Quick start
 
@@ -46,6 +48,7 @@ pnpm cf:dry-run:production
 - Isolated local and production configuration targeting one Worker
 - D1 and Drizzle schemas for projects and tasks, with local migrations and seed data
 - Ownership-scoped server repositories backed by composite database constraints
+- Typed transactional email templates with safe local logging and Cloudflare delivery
 - Public `GET /api/health` endpoint with a live database check
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
 - Homepage discovery links and Content Signals for agent-readable resources

@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-19
 ---
 
 # TanBase Core
@@ -11,16 +11,17 @@ last_verified: 2026-09-18
 
 Open-source full-stack starter for TanStack Start on Cloudflare. The current
 repository proves the Worker runtime, SSR, static assets, environment selection,
-observability, deployment automation, and a D1/Drizzle project-and-task data
-slice. The remaining application capabilities described below are planned
-unless marked done in [FEATURES.md](FEATURES.md).
+observability, deployment automation, a D1/Drizzle project-and-task data slice,
+and the transactional email module. The remaining application capabilities
+described below are planned unless marked done in
+[FEATURES.md](FEATURES.md).
 
-|              |                                                          |
-| ------------ | -------------------------------------------------------- |
-| Status       | Local D1 foundation verified; production rollout pending |
-| License      | MIT                                                      |
-| Repo         | github.com/tanfust/tanbase-core (public)                 |
-| Last updated | 2026-09-18                                               |
+|              |                                                   |
+| ------------ | ------------------------------------------------- |
+| Status       | Production D1 migrated; Worker deployment pending |
+| License      | MIT                                               |
+| Repo         | github.com/tanfust/tanbase-core (public)          |
+| Last updated | 2026-09-19                                        |
 
 ---
 
@@ -52,7 +53,7 @@ Paid TanBase editions (Mobile, Web, Universal) use Supabase and Paddle. Core has
 1. **Every primitive earns its place.** If no feature of the demo app needs it, it is not in the repo.
 2. **One Worker.** One `wrangler.jsonc`, one deploy, one `src/server.ts` that exports everything.
 3. **Modules are deletable.** Each primitive lives in `src/modules/<name>`. Removing a module is documented and verified.
-4. **Adapters only where a real second option exists.** Email is the only adapter in v1.
+4. **Integrations stay replaceable.** Features call the email module, not the provider binding directly.
 5. **Ownership lives in code.** D1 has no row-level security. Every query goes through a repository that requires a user id.
 6. **D1 is the source of truth.** Durable Objects broadcast; they never store app data.
 7. **Measured, not claimed.** Performance and cost are checked against real numbers.
@@ -92,21 +93,21 @@ Subtasks are tasks with a `parent_id`.
 
 ### Feature to primitive map
 
-| Feature                                    | Primitive                                            | Binding                         |
-| ------------------------------------------ | ---------------------------------------------------- | ------------------------------- |
-| Rendering, server functions, static assets | Workers + TanStack Start                             | (built in)                      |
-| Projects and tasks                         | D1 + Drizzle                                         | `DB`                            |
-| Sign in, sessions                          | Better Auth on D1, KV as session secondary storage   | `DB`, `KV`                      |
-| Bot protection on auth forms               | Turnstile                                            | `TURNSTILE_SECRET_KEY` (secret) |
-| Abuse limits on auth and AI                | Rate Limiting                                        | `AUTH_LIMITER`, `AI_LIMITER`    |
-| Attachments                                | R2                                                   | `FILES`                         |
-| Live board                                 | Durable Object per project, WebSocket Hibernation    | `BOARD`                         |
-| Task breakdown                             | Workflows                                            | `BREAKDOWN`                     |
-| AI inference                               | Workers AI through AI Gateway                        | `AI`                            |
-| Reminders                                  | Cron Triggers -> Queues -> email                     | `EMAIL_QUEUE`                   |
-| Email                                      | Resend (default), Cloudflare Email Service (backlog) | `RESEND_API_KEY`                |
-| Agent access                               | MCP server (Cloudflare Agents SDK)                   | `MCP_OBJECT`                    |
-| Logs                                       | Workers Logs                                         | `observability`                 |
+| Feature                                    | Primitive                                          | Binding                         |
+| ------------------------------------------ | -------------------------------------------------- | ------------------------------- |
+| Rendering, server functions, static assets | Workers + TanStack Start                           | (built in)                      |
+| Projects and tasks                         | D1 + Drizzle                                       | `DB`                            |
+| Sign in, sessions                          | Better Auth on D1, KV as session secondary storage | `DB`, `KV`                      |
+| Bot protection on auth forms               | Turnstile                                          | `TURNSTILE_SECRET_KEY` (secret) |
+| Abuse limits on auth and AI                | Rate Limiting                                      | `AUTH_LIMITER`, `AI_LIMITER`    |
+| Attachments                                | R2                                                 | `FILES`                         |
+| Live board                                 | Durable Object per project, WebSocket Hibernation  | `BOARD`                         |
+| Task breakdown                             | Workflows                                          | `BREAKDOWN`                     |
+| AI inference                               | Workers AI through AI Gateway                      | `AI`                            |
+| Reminders                                  | Cron Triggers -> Queues -> email                   | `EMAIL_QUEUE`                   |
+| Email                                      | Cloudflare Email Service                           | `EMAIL`                         |
+| Agent access                               | MCP server (Cloudflare Agents SDK)                 | `MCP_OBJECT`                    |
+| Logs                                       | Workers Logs                                       | `observability`                 |
 
 ### Worker entry
 
@@ -260,7 +261,10 @@ CLAUDE.md
 - Hourly cron finds tasks due within the reminder window with no `reminder_sent_at` and enqueues one message per task.
 - The queue consumer renders a React Email template, sends through the email adapter, then sets `reminder_sent_at`. After 3 failed retries a message goes to the dead-letter queue.
 - In the demo environment a nightly cron wipes demo data.
-- `sendEmail()` selects its adapter from `EMAIL_PROVIDER`. Resend is the v1 adapter.
+- `sendEmail()` renders React Email templates and sends through the native
+  Cloudflare `EMAIL` binding.
+- Without `EMAIL_FROM`, email delivery logs only safe metadata and does not
+  expose recipients, links, message bodies, or credentials.
 
 ### MCP
 
@@ -301,7 +305,7 @@ Initial targets. Adjust after the first measurements in F-019.
 | Validation      | Zod                                                                |
 | Database        | Cloudflare D1, Drizzle ORM                                         |
 | Auth            | Better Auth                                                        |
-| Email           | React Email, Resend                                                |
+| Email           | React Email, Cloudflare Email Service                              |
 | Testing         | Vitest with `@cloudflare/vitest-plugin`, Playwright for end-to-end |
 | Package manager | pnpm                                                               |
 
@@ -323,7 +327,9 @@ Included in Workers Paid (checked September 2026, re-check before publishing):
 | Workers AI           | Free daily allocation, then per-model pricing |
 | Email Service (beta) | 3,000 emails, then $0.35 per 1,000            |
 
-R2 has no egress fees. Check KV, R2 and Queues allowances on the pricing page at F-001. Resend's free tier covers 3,000 emails a month with no base plan.
+R2 has no egress fees. Check KV, R2 and Queues allowances on the pricing page at
+F-001. Cloudflare Email Service includes 3,000 outbound messages on Workers Paid
+before usage-based charges.
 
 What can push the bill past $5:
 
@@ -359,7 +365,6 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 2. **UI source.** Consume the `tanfust/ui` registry, or install shadcn/ui components directly?
 3. **AI model.** Which Workers AI model returns valid subtask JSON reliably at the lowest cost? Decide at F-013 from the current catalog.
 4. **Demo domain.** Where does the public demo live?
-5. **Email default.** Switch the default adapter to Cloudflare Email Service once it is generally available?
 
 ## Risks
 
@@ -368,7 +373,7 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 | Requests hanging on Workers have been reported with Better Auth on this stack | Prove the full auth flow in production during F-005 before building on it                                        |
 | Custom entry not picked up                                                    | `main` points to `./src/server.ts`; the F-001 health check exercises every handler                               |
 | Too many primitives make forks heavy                                          | Module removal documented and verified in F-021                                                                  |
-| Cloudflare Email Service is in beta                                           | Resend stays the default                                                                                         |
+| Cloudflare Email Service is in beta                                           | Keep the provider boundary in `sendEmail()` and verify delivery before auth rollout                              |
 | Demo abuse drives cost                                                        | Guardrails in F-022 ship before the demo is public                                                               |
 | Crowded template space                                                        | Differentiate on all primitives proven together, the production layer, the agent layer and the published invoice |
 

@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-19
 ---
 
 # Development
@@ -64,6 +64,20 @@ pnpm dev
 The seed uses stable IDs and `INSERT OR IGNORE`, so rerunning it creates no
 duplicates. Tests use `@cloudflare/vitest-plugin`, apply the real generated SQL,
 and receive an isolated D1 database for each test file.
+
+## Local email workflow
+
+`sendEmail()` uses the native `EMAIL` binding and defaults to a metadata-only
+log when `EMAIL_FROM` is empty. The log contains only the template name and
+recipient count; it never contains addresses, message bodies, verification
+links, reset tokens, or credentials.
+
+For a local simulated delivery, set `EMAIL_FROM` in an ignored `.dev.vars` file
+to an address on an onboarded sender domain. Wrangler logs and stores the
+rendered email locally instead of delivering it because the binding does not
+set `remote: true`. Use only controlled recipients if you deliberately enable a
+remote binding. Templates render both HTML and plain text at send time and have
+Workers-runtime snapshot coverage.
 
 ## Server-only boundaries
 

@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-19
 ---
 
 # Change records
@@ -19,6 +19,7 @@ Records:
 - [2026-09-17: Markdown negotiation readiness](2026-09-17-markdown-negotiation-readiness.md)
 - [2026-09-18: D1 and Drizzle foundation](2026-09-18-d1-drizzle-foundation.md)
 - [2026-09-18: Production-only default deployment](2026-09-18-production-only-default.md)
+- [2026-09-19: Cloudflare transactional email foundation](2026-09-19-cloudflare-email-foundation.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

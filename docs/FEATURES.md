@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-19
 ---
 
 # TanBase Core: Features
@@ -24,7 +24,7 @@ last_verified: 2026-09-18
 | 6   | AI             | F-013, F-014   |
 | 7   | MCP            | F-015          |
 | 8   | Launch         | F-016 to F-025 |
-|     | Backlog        | F-026, F-027   |
+|     | Backlog        | F-026          |
 
 ---
 
@@ -59,7 +59,7 @@ preventing unused infrastructure from entering the template.
 
 **Acceptance criteria**
 
-- [ ] Add D1 with the first data-backed feature and verify its migration path
+- [x] Add D1 with the first data-backed feature and verify its migration path
       locally and in production
 - [ ] Add KV, R2, Durable Objects, Workflows, Queues, AI, Cron, and MCP only when
       their owning product feature is implemented
@@ -83,7 +83,7 @@ non-production branch builds are optional and disabled by default.
 - [x] CI performs a production packaging dry run without deployment credentials
 - [x] GitHub Actions contains no remote deployment job or Cloudflare credential reference
 - [x] Cloudflare Workers Builds uses `main` as the production branch
-- [ ] Non-production branch builds and Preview URLs are disabled in Cloudflare
+- [x] Non-production branch builds and Preview URLs are disabled in Cloudflare
 - [ ] The first production build passes remote smoke checks
 
 ---
@@ -92,14 +92,14 @@ non-production branch builds are optional and disabled by default.
 
 ### F-003: Data layer with scoped repositories
 
-**Module:** data | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-001
+**Module:** data | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-001
 
 **What:** Drizzle schema, migrations, a per-request client, and the ownership rule that replaces row-level security.
 
 **Acceptance criteria**
 
 - [x] Schema for `project` and `task` in `src/db/schema/`
-- [ ] Migrations generated into `drizzle/` and applied locally and in production
+- [x] Migrations generated into `drizzle/` and applied locally and in production
       with `wrangler d1 migrations apply`
 - [x] `getDb()` creates a Drizzle client per request
 - [x] Repositories take a required `userId` first argument
@@ -124,16 +124,16 @@ non-production branch builds are optional and disabled by default.
 
 ### F-004: Email module
 
-**Module:** email | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-001
+**Module:** email | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-001
 
-**What:** One send function, a Resend adapter, and the templates every later feature needs.
+**What:** One send function, native Cloudflare delivery, and the templates every later feature needs.
 
 **Acceptance criteria**
 
-- [ ] `sendEmail({ to, subject, template, props })` in `src/modules/email`
-- [ ] Resend adapter selected by `EMAIL_PROVIDER=resend`
-- [ ] React Email templates: verify email, reset password, magic link, task reminder
-- [ ] With no API key set, emails are logged instead of sent
+- [x] `sendEmail({ to, subject, template, props })` in `src/modules/email`
+- [x] Native Cloudflare Email Service binding with no provider API key
+- [x] React Email templates: verify email, reset password, magic link, task reminder
+- [x] With no sender set, emails log safe metadata instead of sending
 
 **Technical notes**
 
@@ -141,7 +141,7 @@ non-production branch builds are optional and disabled by default.
 
 **Tests**
 
-- Snapshot test per template
+- Workers-runtime snapshot test per template plus adapter and safe-fallback tests
 
 ---
 
@@ -521,13 +521,3 @@ responses.
 - Sent at a fixed UTC hour; per-user time zones are out of scope for v1
 
 ---
-
-### F-027: Cloudflare Email Service adapter
-
-**Module:** email | **Priority:** P2 | **Status:** 🔲 Todo | **Depends on:** F-004
-
-**Acceptance criteria**
-
-- [ ] `cloudflare` adapter using the Email Service binding, selected by `EMAIL_PROVIDER=cloudflare`
-- [ ] Marked as beta in docs until Cloudflare announces general availability
-- [ ] Template snapshot tests pass with both adapters

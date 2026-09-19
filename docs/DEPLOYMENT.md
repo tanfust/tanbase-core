@@ -1,7 +1,7 @@
 ---
 status: active
 audience: maintainers, operators, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-19
 ---
 
 # Deployment runbook
@@ -48,6 +48,33 @@ pnpm db:migrate:production
 `pnpm cf:deploy:production` builds first, applies pending production migrations,
 then deploys the generated Worker. Migrations must remain compatible with the
 currently active code; destructive changes require an expand/contract rollout.
+
+### Transactional email
+
+The email module uses the native `EMAIL` binding and needs no provider API key.
+It is safe by default: while `EMAIL_FROM` is empty, it records only
+non-sensitive delivery metadata and does not send. To enable production email:
+
+1. Confirm the account is on Workers Paid; arbitrary outbound recipients are
+   not available on the Free plan.
+2. Onboard the sending domain in Cloudflare Email Service and confirm its SPF
+   and DKIM records are active.
+3. Set the production `EMAIL_FROM` Wrangler variable to a sender on that domain.
+4. Restrict the production `send_email` binding with
+   `allowed_sender_addresses` after the exact sender is known.
+5. Regenerate Worker types, run verification and the production dry run, then
+   deploy the same verified commit.
+
+The authenticated operator can inspect onboarding with:
+
+```sh
+pnpm exec wrangler email sending list
+pnpm exec wrangler email sending settings <domain>
+```
+
+Email Sending is a beta transactional service. Verify one delivery to an
+address controlled by the operator before enabling authentication emails. Do
+not use it for newsletters or bulk marketing.
 
 ### Canonical production domain
 

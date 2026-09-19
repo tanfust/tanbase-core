@@ -13,6 +13,7 @@
   },
   "vars": {
     "APP_ENV": "local",
+    "EMAIL_FROM": "",
   },
   "d1_databases": [
     {
@@ -22,20 +23,24 @@
       "migrations_pattern": "drizzle/migrations/*.sql",
     },
   ],
+  "send_email": [{ "name": "EMAIL" }],
   "env": {
     "production": {
       "name": "tanbase-core",
       "vars": {
         "APP_ENV": "production",
+        "EMAIL_FROM": "",
       },
       "d1_databases": [
         {
           "binding": "DB",
           "database_name": "tanbase-core-production",
+          "database_id": "3736933e-6d18-4dbb-aba1-ccd046861b2b",
           "migrations_dir": "drizzle",
           "migrations_pattern": "drizzle/migrations/*.sql",
         },
       ],
+      "send_email": [{ "name": "EMAIL" }],
     },
   },
 }

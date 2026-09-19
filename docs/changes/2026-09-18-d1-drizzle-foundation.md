@@ -36,8 +36,8 @@ from being retrofitted after product flows depend on them.
 
 - Added the `DB: D1Database` Worker binding.
 - Local persistence uses `tanbase-core-local`; production targets
-  `tanbase-core-production`. The remote database ID is intentionally unresolved
-  until the account that owns the live Worker is accessible.
+  `tanbase-core-production` at
+  `3736933e-6d18-4dbb-aba1-ccd046861b2b`.
 - Added additive migration
   `drizzle/migrations/0000_many_sharon_carter.sql` and configured Wrangler's
   nested migration pattern.
@@ -66,14 +66,22 @@ Local evidence:
 - Regenerating Worker types left the SHA-256 unchanged at
   `9dba85b1e5b5dc99280db102cf0bddcf6b7198c9661953042d8eb2a1c4c97c9f`.
 
-No production D1 evidence exists yet.
+Production D1 evidence:
+
+- `pnpm db:migrate:production` — applied
+  `migrations/0000_many_sharon_carter.sql`; 8 commands succeeded.
+- `wrangler d1 migrations list DB --env production --remote` — no migrations
+  remain.
+- A read-only `sqlite_schema` query confirmed the `project` and `task` tables on
+  database `3736933e-6d18-4dbb-aba1-ccd046861b2b`.
 
 ## Deployment state
 
-| Target     | Commit                          | URL                                | Date       | Result                                                        |
-| ---------- | ------------------------------- | ---------------------------------- | ---------- | ------------------------------------------------------------- |
-| Local      | Working tree based on `e531853` | `http://localhost:3005`            | 2026-09-18 | Migration, seed, verify, smoke, and production dry run passed |
-| Production | —                               | `https://tanbase-core.tanfust.com` | 2026-09-18 | Existing Worker healthy; D1 change not deployed               |
+| Target        | Commit                          | URL / resource                         | Date       | Result                                                        |
+| ------------- | ------------------------------- | -------------------------------------- | ---------- | ------------------------------------------------------------- |
+| Local         | Working tree based on `e531853` | `http://localhost:3005`                | 2026-09-18 | Migration, seed, verify, smoke, and production dry run passed |
+| Production D1 | `e531853`                       | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-18 | Migration applied and project/task tables confirmed           |
+| Production    | —                               | `https://tanbase-core.tanfust.com`     | 2026-09-18 | Existing Worker healthy; D1 binding not deployed              |
 
 ## Rollback notes
 
@@ -85,11 +93,7 @@ them.
 
 ## Remaining work
 
-- Access the Cloudflare account that owns `tanbase-core`, create
-  `tanbase-core-production`, and commit its exact ID.
-- Disable non-production branch builds and Preview URLs in Cloudflare.
-- Apply the additive migration, deploy the same verified commit to production,
-  and record database-aware production smoke evidence.
-- Implement the email module next, then Better Auth core, auth UI, and
-  Turnstile/rate limits.
+- Deploy the verified D1 binding to production and record database-aware smoke
+  evidence.
+- Implement Better Auth core, auth UI, and Turnstile/rate limits.
 - Add attachment schema in F-010 and AI usage schema in F-013.

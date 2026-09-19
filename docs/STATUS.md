@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, operators, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-19
 ---
 
 # Current status
@@ -12,20 +12,26 @@ deployment history are the operational record.
 ## Milestone
 
 The Worker foundation and public agent-discovery baseline are live on the
-canonical production hostname. The project/task D1 and Drizzle foundation is
-implemented and verified locally. The default deployment topology now includes
-only isolated local development and production; branch previews are optional.
+canonical production hostname. The production D1 database now exists and its
+additive project/task migration is applied. The transactional email module is
+implemented with typed templates, the native Cloudflare Email Service binding,
+and a safe logging fallback.
 
-Production D1 creation, migration, and deployment remain blocked on access to
-the Cloudflare account that owns the live Worker. Cloudflare Markdown for Agents
-remains separately gated by the zone plan.
+The new database binding and email module have not been deployed to the Worker.
+Cloudflare Markdown for Agents remains separately gated by the zone plan.
 
 ## Verification snapshot
 
-| Target     | Commit                                | URL                                | Date                 | Evidence                                                                                     |
-| ---------- | ------------------------------------- | ---------------------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
-| Local      | Working tree based on `e531853`       | `http://localhost:3005`            | 2026-09-18           | D1 migration, idempotent seed, verify, local smoke, and production packaging dry run passed  |
-| Production | `efd9161` / Worker version `d91d365d` | `https://tanbase-core.tanfust.com` | 2026-09-17 16:42 UTC | DNS, TLS, redirect, and HTML discovery smoke passed; the D1 foundation has not been deployed |
+| Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                      |
+| ------------- | ------------------------------------- | -------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------- |
+| Local         | Working tree based on `a031fdf`       | `http://localhost:3005`                | 2026-09-19           | 27 runtime tests, verify, local smoke, production dry run, and simulated email binding passed |
+| Production D1 | `e531853`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-18           | Migration applied; `project` and `task` confirmed; no migrations remain                       |
+| Production    | `efd9161` / Worker version `d91d365d` | `https://tanbase-core.tanfust.com`     | 2026-09-17 16:42 UTC | DNS, TLS, redirect, and HTML discovery smoke passed; new binding and code not deployed        |
+
+Cloudflare Workers Builds is configured with production branch `main`, build
+command `pnpm verify`, and deploy command `pnpm cf:deploy:production`.
+Non-production builds and Preview URLs are disabled; the production
+`workers.dev` URL remains enabled.
 
 Historical preview experiments and their exact evidence remain in the immutable
 [change records](changes/README.md). They are not requirements or evidence for
@@ -33,11 +39,16 @@ the active production-only topology.
 
 ## Known blockers
 
-- The accessible Cloudflare accounts do not contain the live `tanbase-core`
-  Worker. Obtain access to its owning account before creating
-  `tanbase-core-production`, recording its ID, or running a remote migration.
-- The production D1 migration, Worker deployment, and database-aware production
-  smoke check have not run.
+- The Worker deployment and database-aware production smoke check have not run
+  for the D1 and email work.
+- Build `75df1b1e` for commit `a031fdf` failed during the production migration
+  because the newly created D1 database did not yet have its ID in
+  `wrangler.jsonc`. The working tree now contains the verified ID; a new commit
+  and push are required to retry the build.
+- The account dashboard reports that Email Sending requires Workers Paid, and
+  the current Wrangler OAuth request is unauthorized (Cloudflare code 2036).
+  Upgrade the Worker plan, confirm Email Sending access, onboard the sender
+  domain, choose `EMAIL_FROM`, and run one controlled send.
 - Upgrade the `tanfust.com` Free zone before enabling Cloudflare Markdown for
   Agents, then pass the opt-in production smoke check.
 - The public health endpoint remains intentionally minimal until hardening.
@@ -46,7 +57,7 @@ the active production-only topology.
 
 Production runs commit `efd9161`, Worker version `d91d365d`, with live HTML
 discovery smoke passed at 2026-09-17 16:42 UTC. It does not include the current
-D1 work.
+D1 binding or email module.
 
 Update this file after every first-of-kind production smoke check. Keep local
 verification and production deployment evidence separate.
