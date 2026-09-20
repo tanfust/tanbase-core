@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-19
+last_verified: 2026-09-20
 ---
 
 # Change records
@@ -21,6 +21,7 @@ Records:
 - [2026-09-18: Production-only default deployment](2026-09-18-production-only-default.md)
 - [2026-09-19: Cloudflare transactional email foundation](2026-09-19-cloudflare-email-foundation.md)
 - [2026-09-19: Better Auth D1 core](2026-09-19-better-auth-d1-core.md)
+- [2026-09-19: Resumable guided setup](2026-09-19-guided-setup.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

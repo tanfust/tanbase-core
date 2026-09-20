@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-19
+last_verified: 2026-09-20
 ---
 
 # TanBase Core: Features
@@ -131,7 +131,8 @@ non-production branch builds are optional and disabled by default.
 **Acceptance criteria**
 
 - [x] `sendEmail({ to, subject, template, props })` in `src/modules/email`
-- [x] Native Cloudflare Email Service binding with no provider API key
+- [x] Optional native Cloudflare Email Service binding path with no provider
+      API key; omitted from fresh-account setup until sender onboarding
 - [x] React Email templates: verify email, reset password, magic link, task reminder
 - [x] With no sender set, emails log safe metadata instead of sending
 
@@ -477,12 +478,14 @@ responses.
 
 ### F-023: One-click setup
 
-**Module:** launch | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-021
+**Module:** launch | **Priority:** P1 | **Status:** 🚧 In progress | **Depends on:** F-021
 
 **Acceptance criteria**
 
 - [ ] Deploy to Cloudflare button in the README (verify which resources it provisions automatically)
-- [ ] `pnpm setup` covers whatever the button does not: migrations, secrets checklist
+- [x] `pnpm run setup` covers migrations, generated auth secrets, D1
+      provisioning, deployment, smoke checks, safe reruns, and optional-service
+      deferral (`pnpm setup` itself is reserved by pnpm)
 - [ ] Someone outside Tanfust with a fresh Cloudflare account reaches a working deploy in under 15 minutes using only the README
 
 ---

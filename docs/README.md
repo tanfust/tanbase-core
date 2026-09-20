@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-20
 ---
 
 # Documentation index
@@ -11,6 +11,7 @@ last_verified: 2026-09-18
 | Audience             | Read first                    | Purpose                                           |
 | -------------------- | ----------------------------- | ------------------------------------------------- |
 | Evaluators and users | [README](../README.md)        | Product scope and shortest successful start       |
+| New installations    | [Installing](INSTALLING.md)   | Guided local and Cloudflare setup                 |
 | Contributors         | [Development](DEVELOPMENT.md) | Setup, commands, tests, and contribution workflow |
 | Operators            | [Deployment](DEPLOYMENT.md)   | Production deployment, smoke checks, and rollback |
 | Maintainers          | [Overview](OVERVIEW.md)       | Stable product and architecture truth             |

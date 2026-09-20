@@ -24,7 +24,6 @@
       "migrations_pattern": "drizzle/migrations/*.sql",
     },
   ],
-  "send_email": [{ "name": "EMAIL" }],
   "env": {
     "production": {
       "name": "tanbase-core",
@@ -42,7 +41,6 @@
           "migrations_pattern": "drizzle/migrations/*.sql",
         },
       ],
-      "send_email": [{ "name": "EMAIL" }],
     },
   },
 }

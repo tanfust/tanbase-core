@@ -1,7 +1,7 @@
 ---
 status: active
 audience: maintainers, operators, agents
-last_verified: 2026-09-19
+last_verified: 2026-09-20
 ---
 
 # Deployment runbook
@@ -12,6 +12,16 @@ the repository but never receives Cloudflare credentials and never deploys.
 The base Wrangler configuration is local-only. Production builds select the
 `production` Cloudflare environment during `vite build`, because the Vite plugin
 emits flattened environment-specific configuration at build time.
+
+For a fresh clone, prefer the resumable [guided installer](INSTALLING.md):
+
+```sh
+pnpm run setup
+```
+
+It resolves the account, provisions D1, applies migrations before code,
+configures the Better Auth secret without persisting it, deploys, and runs the
+production smoke suite. The manual sections below remain the recovery contract.
 
 ## Required Cloudflare configuration
 
@@ -70,18 +80,20 @@ have passed their own production checks.
 
 ### Transactional email
 
-The email module uses the native `EMAIL` binding and needs no provider API key.
-It is safe by default: while `EMAIL_FROM` is empty, it records only
-non-sensitive delivery metadata and does not send. To enable production email:
+The email module can use the native `EMAIL` binding and needs no provider API
+key. The binding is omitted by default so a fresh Free account can deploy. While
+`EMAIL_FROM` is empty, the module records only non-sensitive delivery metadata
+and does not send. To enable production email:
 
 1. Confirm the account is on Workers Paid; arbitrary outbound recipients are
    not available on the Free plan.
 2. Onboard the sending domain in Cloudflare Email Service and confirm its SPF
    and DKIM records are active.
-3. Set the production `EMAIL_FROM` Wrangler variable to a sender on that domain.
-4. Restrict the production `send_email` binding with
+3. Add the production `send_email` binding named `EMAIL`.
+4. Set the production `EMAIL_FROM` Wrangler variable to a sender on that domain.
+5. Restrict the production `send_email` binding with
    `allowed_sender_addresses` after the exact sender is known.
-5. Regenerate Worker types, run verification and the production dry run, then
+6. Regenerate Worker types, run verification and the production dry run, then
    deploy the same verified commit.
 
 The authenticated operator can inspect onboarding with:

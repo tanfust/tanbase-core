@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-19
+last_verified: 2026-09-20
 ---
 
 # TanBase Core
@@ -11,20 +11,32 @@ Cloudflare Workers. The current foundation runs server-rendered React and static
 assets in the Workers runtime, with repeatable verification and
 Cloudflare-owned production deployments.
 
-The repository now includes the first data-backed slice plus the transactional
-email foundation: D1, Drizzle migrations, ownership-scoped project and task
-repositories, typed React Email templates, and native Cloudflare Email Service
-delivery. Authentication, files, realtime collaboration, background work, AI,
-and MCP remain roadmap items.
+The repository now includes D1 and Drizzle, ownership-scoped project and task
+repositories, Better Auth's D1 core, typed React Email templates, and optional
+native Cloudflare Email Service delivery. Authentication UI, files, realtime
+collaboration, background work, AI, and MCP remain roadmap items.
 
 ## Quick start
 
 Prerequisites: Node.js 22.13 or newer on a supported line, and pnpm 10.11.1.
 
+For a fresh clone, run the guided installer:
+
 ```sh
 pnpm install --frozen-lockfile
-pnpm db:migrate:local
-pnpm db:seed:local
+pnpm run setup
+```
+
+It prepares local development and, after one confirmation, provisions D1,
+configures Better Auth, deploys to Cloudflare, and runs production smoke checks.
+Optional Email Service, custom-domain, Git-integration, and preview setup is
+skipped. See [guided installation](docs/INSTALLING.md) for flags and recovery.
+
+To prepare only local development:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm run setup --local-only
 pnpm dev
 ```
 
@@ -48,7 +60,9 @@ pnpm cf:dry-run:production
 - Isolated local and production configuration targeting one Worker
 - D1 and Drizzle schemas for projects and tasks, with local migrations and seed data
 - Ownership-scoped server repositories backed by composite database constraints
-- Typed transactional email templates with safe local logging and Cloudflare delivery
+- Better Auth core with D1-backed users, sessions, accounts, and verification state
+- Typed transactional email templates with safe logging and optional Cloudflare delivery
+- Resumable guided setup for local development and essential production resources
 - Public `GET /api/health` endpoint with a live database check
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
 - Homepage discovery links and Content Signals for agent-readable resources
@@ -66,6 +80,7 @@ remains deferred until its owning product feature is implemented.
 - [Feature roadmap](docs/FEATURES.md)
 - [Current status](docs/STATUS.md)
 - [Development guide](docs/DEVELOPMENT.md)
+- [Guided installation](docs/INSTALLING.md)
 - [Deployment runbook](docs/DEPLOYMENT.md)
 - [AI agent contract](AGENTS.md)
 

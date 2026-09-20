@@ -1,4 +1,7 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 
 const args = process.argv.slice(2)
 
@@ -20,7 +23,13 @@ if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
 }
 
 const url = new URL(baseUrl)
-const canonicalOrigin = "https://tanbase-core.tanfust.com"
+const siteSource = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "../src/lib/site.ts"),
+  "utf8"
+)
+const canonicalOrigin = siteSource.match(/\borigin:\s*"([^"]+)"/)?.[1]
+
+assert.ok(canonicalOrigin, "src/lib/site.ts must define siteConfig.origin")
 const cacheControl = "public, max-age=300"
 const contentSignal = "ai-train=no, search=yes, ai-input=yes"
 
@@ -84,6 +93,19 @@ assert.equal(
   rootResponse.headers.get("content-signal"),
   contentSignal,
   "root must expose the selected Content Signals policy"
+)
+
+const protectedResponse = await fetchWithTimeout(new URL("/app", url), {
+  redirect: "manual",
+})
+assert.ok(
+  [302, 303, 307, 308].includes(protectedResponse.status),
+  `protected app must redirect without a session, got ${protectedResponse.status}`
+)
+assert.match(
+  protectedResponse.headers.get("location") ?? "",
+  /^\/login\?redirect=%2Fapp(?:&|$)/,
+  "protected app must preserve the requested path in the login redirect"
 )
 
 const rootLinks = rootResponse.headers.get("link") ?? ""

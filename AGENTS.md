@@ -1,7 +1,7 @@
 ---
 status: active
 audience: agents, contributors, maintainers
-last_verified: 2026-09-19
+last_verified: 2026-09-20
 ---
 
 # AI agent operating contract
@@ -51,12 +51,17 @@ change note as current truth. A superseded ADR must link to its replacement.
 The current milestone includes Worker SSR, static assets, local and production
 environments, observability, deployment automation, and D1-backed project/task
 repositories. The server-only email module renders typed React Email templates,
-logs safe metadata when no sender is configured, and sends through the native
-Cloudflare Email Service binding without an API key. Better Auth uses
+logs safe metadata when no sender is configured, and can send through an
+explicitly enabled native Cloudflare Email Service binding without an API key.
+Better Auth uses
 request-scoped D1 storage for users, accounts, sessions, and verification state;
 KV is intentionally not configured for auth. R2, Queues, Workflows, Durable
 Objects, AI, and MCP are not configured yet. The public health endpoint includes
 a minimal D1 check and will be reduced or protected during hardening.
+
+The guided installer owns clone personalization and essential Cloudflare setup.
+It must remain resumable, must never persist production secrets, and must keep
+optional bindings out of the default path.
 
 ## Definition of done
 

@@ -1,4 +1,3 @@
-import { env } from "cloudflare:workers"
 import { describe, expect, it, vi } from "vitest"
 
 import { createEmailSender } from "./send-email.server"
@@ -16,9 +15,7 @@ describe("sendEmail", () => {
   it("logs safe metadata when no sender is configured", async () => {
     const info = vi.fn()
     const send = createEmailSender({
-      environment: {
-        EMAIL: { send: vi.fn() },
-      },
+      environment: {},
       logger: { info },
     })
 
@@ -67,19 +64,17 @@ describe("sendEmail", () => {
     )
   })
 
-  it("sends through the simulated Workers binding", async () => {
+  it("returns a safe error when a sender exists without an Email binding", async () => {
     const send = createEmailSender({
       environment: {
-        EMAIL: env.EMAIL,
         EMAIL_FROM: "TanBase Core <hello@example.com>",
       },
       logger: { info: vi.fn() },
     })
 
-    await expect(send(input)).resolves.toEqual({
-      delivery: "sent",
-      id: expect.any(String),
-    })
+    await expect(send(input)).rejects.toThrow(
+      "Email delivery is not configured"
+    )
   })
 
   it("returns a safe error when the provider rejects delivery", async () => {

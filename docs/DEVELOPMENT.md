@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-19
+last_verified: 2026-09-20
 ---
 
 # Development
@@ -25,6 +25,8 @@ lockfile or supply-chain validation in contributor or CI instructions.
 
 | Command                                          | Purpose                                                              |
 | ------------------------------------------------ | -------------------------------------------------------------------- |
+| `pnpm run setup`                                 | Guided local and production installation                             |
+| `pnpm run setup --local-only`                    | Prepare only isolated local development                              |
 | `pnpm dev`                                       | Run TanStack Start inside the Workers runtime on port 3000           |
 | `pnpm verify`                                    | Format, lint, docs, migration, type, test, boundary, and build gates |
 | `pnpm docs:check`                                | Validate frontmatter, required sections, and internal links          |
@@ -44,6 +46,9 @@ lockfile or supply-chain validation in contributor or CI instructions.
 
 Both are committed. CI regenerates Worker types and fails when the working tree
 changes. Never hand-edit generated files.
+
+`cf:typegen` uses the committed empty `scripts/typegen.env` so ignored local
+secrets never change the committed binding declarations.
 
 Drizzle schema snapshots and SQL under `drizzle/migrations/` are also committed.
 Generate them with `pnpm db:generate`, review the SQL, then apply the SQL with
@@ -67,17 +72,17 @@ and receive an isolated D1 database for each test file.
 
 ## Local email workflow
 
-`sendEmail()` uses the native `EMAIL` binding and defaults to a metadata-only
-log when `EMAIL_FROM` is empty. The log contains only the template name and
-recipient count; it never contains addresses, message bodies, verification
-links, reset tokens, or credentials.
+`sendEmail()` defaults to a metadata-only log when `EMAIL_FROM` is empty. The
+log contains only the template name and recipient count; it never contains
+addresses, message bodies, verification links, reset tokens, or credentials.
+The native `EMAIL` binding is intentionally absent from the default template so
+Email Service onboarding cannot block a fresh account.
 
-For a local simulated delivery, set `EMAIL_FROM` in an ignored `.dev.vars` file
-to an address on an onboarded sender domain. Wrangler logs and stores the
-rendered email locally instead of delivering it because the binding does not
-set `remote: true`. Use only controlled recipients if you deliberately enable a
-remote binding. Templates render both HTML and plain text at send time and have
-Workers-runtime snapshot coverage.
+To exercise the native binding locally, first add `send_email` to the base
+Wrangler configuration, regenerate types, and set `EMAIL_FROM` in ignored
+`.dev.vars` to an address on an onboarded sender domain. Wrangler simulates
+delivery unless the binding explicitly uses `remote: true`. Templates render
+both HTML and plain text at send time and have Workers-runtime coverage.
 
 ## Local authentication workflow
 

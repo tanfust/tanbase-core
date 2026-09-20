@@ -4,7 +4,7 @@ import { renderEmail } from "./render"
 import type { EmailDeliveryResult, SendEmailInput } from "./types"
 
 interface EmailEnvironment {
-  EMAIL: SendEmail
+  EMAIL?: SendEmail
   EMAIL_FROM?: string
 }
 
@@ -47,6 +47,10 @@ export function createEmailSender(
 
     if (!environment.EMAIL_FROM) {
       return logEmail(input, logger)
+    }
+
+    if (!environment.EMAIL) {
+      throw new Error("Email delivery is not configured")
     }
 
     const rendered = await renderEmail(input)
