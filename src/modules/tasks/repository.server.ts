@@ -18,6 +18,13 @@ export interface CreateTaskInput {
   dueAt?: number | null
 }
 
+export interface UpdateTaskInput {
+  title?: string
+  notes?: string | null
+  status?: TaskStatus
+  dueAt?: number | null
+}
+
 export async function createProject(
   userId: string,
   input: CreateProjectInput,
@@ -83,6 +90,38 @@ export async function listProjects(
   })
 }
 
+export async function renameProject(
+  userId: string,
+  projectId: string,
+  name: string,
+  database?: D1Database
+): Promise<Project | null> {
+  const db = getDb(database)
+  const project = (
+    await db
+      .update(projects)
+      .set({ name })
+      .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+      .returning()
+  ).at(0)
+
+  return project ?? null
+}
+
+export async function deleteProject(
+  userId: string,
+  projectId: string,
+  database?: D1Database
+): Promise<boolean> {
+  const db = getDb(database)
+  const deleted = await db
+    .delete(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .returning({ id: projects.id })
+
+  return deleted.length > 0
+}
+
 export async function createTask(
   userId: string,
   input: CreateTaskInput,
@@ -121,4 +160,36 @@ export async function listTasksByProject(
     where: and(eq(tasks.userId, userId), eq(tasks.projectId, projectId)),
     orderBy: [asc(tasks.status), asc(tasks.position), asc(tasks.id)],
   })
+}
+
+export async function updateTask(
+  userId: string,
+  taskId: string,
+  input: UpdateTaskInput,
+  database?: D1Database
+): Promise<Task | null> {
+  const db = getDb(database)
+  const task = (
+    await db
+      .update(tasks)
+      .set({ ...input, updatedAt: Date.now() })
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+      .returning()
+  ).at(0)
+
+  return task ?? null
+}
+
+export async function deleteTask(
+  userId: string,
+  taskId: string,
+  database?: D1Database
+): Promise<boolean> {
+  const db = getDb(database)
+  const deleted = await db
+    .delete(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .returning({ id: tasks.id })
+
+  return deleted.length > 0
 }

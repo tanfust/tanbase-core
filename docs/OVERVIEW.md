@@ -11,9 +11,9 @@ last_verified: 2026-09-19
 
 Open-source full-stack starter for TanStack Start on Cloudflare. The current
 repository proves the Worker runtime, SSR, static assets, environment selection,
-observability, deployment automation, a D1/Drizzle project-and-task data slice,
-and the transactional email module. The remaining application capabilities
-described below are planned unless marked done in
+observability, deployment automation, Better Auth on D1, a responsive
+project-and-task board, settings, and the transactional email module. The
+remaining application capabilities described below are planned unless marked done in
 [FEATURES.md](FEATURES.md).
 
 |              |                                                   |
@@ -78,14 +78,14 @@ Subtasks are tasks with a `parent_id`.
 
 ### User flow
 
-1. Sign up with email (Turnstile check) and verify, or continue with Google or a magic link.
-2. Land on a default project board with three columns.
-3. Create, edit, drag and complete tasks. Set due dates.
-4. Open the same board on a phone. Changes appear live.
-5. Attach files to a task.
-6. Click "Break down" on a task. AI generates subtasks; progress shows while the workflow runs.
-7. Receive an email reminder before a task is due.
-8. Connect Claude or any MCP client and ask "what is due today?" or "add a task".
+1. Sign up with email and password, verify the address, and sign in.
+2. Land on a default project board with todo, doing, and done columns.
+3. Create, edit, delete, and move tasks through explicit controls. Set notes and due dates.
+4. Create, rename, switch, and delete projects from a responsive desktop or mobile shell.
+5. Update the display name and password, or choose light, dark, or system appearance.
+
+Turnstile, rate limiting, Google and magic-link sign-in, drag ordering, realtime,
+files, reminders, AI breakdown, and MCP access remain later feature slices.
 
 ---
 

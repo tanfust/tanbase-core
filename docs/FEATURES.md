@@ -161,15 +161,15 @@ non-production branch builds are optional and disabled by default.
       used because it cannot satisfy Better Auth's atomic secondary-storage
       contract ([ADR-0006](decisions/0006-d1-auth-session-storage.md))
 - [ ] Sign up, verify, sign in, sign out, forgot and reset password all work **in production**, not only locally
-- [ ] Pathless `_app` layout redirects to `/login` without a session and returns to the original URL after sign-in
+- [x] Pathless `_app` layout redirects to `/login` without a session and returns to the original URL after sign-in
 - [x] A default project is created idempotently on first sign-in
 
 **Technical notes**
 
 - Auth instance created per request
 - `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` set per environment
-- The pathless layout already preserves the original URL in the login search;
-  consuming it after sign-in belongs to the auth UI follow-up
+- Redirect values are constrained to same-origin application paths; malformed,
+  absolute, and protocol-relative values fall back to `/app`
 - Hanging requests have been reported with this stack; watch Workers Logs during the production check
 
 **Tests**
@@ -200,21 +200,23 @@ non-production branch builds are optional and disabled by default.
 
 ### F-007: Projects and tasks
 
-**Module:** tasks | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-005
+**Module:** tasks | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-005
 
 **What:** The board itself.
 
 **Acceptance criteria**
 
-- [ ] Board view per project with todo, doing and done columns
-- [ ] Create, edit (title, notes, due date), delete and change status of tasks
-- [ ] Create, rename and delete projects; deleting a project deletes its tasks
-- [ ] Server functions with Zod input validation, TanStack Query with optimistic updates
-- [ ] Empty, loading and error states
+- [x] Board view per project with todo, doing and done columns
+- [x] Create, edit (title, notes, due date), delete and change status of tasks
+- [x] Create, rename and delete projects; deleting a project deletes its tasks
+- [x] Server functions with Zod input validation, TanStack Query with optimistic updates
+- [x] Empty, loading and error states
 
 **Tests**
 
 - Passing another user's task or project id returns not found
+- Isolated local Playwright coverage exercises CRUD, refresh persistence,
+  settings, password reset, sign-out, and mobile shell behavior
 
 ---
 

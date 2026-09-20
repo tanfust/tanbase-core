@@ -11,7 +11,15 @@ const config = defineConfig(({ mode }) => ({
     devtools(),
     ...(mode === "test"
       ? []
-      : [cloudflare({ viteEnvironment: { name: "ssr" } })]),
+      : [
+          cloudflare({
+            configPath:
+              mode === "e2e" ? "wrangler.e2e.jsonc" : "wrangler.jsonc",
+            persistState:
+              mode === "e2e" ? { path: ".wrangler/e2e-state" } : true,
+            viteEnvironment: { name: "ssr" },
+          }),
+        ]),
     tailwindcss(),
     tanstackStart({
       importProtection: {

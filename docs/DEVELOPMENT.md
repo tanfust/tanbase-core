@@ -29,6 +29,7 @@ lockfile or supply-chain validation in contributor or CI instructions.
 | `pnpm run setup --local-only`                    | Prepare only isolated local development                              |
 | `pnpm dev`                                       | Run TanStack Start inside the Workers runtime on port 3000           |
 | `pnpm verify`                                    | Format, lint, docs, migration, type, test, boundary, and build gates |
+| `pnpm test:e2e`                                  | Run the isolated local-D1 authentication and board browser journey   |
 | `pnpm docs:check`                                | Validate frontmatter, required sections, and internal links          |
 | `pnpm db:generate`                               | Generate a migration from the Drizzle schema                         |
 | `pnpm db:check`                                  | Check generated Drizzle migration history                            |
@@ -105,8 +106,19 @@ pnpm dev
 
 With `EMAIL_FROM` empty, verification and reset messages use the safe metadata
 fallback and do not expose their links. Workers-runtime tests inject a fake
-sender and exercise the complete core flow without real delivery. The `/login`
-route is intentionally a placeholder until the auth UI slice.
+sender and exercise the complete core flow without real delivery. The browser
+suite uses `wrangler.e2e.jsonc`, port `3110`, and `.wrangler/e2e-state`; it
+prepares one verified account only in that isolated local D1 database and reads
+reset tokens only from the same local verification storage.
+
+Install the matching browser once with `pnpm exec playwright install chromium`,
+or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an existing compatible Chromium
+binary before running `pnpm test:e2e`.
+
+The public authentication pages cover sign-up, verification guidance, sign-in,
+verification resend, forgot password, and reset password. Protected routes use
+the responsive application shell, while `/settings` manages the display name,
+password, and persisted light, dark, or system appearance.
 
 ## Server-only boundaries
 

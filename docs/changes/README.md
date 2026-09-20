@@ -22,6 +22,7 @@ Records:
 - [2026-09-19: Cloudflare transactional email foundation](2026-09-19-cloudflare-email-foundation.md)
 - [2026-09-19: Better Auth D1 core](2026-09-19-better-auth-d1-core.md)
 - [2026-09-19: Resumable guided setup](2026-09-19-guided-setup.md)
+- [2026-09-20: Authentication and task-board UI](2026-09-20-authentication-task-board-ui.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

@@ -4,10 +4,14 @@ import { describe, expect, it } from "vitest"
 import {
   createProject,
   createTask,
+  deleteProject,
+  deleteTask,
   ensureDefaultProject,
   getProject,
   listProjects,
   listTasksByProject,
+  renameProject,
+  updateTask,
 } from "./repository.server"
 
 describe("project and task repositories", () => {
@@ -138,5 +142,47 @@ describe("project and task repositories", () => {
     await expect(
       listTasksByProject("owner", project.id, env.DB)
     ).resolves.toEqual([])
+  })
+
+  it("renames and deletes only owned projects", async () => {
+    const project = await createProject("owner", { name: "Original" }, env.DB)
+
+    await expect(
+      renameProject("stranger", project.id, "Intrusion", env.DB)
+    ).resolves.toBeNull()
+    await expect(
+      renameProject("owner", project.id, "Renamed", env.DB)
+    ).resolves.toMatchObject({ name: "Renamed" })
+    await expect(deleteProject("stranger", project.id, env.DB)).resolves.toBe(
+      false
+    )
+    await expect(deleteProject("owner", project.id, env.DB)).resolves.toBe(true)
+  })
+
+  it("updates and deletes only owned tasks", async () => {
+    const project = await createProject("owner", { name: "Board" }, env.DB)
+    const task = await createTask(
+      "owner",
+      { projectId: project.id, title: "Draft" },
+      env.DB
+    )
+
+    await expect(
+      updateTask("stranger", task.id, { title: "Intrusion" }, env.DB)
+    ).resolves.toBeNull()
+    await expect(
+      updateTask(
+        "owner",
+        task.id,
+        { title: "Ready", status: "doing", dueAt: 1_800_000_000_000 },
+        env.DB
+      )
+    ).resolves.toMatchObject({
+      title: "Ready",
+      status: "doing",
+      dueAt: 1_800_000_000_000,
+    })
+    await expect(deleteTask("stranger", task.id, env.DB)).resolves.toBe(false)
+    await expect(deleteTask("owner", task.id, env.DB)).resolves.toBe(true)
   })
 })

@@ -118,6 +118,16 @@ describe("Better Auth D1 core", () => {
       throw new Error("Verification email was not queued")
     }
 
+    const resendResponse = await auth.handler(
+      authRequest("/send-verification-email", {
+        email,
+        callbackURL: "/login?verified=true",
+      })
+    )
+    expect(resendResponse.status).toBe(200)
+    await flushDeliveries()
+    expect(deliveries).toHaveLength(2)
+
     expect(await listProjects(signUpBody.user.id, env.DB)).toEqual([])
 
     const verifyResponse = await auth.handler(
@@ -201,5 +211,38 @@ describe("Better Auth D1 core", () => {
       })
     )
     expect(newPasswordResponse.status).toBe(200)
+
+    const updatedCookie = sessionCookie(newPasswordResponse)
+    const updateUserResponse = await auth.handler(
+      authRequest("/update-user", { name: "Updated Owner" }, updatedCookie)
+    )
+    expect(updateUserResponse.status).toBe(200)
+
+    const changedPassword = "final-password-789"
+    const changePasswordResponse = await auth.handler(
+      authRequest(
+        "/change-password",
+        {
+          currentPassword: newPassword,
+          newPassword: changedPassword,
+          revokeOtherSessions: false,
+        },
+        updatedCookie
+      )
+    )
+    expect(changePasswordResponse.status).toBe(200)
+
+    const finalSignInResponse = await auth.handler(
+      authRequest("/sign-in/email", { email, password: changedPassword })
+    )
+    expect(finalSignInResponse.status).toBe(200)
+
+    const invalidResetResponse = await auth.handler(
+      authRequest("/reset-password", {
+        newPassword: "unused-password-123",
+        token: "invalid-token",
+      })
+    )
+    expect(invalidResetResponse.status).toBe(400)
   })
 })

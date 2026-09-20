@@ -24,6 +24,7 @@ export default defineConfig({
   ],
   test: {
     include: ["src/**/*.test.{ts,tsx}"],
+    exclude: ["src/**/*.ui.test.{ts,tsx}"],
     setupFiles: ["./test/apply-migrations.ts"],
   },
 })
