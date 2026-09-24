@@ -1,16 +1,18 @@
 ---
 status: active
 audience: users, maintainers, operators, agents
-last_verified: 2026-09-18
+last_verified: 2026-09-24
 ---
 
 # Agent discovery
 
 TanBase Core publishes a small discovery surface that describes only current,
 public capabilities. The canonical production origin is
-`https://tanbase-core.tanfust.com`. The hostname, certificate, HTTP redirect,
-and HTML discovery baseline were activated and smoke-tested on 2026-09-17;
-Markdown negotiation remains a separate gated capability.
+`https://core.tanbase.dev`
+([ADR-0008](decisions/0008-canonical-production-domain.md)). The HTML discovery
+baseline was first activated and smoke-tested on 2026-09-17 at the former
+`tanbase-core.tanfust.com` hostname, which now redirects to the canonical
+origin. Markdown negotiation remains a separate gated capability.
 
 ## Published resources
 
@@ -34,8 +36,8 @@ the canonical sitemap.
 The homepage advertises these truthful HTTP links:
 
 ```http
-Link: <https://tanbase-core.tanfust.com/llms.txt>; rel="describedby"; type="text/markdown"
-Link: <https://tanbase-core.tanfust.com/sitemap.xml>; rel="related"; type="application/xml"
+Link: <https://core.tanbase.dev/llms.txt>; rel="describedby"; type="text/markdown"
+Link: <https://core.tanbase.dev/sitemap.xml>; rel="related"; type="application/xml"
 ```
 
 Both relation tokens are registered by IANA. Sitemap location is also published
@@ -56,7 +58,7 @@ a preference and do not technically prevent access.
 ## Markdown negotiation
 
 Markdown for Agents is a Cloudflare zone-edge capability, not an application
-route or Worker binding. Once enabled for `tanbase-core.tanfust.com`, a request
+route or Worker binding. Once enabled for `core.tanbase.dev`, a request
 to `/` with `Accept: text/markdown` must return the converted page with:
 
 - `Content-Type: text/markdown; charset=utf-8`
@@ -69,11 +71,12 @@ document. The feature is not complete until the canonical production URL passes
 the live smoke command with `--expect-markdown`; local Worker runs do not
 simulate Cloudflare's zone-level conversion.
 
-The `tanfust.com` zone was confirmed on the Free plan on 2026-09-17. Its
-Cloudflare dashboard marks Markdown for Agents as disabled and Pro-only, and a
-live `Accept: text/markdown` request currently returns HTTP 500. Do not claim
-Markdown negotiation until the zone is upgraded, the edge feature is enabled,
-and the opt-in smoke gate passes.
+The `tanbase.dev` zone was confirmed on the Free plan on 2026-09-24, and
+Cloudflare documents Markdown for Agents for Pro, Business, and Enterprise
+zones. The former `tanfust.com` zone was also Free and returned HTTP 500 for a
+live `Accept: text/markdown` request on 2026-09-17. Do not claim Markdown
+negotiation until the zone is upgraded, the edge feature is enabled, and the
+opt-in smoke gate passes.
 
 ## Capability gates
 
@@ -101,20 +104,23 @@ only when the named capability exists and can be verified:
 
 ## Production activation
 
-`tanbase-core.tanfust.com` is attached to the production `tanbase-core` Worker.
-Cloudflare terminates TLS and redirects the HTTP root to the exact HTTPS URL.
-Verify the active HTML discovery baseline with:
+`core.tanbase.dev` is attached to the production `tanbase-core` Worker.
+Cloudflare terminates TLS, and the zone's **Always Use HTTPS** setting redirects
+HTTP to the exact HTTPS URL. The former `tanbase-core.tanfust.com` hostname
+permanently redirects to the canonical origin, as described in the
+[deployment runbook](DEPLOYMENT.md). Verify the active HTML discovery baseline
+with:
 
 ```sh
-pnpm smoke -- --url https://tanbase-core.tanfust.com --environment production
+pnpm smoke -- --url https://core.tanbase.dev --environment production
 ```
 
 After the zone supports the feature, enable **Markdown for Agents** in **AI
 Crawl Control** or through a Configuration Rule scoped to
-`tanbase-core.tanfust.com`, then run the additional negotiation gate:
+`core.tanbase.dev`, then run the additional negotiation gate:
 
 ```sh
-pnpm smoke -- --url https://tanbase-core.tanfust.com --environment production --expect-markdown
+pnpm smoke -- --url https://core.tanbase.dev --environment production --expect-markdown
 ```
 
 Record the deployed commit, URL, UTC date, and smoke result in

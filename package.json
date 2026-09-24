@@ -32,7 +32,7 @@
     "cf:typegen": "wrangler types src/worker-configuration.d.ts --env-file scripts/typegen.env",
     "cf:build:production": "cross-env CLOUDFLARE_ENV=production vite build",
     "cf:dry-run:production": "pnpm cf:build:production && wrangler deploy --dry-run",
-    "cf:deploy:production": "pnpm cf:build:production && pnpm db:migrate:production && wrangler deploy",
+    "cf:deploy:production": "pnpm cf:build:production && pnpm db:migrate:production && wrangler deploy && node scripts/smoke-after-deploy.mjs",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {

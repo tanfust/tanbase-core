@@ -1,7 +1,7 @@
 ---
 status: active
 audience: maintainers, operators, agents
-last_verified: 2026-09-20
+last_verified: 2026-09-24
 ---
 
 # Deployment runbook
@@ -109,29 +109,51 @@ not use it for newsletters or bulk marketing.
 
 ### Canonical production domain
 
-Attach `tanbase-core.tanfust.com` to the production Worker. Cloudflare must
-provision DNS and the edge certificate before the URL is available.
+The canonical origin is `https://core.tanbase.dev`
+([ADR-0008](decisions/0008-canonical-production-domain.md)). It is attached to
+the production Worker as a custom domain in the `tanbase.dev` zone. Cloudflare
+must provision DNS and the edge certificate before the URL is available.
 
-Keep the hostname-scoped HTTP-to-HTTPS redirect at the edge, preserving path and
-query string. Verify it independently:
+Keep **Always Use HTTPS** enabled on the `tanbase.dev` zone. `.dev` is
+HSTS-preloaded, so browsers only use HTTPS; the edge redirect covers other
+clients. Verify it independently:
 
 ```sh
-curl --head http://tanbase-core.tanfust.com/
+curl --head http://core.tanbase.dev/
 ```
 
-The response must be `301` or `308` with
-`Location: https://tanbase-core.tanfust.com/`.
+The response must be `301` or `308` with `Location: https://core.tanbase.dev/`.
+
+Zone redirect rules complete the topology:
+
+| Source                                  | Target                                       | Status |
+| --------------------------------------- | -------------------------------------------- | ------ |
+| `tanbase-core.tanfust.com/*`            | `https://core.tanbase.dev/*`, query retained | 301    |
+| `tanbase.dev/*` and `www.tanbase.dev/*` | `https://core.tanbase.dev/*`, query retained | 302    |
+
+The former hostname stays attached to the Worker so Cloudflare keeps its DNS
+record and certificate; the redirect rule runs before the Worker. The apex
+redirect is temporary because the apex is reserved for the TanBase brand site.
+Single Redirects require proxied DNS records, so the apex and `www` use
+proxied `AAAA 100::` placeholders.
+
+Better Auth accepts requests only from `BETTER_AUTH_URL`. When the canonical
+origin changes, update `src/lib/site.ts`, `src/modules/seo/llms.txt`, and the
+production `BETTER_AUTH_URL` together, run `pnpm cf:typegen`, and enable the
+redirect from the former hostname immediately after that deployment. Forks keep
+the installer's `workers.dev` origin until they attach their own domain.
 
 ### Markdown for Agents
 
-Markdown negotiation is a `tanfust.com` zone feature, not Worker source or a
+Markdown negotiation is a `tanbase.dev` zone feature, not Worker source or a
 binding. After the zone is on a supported plan, enable **Markdown for Agents**
 in **AI Crawl Control**, optionally through a Configuration Rule restricted to
-`tanbase-core.tanfust.com`, then run the opt-in production smoke check.
+`core.tanbase.dev`, then run the opt-in production smoke check.
 
-As of 2026-09-17, the zone is on the Free plan and the dashboard exposes the
-feature as Pro-only. HTML discovery can ship independently. Do not add an
-application-side converter as a fallback.
+As of 2026-09-24, the `tanbase.dev` zone is on the Free plan and Cloudflare
+documents the feature for Pro, Business, and Enterprise zones. HTML discovery
+can ship independently. Do not add an application-side converter as a
+fallback.
 
 ## Local gates
 
@@ -157,6 +179,9 @@ For a push to `main`, Workers Builds:
 2. Builds with `CLOUDFLARE_ENV=production`.
 3. Applies pending additive migrations to `tanbase-core-production`.
 4. Deploys the same commit as the active production version.
+5. Runs the production smoke suite against the canonical origin, retrying up
+   to three times while the edge converges. A failure marks the build as failed
+   but does not roll back the deployment.
 
 Protect `main` and require successful CI and review. Do not enable a second
 remote deployment workflow in GitHub Actions.
@@ -185,17 +210,20 @@ This command changes live Cloudflare state and is for explicit recovery only:
 pnpm cf:deploy:production
 ```
 
+It ends with the same post-deploy production smoke check as Workers Builds.
+
 Environment selection belongs in the build command. Do not build once and
 attempt to retarget the generated configuration during deployment.
 
 ## Production smoke checks
 
 ```sh
-pnpm smoke -- --url https://tanbase-core.tanfust.com --environment production
+pnpm smoke -- --url https://core.tanbase.dev --environment production
 # Only after Cloudflare Markdown for Agents is enabled:
-pnpm smoke -- --url https://tanbase-core.tanfust.com --environment production --expect-markdown
+pnpm smoke -- --url https://core.tanbase.dev --environment production --expect-markdown
 ```
 
+For production, `--url` defaults to the canonical origin in `src/lib/site.ts`.
 The script checks the database-aware health contract, SSR document, canonical
 metadata, discovery headers, sitemap, robots policy, truthful `llms.txt`, and
 absence of a server-error page. Record the commit, URL, UTC date, Worker version,

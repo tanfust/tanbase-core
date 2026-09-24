@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-19
+last_verified: 2026-09-24
 ---
 
 # TanBase Core
@@ -16,12 +16,12 @@ project-and-task board, settings, and the transactional email module. The
 remaining application capabilities described below are planned unless marked done in
 [FEATURES.md](FEATURES.md).
 
-|              |                                                   |
-| ------------ | ------------------------------------------------- |
-| Status       | Production D1 migrated; Worker deployment pending |
-| License      | MIT                                               |
-| Repo         | github.com/tanfust/tanbase-core (public)          |
-| Last updated | 2026-09-19                                        |
+|              |                                                      |
+| ------------ | ---------------------------------------------------- |
+| Status       | Deployed at core.tanbase.dev; auth hardening pending |
+| License      | MIT                                                  |
+| Repo         | github.com/tanfust/tanbase-core (public)             |
+| Last updated | 2026-09-24                                           |
 
 ---
 
@@ -370,7 +370,7 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 1. **MCP auth.** Better Auth as an OAuth provider for MCP clients, or personal access tokens? OAuth fits the Claude connector flow; tokens are simpler. Decide at F-015 after checking current Better Auth and Agents SDK support.
 2. **UI source.** Consume the `tanfust/ui` registry, or install shadcn/ui components directly?
 3. **AI model.** Which Workers AI model returns valid subtask JSON reliably at the lowest cost? Decide at F-013 from the current catalog.
-4. **Demo domain.** Where does the public demo live?
+4. **Demo domain.** Resolved: `https://core.tanbase.dev`, with the apex reserved for the TanBase brand site ([ADR-0008](decisions/0008-canonical-production-domain.md)).
 
 ## Risks
 
