@@ -66,6 +66,21 @@ Production, before this change:
 - `wrangler d1 migrations list DB --env production --remote` reported no pending
   migrations.
 
+`tanbase.dev` zone, before merge (verified 2026-09-24 20:01 UTC):
+
+- The zone API reports Always Use HTTPS `on`, proxied `AAAA 100::` records for
+  `tanbase.dev` and `www.tanbase.dev`, and one redirect rule
+  `(http.host in {"tanbase.dev" "www.tanbase.dev"})` with a dynamic `302` target
+  `concat("https://core.tanbase.dev", http.request.uri.path)` and the query
+  string preserved.
+- `curl` returned `302` from `https://tanbase.dev/docs/x?a=1&b=2` to
+  `https://core.tanbase.dev/docs/x?a=1&b=2`, and from
+  `https://www.tanbase.dev/login?redirect=%2Fapp` to
+  `https://core.tanbase.dev/login?redirect=%2Fapp`. HTTP apex and `www`
+  requests reach the canonical origin in one hop.
+- `curl` returned `301` from `http://core.tanbase.dev/login?redirect=%2Fapp` to
+  the same HTTPS URL; `https://core.tanbase.dev/` returned `200`.
+
 Local:
 
 - `pnpm verify` — passed: formatting, lint, 35 maintained documents, Drizzle
