@@ -32,7 +32,9 @@ temporary `302`, preserving path and query string.
 
 `tanbase-core.tanfust.com` remains attached to the Worker so its DNS record and
 certificate stay managed, and a `tanfust.com` zone redirect rule sends it to the
-canonical origin with a permanent `301`, preserving path and query string.
+canonical origin with a permanent `301`, preserving path and query string. This
+paragraph was amended on 2026-09-24; see
+[Amendment](#amendment-2026-09-24).
 
 Redirects are zone rules, not Worker code, so the application stays
 host-agnostic apart from its one configured origin. Forks keep the guided
@@ -56,3 +58,11 @@ TanBase brand. Keeping `tanbase-core.tanfust.com` was rejected because it ties
 the product's identity, auth URL, and sender reputation to the agency domain. A
 Worker-level host redirect was rejected because a zone rule runs before the
 Worker and keeps redirect policy out of application code.
+
+## Amendment (2026-09-24)
+
+The redirect for the former hostname was not implemented. Right after the
+canonical-origin deployment, the operator removed `tanbase-core.tanfust.com`
+from the Worker, which deleted its DNS record, so the hostname no longer
+resolves. It had no users or known external links, so a permanent redirect rule
+in the agency zone was not worth maintaining. The rest of this decision stands.

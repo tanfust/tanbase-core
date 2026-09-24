@@ -50,9 +50,10 @@ Operator actions:
   UTC, Worker version `dfc781da`). Enable **Always Use HTTPS** on the
   `tanbase.dev` zone, add proxied `AAAA 100::` records for `tanbase.dev` and
   `www.tanbase.dev`, and add the temporary `302` apex and `www` redirect rule.
-- Immediately after the deployment: add the `301` redirect rule from
-  `tanbase-core.tanfust.com` to `https://core.tanbase.dev` in the `tanfust.com`
-  zone, preserving path and query string.
+- Immediately after the deployment, the former hostname was retired instead of
+  redirected: the operator removed `tanbase-core.tanfust.com` from the Worker,
+  which deleted its DNS record. The planned `301` rule was not added; see the
+  [ADR-0008 amendment](../decisions/0008-canonical-production-domain.md#amendment-2026-09-24).
 
 ## Validation evidence
 
@@ -81,6 +82,14 @@ Production, before this change:
 - `curl` returned `301` from `http://core.tanbase.dev/login?redirect=%2Fapp` to
   the same HTTPS URL; `https://core.tanbase.dev/` returned `200`.
 
+Former hostname, after the deployment (verified 2026-09-24 20:46 UTC):
+
+- The Worker's only custom domain is `core.tanbase.dev`; the `tanfust.com` zone
+  has no record for `tanbase-core.tanfust.com`, `dig` returns no address, and
+  `curl https://tanbase-core.tanfust.com/` cannot resolve the host.
+- Before it was removed, a sign-in `POST` with that origin returned `403`,
+  confirming the former hostname could no longer authenticate users.
+
 Local:
 
 - `pnpm verify` — passed: formatting, lint, 35 maintained documents, Drizzle
@@ -96,23 +105,22 @@ Local:
 
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                                     |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------------------------------------ |
-| Local      | Working tree based on `fcdee3c` | `http://localhost:3000`    | 2026-09-24 | Verify, dry run, typegen, and smoke passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed                               |
+| Target     | Commit                                | URL                        | Date                 | Result                                                                                           |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| Local      | Working tree based on `fcdee3c`       | `http://localhost:3000`    | 2026-09-24           | Verify, dry run, typegen, and smoke passed                                                       |
+| Production | `0c6ea5a` / Worker version `b469d461` | `https://core.tanbase.dev` | 2026-09-24 20:08 UTC | Workers Build `fbf5f087` post-deploy smoke passed on the first attempt; independent smoke passed |
 
 ## Rollback notes
 
-Roll back the Worker to the previous version in Cloudflare, disable the
-`tanbase-core.tanfust.com` redirect rule, then revert this change so the
-canonical origin and `BETTER_AUTH_URL` return to the former hostname together.
+Roll back the Worker to the previous version in Cloudflare, re-attach
+`tanbase-core.tanfust.com` as a Worker custom domain, then revert this change so
+the canonical origin and `BETTER_AUTH_URL` return to the former hostname
+together.
 The apex redirect and Always Use HTTPS are independent and can remain. No data
 change is involved.
 
 ## Remaining work
 
-- Record the canonical-origin production smoke and redirect evidence after the
-  deployment.
 - Enable GitHub branch protection on `main` with required CI.
 - F-006 Turnstile and auth rate limits, then the restricted production `EMAIL`
   binding and `EMAIL_FROM` on the onboarded `send.tanbase.dev` sender domain

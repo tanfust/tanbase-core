@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-20
+last_verified: 2026-09-24
 ---
 
 # TanBase Core: Features
@@ -40,7 +40,7 @@ preventing unused infrastructure from entering the template.
 
 #### F-001A: Worker foundation
 
-**Status:** 🟡 In Progress
+**Status:** ✅ Done
 
 **Acceptance criteria**
 
@@ -51,7 +51,7 @@ preventing unused infrastructure from entering the template.
 - [x] `GET /api/health` returns the exact foundation contract without caching
 - [x] Worker binding types are generated and committed
 - [x] Server-only import protection is enforced and tested with a deliberate violation
-- [ ] Production deploy from `main` passes remote smoke
+- [x] Production deploy from `main` passes remote smoke
 
 #### F-001B: Product-backed binding slices
 
@@ -70,7 +70,7 @@ preventing unused infrastructure from entering the template.
 
 ### F-002: CI and production deployment
 
-**Module:** platform | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-001A
+**Module:** platform | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-001A
 
 **What:** GitHub Actions verifies every pull request and push without deployment
 credentials. Cloudflare Workers Builds owns remote deployment from `main`;
@@ -84,7 +84,7 @@ non-production branch builds are optional and disabled by default.
 - [x] GitHub Actions contains no remote deployment job or Cloudflare credential reference
 - [x] Cloudflare Workers Builds uses `main` as the production branch
 - [x] Non-production branch builds and Preview URLs are disabled in Cloudflare
-- [ ] The first production build passes remote smoke checks
+- [x] The first production build passes remote smoke checks
 
 ---
 
