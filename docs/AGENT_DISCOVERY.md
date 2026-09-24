@@ -11,8 +11,8 @@ public capabilities. The canonical production origin is
 `https://core.tanbase.dev`
 ([ADR-0008](decisions/0008-canonical-production-domain.md)). The HTML discovery
 baseline was first activated and smoke-tested on 2026-09-17 at the former
-`tanbase-core.tanfust.com` hostname, which now redirects to the canonical
-origin. Markdown negotiation remains a separate gated capability.
+`tanbase-core.tanfust.com` hostname, which was retired on 2026-09-24. Markdown
+negotiation remains a separate gated capability.
 
 ## Published resources
 
@@ -106,10 +106,9 @@ only when the named capability exists and can be verified:
 
 `core.tanbase.dev` is attached to the production `tanbase-core` Worker.
 Cloudflare terminates TLS, and the zone's **Always Use HTTPS** setting redirects
-HTTP to the exact HTTPS URL. The former `tanbase-core.tanfust.com` hostname
-permanently redirects to the canonical origin, as described in the
-[deployment runbook](DEPLOYMENT.md). Verify the active HTML discovery baseline
-with:
+HTTP to the exact HTTPS URL. The apex and `www` redirect to the canonical
+origin, as described in the [deployment runbook](DEPLOYMENT.md). Verify the
+active HTML discovery baseline with:
 
 ```sh
 pnpm smoke -- --url https://core.tanbase.dev --environment production
