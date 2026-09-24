@@ -29,7 +29,7 @@
       "name": "tanbase-core",
       "vars": {
         "APP_ENV": "production",
-        "BETTER_AUTH_URL": "https://tanbase-core.tanfust.com",
+        "BETTER_AUTH_URL": "https://core.tanbase.dev",
         "EMAIL_FROM": "",
       },
       "d1_databases": [

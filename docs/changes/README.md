@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-20
+last_verified: 2026-09-24
 ---
 
 # Change records
@@ -23,6 +23,7 @@ Records:
 - [2026-09-19: Better Auth D1 core](2026-09-19-better-auth-d1-core.md)
 - [2026-09-19: Resumable guided setup](2026-09-19-guided-setup.md)
 - [2026-09-20: Authentication and task-board UI](2026-09-20-authentication-task-board-ui.md)
+- [2026-09-24: Canonical origin on core.tanbase.dev](2026-09-24-canonical-tanbase-dev.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

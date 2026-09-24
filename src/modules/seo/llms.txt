@@ -5,7 +5,7 @@ Cloudflare Workers.
 
 ## Canonical resources
 
-- Production origin: https://tanbase-core.tanfust.com/
+- Production origin: https://core.tanbase.dev/
 - Source repository: https://github.com/tanfust/tanbase-core
 - Public overview: https://github.com/tanfust/tanbase-core/blob/main/README.md
 - Architecture: https://github.com/tanfust/tanbase-core/blob/main/docs/OVERVIEW.md

@@ -10,19 +10,6 @@ function option(name) {
   return index >= 0 ? args[index + 1] : undefined
 }
 
-const baseUrl = option("url")
-const environment = option("environment")
-const expectMarkdown = args.includes("--expect-markdown")
-const allowedEnvironments = new Set(["local", "production"])
-
-if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
-  console.error(
-    "Usage: pnpm smoke -- --url <url> --environment <local|production> [--expect-markdown]"
-  )
-  process.exit(1)
-}
-
-const url = new URL(baseUrl)
 const siteSource = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "../src/lib/site.ts"),
   "utf8"
@@ -30,6 +17,22 @@ const siteSource = readFileSync(
 const canonicalOrigin = siteSource.match(/\borigin:\s*"([^"]+)"/)?.[1]
 
 assert.ok(canonicalOrigin, "src/lib/site.ts must define siteConfig.origin")
+
+const environment = option("environment")
+// Production defaults to the canonical origin; local runs must name their URL.
+const baseUrl =
+  option("url") ?? (environment === "production" ? canonicalOrigin : undefined)
+const expectMarkdown = args.includes("--expect-markdown")
+const allowedEnvironments = new Set(["local", "production"])
+
+if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
+  console.error(
+    "Usage: pnpm smoke -- [--url <url>] --environment <local|production> [--expect-markdown]\n--url is required for local and defaults to the canonical origin for production."
+  )
+  process.exit(1)
+}
+
+const url = new URL(baseUrl)
 const cacheControl = "public, max-age=300"
 const contentSignal = "ai-train=no, search=yes, ai-input=yes"
 
