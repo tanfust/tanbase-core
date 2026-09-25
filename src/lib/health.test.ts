@@ -33,6 +33,7 @@ describe("health response", () => {
         database: env.DB,
         files: env.FILES,
         realtime: env.BOARD.getByName("health"),
+        version: env.CF_VERSION_METADATA.id,
       })
 
       expect(response.status).toBe(200)
@@ -41,6 +42,7 @@ describe("health response", () => {
         status: "ok",
         service: "tanbase-core",
         environment,
+        version: env.CF_VERSION_METADATA.id,
         checks: { database: "ok", files: "ok", realtime: "ok" },
       })
     }
@@ -56,6 +58,7 @@ describe("health response", () => {
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toMatchObject({
       status: "ok",
+      version: null,
       checks: { database: "ok", files: "disabled", realtime: "disabled" },
     })
   })
@@ -86,6 +89,7 @@ describe("health response", () => {
       status: "error",
       service: "tanbase-core",
       environment: "production",
+      version: null,
       checks: { database: "error", files: "error", realtime: "error" },
     })
     expect(body).not.toContain("private")

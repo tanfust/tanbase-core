@@ -31,6 +31,8 @@ interface HealthDependencies {
   files?: R2Bucket | null
   /** The health room, or null when the installation has no BOARD binding. */
   realtime?: RealtimeProbe | null
+  /** The running Worker version, so deploy smoke can wait for it. */
+  version?: string | null
   cache?: HealthCache
 }
 
@@ -62,7 +64,7 @@ async function cachedCheck(
 
 export async function createHealthResponse(
   environment: string,
-  { cache, database, files, realtime }: HealthDependencies
+  { cache, database, files, realtime, version }: HealthDependencies
 ): Promise<Response> {
   const [databaseStatus, filesStatus, realtimeStatus] = await Promise.all([
     cachedCheck(
@@ -87,6 +89,7 @@ export async function createHealthResponse(
       status: healthy ? "ok" : "error",
       service: "tanbase-core",
       environment: normalizeAppEnvironment(environment),
+      version: version ?? null,
       checks: {
         database: databaseStatus,
         files: filesStatus,

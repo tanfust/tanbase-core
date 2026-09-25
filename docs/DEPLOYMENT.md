@@ -238,6 +238,11 @@ production, roll back the Worker version first.
 ([ADR-0009](decisions/0009-public-health-endpoint.md)). A successful D1 check is
 cached for 30 seconds in each Cloudflare location; failures are never cached.
 Clients always receive `Cache-Control: no-store` and the same JSON contract.
+Its `version` field is the running Worker version ID from the
+`CF_VERSION_METADATA` binding, or `null` without the binding, so smoke can tell
+which version answered. `pnpm smoke -- --environment production
+--expect-version <id>` exits with status `3` while the edge serves another
+version.
 
 ### Analytics
 
@@ -333,9 +338,13 @@ For a push to `main`, Workers Builds:
 2. Builds with `CLOUDFLARE_ENV=production`.
 3. Applies pending additive migrations to `tanbase-core-production`.
 4. Deploys the same commit as the active production version.
-5. Runs the production smoke suite against the canonical origin, retrying up
-   to three times while the edge converges. A failure marks the build as failed
-   but does not roll back the deployment.
+5. Runs the production smoke suite against the canonical origin. Some
+   Cloudflare locations keep serving the previous version for a minute or more,
+   so `scripts/smoke-after-deploy.mjs` reads the new deployment's version from
+   `wrangler deployments status` and waits up to three minutes for
+   `/api/health` to report it. Only then do the smoke assertions run, retrying
+   up to three times. A failure marks the build as failed but does not roll
+   back the deployment.
 
 Protect `main` and require successful CI and review. Do not enable a second
 remote deployment workflow in GitHub Actions.

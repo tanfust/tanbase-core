@@ -77,7 +77,19 @@ Local:
 | Target     | Commit                          | URL                        | Date       | Result                                    |
 | ---------- | ------------------------------- | -------------------------- | ---------- | ----------------------------------------- |
 | Local      | Working tree based on `fbaf405` | `http://localhost:3110`    | 2026-09-25 | Verify, browser suite, and dry run passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed                              |
+| Production | `eb0e127` / version `d7d9401f`  | `https://core.tanbase.dev` | 2026-09-25 | Deployed; smoke passed independently      |
+
+Production:
+
+- Workers Build `4bbe27e4` deployed merge `eb0e127` as Worker version
+  `d7d9401f` at 22:06 UTC, creating the `BoardRoom` class. Its post-deploy
+  smoke failed all three attempts because the Singapore location that
+  answered it still served versions `27b14b56` and `3240ddca`, whose health
+  response has no `realtime` check. Worker logs confirm the versions; see
+  [the deploy smoke change](2026-09-25-deploy-smoke-version.md).
+- An independent `pnpm smoke -- --environment production` passed against
+  `d7d9401f` at 22:10 UTC with `realtime: ok`. The live CSP `connect-src` is
+  `'self' wss://core.tanbase.dev https://*.posthog.com`.
 
 ## Rollback notes
 

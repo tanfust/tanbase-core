@@ -25,11 +25,16 @@ const environment = option("environment")
 const baseUrl =
   option("url") ?? (environment === "production" ? canonicalOrigin : undefined)
 const expectMarkdown = args.includes("--expect-markdown")
+// Comma-separated Worker version IDs, one of which the target must serve.
+const expectedVersions = option("expect-version")?.split(",") ?? null
+// Exit status while the edge still serves another version, so the
+// post-deploy runner can keep waiting instead of reporting a failure.
+const notYetServedStatus = 3
 const allowedEnvironments = new Set(["local", "production"])
 
 if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
   console.error(
-    "Usage: pnpm smoke -- [--url <url>] --environment <local|production> [--expect-markdown]\n--url is required for local and defaults to the canonical origin for production."
+    "Usage: pnpm smoke -- [--url <url>] --environment <local|production> [--expect-markdown] [--expect-version <id,...>]\n--url is required for local and defaults to the canonical origin for production."
   )
   process.exit(1)
 }
@@ -74,10 +79,27 @@ assert.equal(
   "no-store",
   "health endpoint must not be cached"
 )
-assert.deepEqual(await healthResponse.json(), {
+
+const health = await healthResponse.json()
+
+if (expectedVersions && !expectedVersions.includes(health.version)) {
+  console.error(
+    `${url.origin} serves Worker version ${health.version ?? "unknown"}, not ${expectedVersions.join(" or ")}.`
+  )
+  process.exit(notYetServedStatus)
+}
+
+assert.ok(
+  environmentConfig(environment).version_metadata
+    ? typeof health.version === "string" && health.version.length > 0
+    : health.version === null,
+  "health endpoint must report the running Worker version"
+)
+assert.deepEqual(health, {
   status: "ok",
   service: "tanbase-core",
   environment,
+  version: health.version,
   checks: {
     database: "ok",
     files: environmentConfig(environment).r2_buckets?.some(
