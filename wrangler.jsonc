@@ -30,6 +30,11 @@
       "simple": { "limit": 10, "period": 60 },
     },
   ],
+  // One BoardRoom per owner and project relays live board events.
+  "durable_objects": {
+    "bindings": [{ "name": "BOARD", "class_name": "BoardRoom" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BoardRoom"] }],
   // Task attachments. Local development uses Wrangler's simulated bucket.
   "r2_buckets": [
     {
@@ -75,6 +80,10 @@
           "allowed_sender_addresses": ["noreply@send.tanbase.dev"],
         },
       ],
+      "durable_objects": {
+        "bindings": [{ "name": "BOARD", "class_name": "BoardRoom" }],
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BoardRoom"] }],
       // Requires R2 to be enabled on the account and the bucket to exist
       // before deployment. The guided installer creates it or removes this.
       "r2_buckets": [

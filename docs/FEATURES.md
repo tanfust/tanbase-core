@@ -300,20 +300,32 @@ non-production branch builds are optional and disabled by default.
 
 ### F-011: Live board
 
-**Module:** realtime | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-007
+**Module:** realtime | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007
 
 **Acceptance criteria**
 
-- [ ] `BoardRoom` Durable Object per project using the WebSocket Hibernation API, with no timers
-- [ ] `/api/realtime/:projectId` checks session and ownership before forwarding the upgrade
-- [ ] Task mutations call `BoardRoom.broadcast()` over RPC after the D1 write succeeds
-- [ ] Clients apply events to the Query cache, reconnect with backoff, and refetch after reconnecting
-- [ ] Two devices see a change in under 1 second
+- [x] `BoardRoom` Durable Object per project using the WebSocket Hibernation API, with no timers
+- [x] `/api/realtime/:projectId` checks session and ownership before forwarding the upgrade
+- [x] Task mutations call `BoardRoom.broadcast()` over RPC after the D1 write succeeds
+- [x] Clients apply events to the Query cache, reconnect with backoff, and refetch after reconnecting
+- [ ] Two devices see a change in under 1 second (4 ms and 10 ms locally; production pending)
 - [ ] An idle room with an open socket hibernates (no duration growth in the dashboard)
 
 **Technical notes**
 
 - The Durable Object stores no app data. D1 stays the source of truth.
+- Rooms are named `{userId}:{projectId}`, so a socket can only join its owner's
+  room. `src/server.ts` dispatches the upgrade before TanStack Start, after
+  checking the WebSocket upgrade, a same-origin `Origin`, the session, and
+  project ownership.
+- Heartbeats use `setWebSocketAutoResponse("ping" → "pong")`, so they never
+  wake a hibernated room; clients send one every 30 seconds.
+- Events are `task.upserted`, `task.deleted` (removing subtasks), and
+  `project.renamed` or `project.deleted`. Updates never replace a newer cached
+  copy, so a device's own echo is harmless. Creating a project sends no event.
+- The CSP adds the page's own `wss:` origin to `connect-src`.
+- `GET /api/health` reports `checks.realtime` through an RPC to a dedicated
+  health room.
 
 ---
 

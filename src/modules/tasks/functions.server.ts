@@ -9,6 +9,7 @@ import {
   getFilesBucket,
   removeStoredObjects,
 } from "@/modules/files/storage.server"
+import { publishBoardEvent } from "@/modules/realtime/rooms.server"
 
 import type { BoardSnapshot, ProjectView, TaskView } from "./contracts"
 import {
@@ -17,6 +18,7 @@ import {
   deleteProject as deleteProjectRecord,
   deleteTask as deleteTaskRecord,
   getProject,
+  getTask,
   listProjects,
   listTasksByProject,
   renameProject as renameProjectRecord,
@@ -99,7 +101,12 @@ export async function renameProjectImpl(
   const userId = await requireUserId()
   const project = await renameProjectRecord(userId, input.projectId, input.name)
   if (!project) throw new Error("Project not found")
-  return toProjectView(project)
+  const view = toProjectView(project)
+  publishBoardEvent(userId, project.id, {
+    type: "project.renamed",
+    project: view,
+  })
+  return view
 }
 
 export async function deleteProjectImpl(
@@ -112,6 +119,10 @@ export async function deleteProjectImpl(
     throw new Error("Project not found")
   }
   await removeStoredObjects(getFilesBucket(), keys)
+  publishBoardEvent(userId, input.projectId, {
+    type: "project.deleted",
+    projectId: input.projectId,
+  })
   return { id: input.projectId }
 }
 
@@ -119,7 +130,9 @@ export async function createTaskImpl(
   input: z.infer<typeof createTaskInputSchema>
 ) {
   const userId = await requireUserId()
-  return toTaskView(await createTaskRecord(userId, input))
+  const task = toTaskView(await createTaskRecord(userId, input))
+  publishBoardEvent(userId, task.projectId, { type: "task.upserted", task })
+  return task
 }
 
 export async function updateTaskImpl(
@@ -127,20 +140,29 @@ export async function updateTaskImpl(
 ) {
   const userId = await requireUserId()
   const { taskId, ...changes } = input
-  const task = await updateTaskRecord(userId, taskId, changes)
-  if (!task) throw new Error("Task not found")
-  return toTaskView(task)
+  const updated = await updateTaskRecord(userId, taskId, changes)
+  if (!updated) throw new Error("Task not found")
+  const task = toTaskView(updated)
+  publishBoardEvent(userId, task.projectId, { type: "task.upserted", task })
+  return task
 }
 
 export async function deleteTaskImpl(
   input: z.infer<typeof deleteTaskInputSchema>
 ) {
   const userId = await requireUserId()
+  const task = await getTask(userId, input.taskId)
+  if (!task) throw new Error("Task not found")
   // Includes subtasks, which the task's cascading delete also removes.
   const keys = await listAttachmentKeysForTaskTree(userId, input.taskId)
   if (!(await deleteTaskRecord(userId, input.taskId))) {
     throw new Error("Task not found")
   }
   await removeStoredObjects(getFilesBucket(), keys)
+  publishBoardEvent(userId, task.projectId, {
+    type: "task.deleted",
+    taskId: task.id,
+    projectId: task.projectId,
+  })
   return { id: input.taskId }
 }

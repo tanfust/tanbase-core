@@ -32,6 +32,7 @@ describe("health response", () => {
       const response = await createHealthResponse(environment, {
         database: env.DB,
         files: env.FILES,
+        realtime: env.BOARD.getByName("health"),
       })
 
       expect(response.status).toBe(200)
@@ -40,21 +41,22 @@ describe("health response", () => {
         status: "ok",
         service: "tanbase-core",
         environment,
-        checks: { database: "ok", files: "ok" },
+        checks: { database: "ok", files: "ok", realtime: "ok" },
       })
     }
   )
 
-  it("reports files as disabled when the installation has no bucket", async () => {
+  it("reports optional features as disabled when they are not bound", async () => {
     const response = await createHealthResponse("production", {
       database: env.DB,
       files: null,
+      realtime: null,
     })
 
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toMatchObject({
       status: "ok",
-      checks: { database: "ok", files: "disabled" },
+      checks: { database: "ok", files: "disabled", realtime: "disabled" },
     })
   })
 
@@ -68,10 +70,14 @@ describe("health response", () => {
     const files = {
       head: () => Promise.reject(new Error("private bucket detail")),
     } as unknown as R2Bucket
+    const realtime = {
+      connections: () => Promise.reject(new Error("private room detail")),
+    }
 
     const response = await createHealthResponse("production", {
       database,
       files,
+      realtime,
     })
     const body = await response.clone().text()
 
@@ -80,7 +86,7 @@ describe("health response", () => {
       status: "error",
       service: "tanbase-core",
       environment: "production",
-      checks: { database: "error", files: "error" },
+      checks: { database: "error", files: "error", realtime: "error" },
     })
     expect(body).not.toContain("private")
   })

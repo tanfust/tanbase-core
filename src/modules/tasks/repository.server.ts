@@ -149,6 +149,19 @@ export async function createTask(
   return task
 }
 
+export async function getTask(
+  userId: string,
+  taskId: string,
+  database?: D1Database
+): Promise<Task | null> {
+  const db = getDb(database)
+  const task = await db.query.tasks.findFirst({
+    where: and(eq(tasks.id, taskId), eq(tasks.userId, userId)),
+  })
+
+  return task ?? null
+}
+
 export async function listTasksByProject(
   userId: string,
   projectId: string,

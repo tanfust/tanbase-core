@@ -265,10 +265,10 @@ CLAUDE.md
 
 ### Realtime
 
-- One `BoardRoom` Durable Object per project, addressed by project id.
-- Clients connect to `/api/realtime/:projectId`. The route checks session and ownership, then forwards the upgrade to the Durable Object.
-- The Durable Object uses the Hibernation API (`ctx.acceptWebSocket`) and no timers, so idle rooms are not billed for duration.
-- Flow: server function writes to D1 -> calls `BoardRoom.broadcast(event)` over RPC -> clients update the TanStack Query cache.
+- One `BoardRoom` Durable Object per owner and project, named `{userId}:{projectId}`.
+- Clients connect to `/api/realtime/:projectId`. `src/server.ts` checks the upgrade, a same-origin `Origin`, the session, and ownership before TanStack runs, then forwards the upgrade to the room.
+- The Durable Object uses the Hibernation API (`ctx.acceptWebSocket`), answers heartbeats with an auto-response, and sets no timers, so idle rooms are not billed for duration.
+- Flow: server function writes to D1 -> calls `BoardRoom.broadcast(event)` over RPC after the response -> clients update the TanStack Query cache and refetch after reconnecting.
 
 ### AI
 
