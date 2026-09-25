@@ -31,7 +31,9 @@ gated by the zone plan.
 F-018 hardening: security headers with a nonce-based CSP, root error and 404
 pages, and request-ID structured logging are live in production. The cached
 health check and optional cookieless PostHog analytics are verified locally
-and not yet deployed; analytics stays off until the `POSTHOG_KEY` secret is set.
+and not yet deployed. Production is configured for the EU PostHog project: the
+`POSTHOG_KEY` Worker secret is set and `POSTHOG_HOST` is committed, so
+analytics starts with that deployment.
 
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,

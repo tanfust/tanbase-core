@@ -46,9 +46,11 @@ forks or leak auth tokens in page URLs.
 ## Migrations and environment changes
 
 No database migration or binding. Added the `POSTHOG_HOST` Wrangler variable,
-empty in both environments, and regenerated Worker types. Analytics requires
-the `POSTHOG_KEY` Worker secret and PostHog's "Cookieless server hash mode"
-project setting; neither is configured by this change.
+empty locally and `https://eu.i.posthog.com` in production for the project's EU
+region, and regenerated Worker types. The operator set the production
+`POSTHOG_KEY` Worker secret on 2026-09-25 before this change deployed (Worker
+version `980a8c39`, which ignores it). Analytics also requires PostHog's
+"Cookieless server hash mode" project setting.
 
 `node_modules` was relinked with the pinned pnpm 10.11.1 after a newer pnpm had
 installed it. The lockfile change adds the PostHog packages and drops an
@@ -75,7 +77,7 @@ Local:
   `localStorage` entry was written, and navigation reported no CSP violations.
   The placeholder was removed and the build regenerated afterwards.
 - `pnpm cf:dry-run:production` — passed; 84 Worker modules with
-  `POSTHOG_HOST ("")`.
+  `POSTHOG_HOST ("https://eu.i.posthog.com")`.
 
 ## Deployment state
 
@@ -92,7 +94,5 @@ holds only a marker response and needs no cleanup.
 
 ## Remaining work
 
-- To enable analytics on `core.tanbase.dev`: turn on PostHog's cookieless
-  server hash mode, set `POSTHOG_HOST` for the project's region, and store
-  `POSTHOG_KEY`.
-- Record the production health and analytics evidence, then mark F-018 done.
+- After deployment, confirm that events from `core.tanbase.dev` arrive in the EU
+  PostHog project, then record the production evidence and mark F-018 done.
