@@ -423,7 +423,7 @@ responses.
 
 ### F-018: Hardening
 
-**Module:** platform | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-005
+**Module:** platform | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-005
 
 **Acceptance criteria**
 
