@@ -70,7 +70,14 @@ d7d9401f-…` against production before this change — printed that the
 | Target     | Commit                          | URL                        | Date       | Result                            |
 | ---------- | ------------------------------- | -------------------------- | ---------- | --------------------------------- |
 | Local      | Working tree based on `eb0e127` | `http://localhost:3111`    | 2026-09-25 | Tests, local smoke, and wait path |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed                      |
+| Production | `9712b8e` / version `d97edb50`  | `https://core.tanbase.dev` | 2026-09-25 | Build smoke passed first attempt  |
+
+Production:
+
+- Workers Build `adb4430f` deployed merge `9712b8e` as version `d97edb50` at
+  22:22:45 UTC. Its post-deploy smoke passed on the first attempt at
+  22:22:49 UTC: the edge already served the new version, so no wait was
+  needed. `/api/health` reports `"version":"d97edb50-2366-49f4-9510-1cc2f32b2903"`.
 
 ## Rollback notes
 
@@ -81,4 +88,5 @@ status `3` until its timeout.
 
 ## Remaining work
 
-- Record the first deployment that exercises the wait.
+- No Workers Build has needed the wait yet; its first real use will show in a
+  build log as `serves Worker version … not …` lines before the pass.

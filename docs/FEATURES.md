@@ -300,7 +300,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-011: Live board
 
-**Module:** realtime | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007
+**Module:** realtime | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-007
 
 **Acceptance criteria**
 
@@ -308,8 +308,8 @@ non-production branch builds are optional and disabled by default.
 - [x] `/api/realtime/:projectId` checks session and ownership before forwarding the upgrade
 - [x] Task mutations call `BoardRoom.broadcast()` over RPC after the D1 write succeeds
 - [x] Clients apply events to the Query cache, reconnect with backoff, and refetch after reconnecting
-- [ ] Two devices see a change in under 1 second (4 ms and 10 ms locally; production pending)
-- [ ] An idle room with an open socket hibernates (no duration growth in the dashboard)
+- [x] Two devices see a change in under 1 second (4 ms and 10 ms locally; operator-confirmed across two devices in production)
+- [x] An idle room with an open socket hibernates (402 ms of active time while sockets stayed open for about 42 seconds)
 
 **Technical notes**
 
