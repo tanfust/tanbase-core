@@ -1,7 +1,7 @@
 ---
 status: active
 audience: agents, contributors, maintainers
-last_verified: 2026-09-20
+last_verified: 2026-09-24
 ---
 
 # AI agent operating contract
@@ -55,8 +55,9 @@ logs safe metadata when no sender is configured, and can send through an
 explicitly enabled native Cloudflare Email Service binding without an API key.
 Better Auth uses
 request-scoped D1 storage for users, accounts, sessions, and verification state;
-KV is intentionally not configured for auth. R2, Queues, Workflows, Durable
-Objects, AI, and MCP are not configured yet. The public health endpoint includes
+KV is intentionally not configured for auth. Turnstile and the `AUTH_LIMITER`
+rate-limit binding protect credential and email-sending auth endpoints. R2,
+Queues, Workflows, Durable Objects, AI, and MCP are not configured yet. The public health endpoint includes
 a minimal D1 check and will be reduced or protected during hardening.
 
 The guided installer owns clone personalization and essential Cloudflare setup.

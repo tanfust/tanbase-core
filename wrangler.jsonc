@@ -15,7 +15,18 @@
     "APP_ENV": "local",
     "BETTER_AUTH_URL": "http://localhost:3000",
     "EMAIL_FROM": "",
+    // Cloudflare's always-pass Turnstile test site key; pair it with the test
+    // secret in ignored .dev.vars. Production uses its own widget.
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
   },
+  // Per-IP, per-endpoint limit for credential and email-sending auth requests.
+  "ratelimits": [
+    {
+      "name": "AUTH_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",
@@ -31,7 +42,18 @@
         "APP_ENV": "production",
         "BETTER_AUTH_URL": "https://core.tanbase.dev",
         "EMAIL_FROM": "",
+        // Public site key of the production Turnstile widget. When set, the
+        // TURNSTILE_SECRET_KEY Worker secret is required and auth fails closed
+        // without it. Empty disables the challenge.
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAFCqjjSEV5UqAPfK",
       },
+      "ratelimits": [
+        {
+          "name": "AUTH_LIMITER",
+          "namespace_id": "1001",
+          "simple": { "limit": 10, "period": 60 },
+        },
+      ],
       "d1_databases": [
         {
           "binding": "DB",

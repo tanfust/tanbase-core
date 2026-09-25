@@ -84,8 +84,9 @@ Subtasks are tasks with a `parent_id`.
 4. Create, rename, switch, and delete projects from a responsive desktop or mobile shell.
 5. Update the display name and password, or choose light, dark, or system appearance.
 
-Turnstile, rate limiting, Google and magic-link sign-in, drag ordering, realtime,
-files, reminders, AI breakdown, and MCP access remain later feature slices.
+Turnstile and per-IP rate limits guard sign-up, sign-in, and email-sending auth
+requests. Google and magic-link sign-in, drag ordering, realtime, files,
+reminders, AI breakdown, and MCP access remain later feature slices.
 
 ---
 
@@ -186,7 +187,14 @@ export default {
   "ai": { "binding": "AI" },
   "triggers": { "crons": ["0 * * * *"] },
 
-  // Rate limiting bindings (AUTH_LIMITER, AI_LIMITER): add in F-006, check current config key
+  "ratelimits": [
+    {
+      "name": "AUTH_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 },
+    },
+    // AI_LIMITER arrives with F-013.
+  ],
   // Production uses distinct remote resources; optional previews must do the same.
 }
 ```
@@ -248,6 +256,12 @@ CLAUDE.md
   [ADR-0006](decisions/0006-d1-auth-session-storage.md).
 - Verification and reset delivery are scheduled with Worker `waitUntil()`
   through the replaceable email module.
+- Better Auth's `captcha` plugin requires a Turnstile token on sign-up, sign-in,
+  password-reset requests, and verification resends. A configured site key
+  without its secret fails closed.
+- The auth route applies `AUTH_LIMITER` per client IP and endpoint before Better
+  Auth runs. Client IPs come from `cf-connecting-ip`, and Better Auth's
+  in-memory limiter is disabled because Worker isolates do not share memory.
 
 ### Realtime
 

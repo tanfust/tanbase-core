@@ -23,7 +23,9 @@ removed from the Worker on 2026-09-24 and no longer resolves.
 
 Authentication is not public-ready. Sign-up works, but verification and reset
 emails are recorded as safe metadata only until the Worker's `EMAIL` binding and
-sender are configured, and Turnstile and auth rate limiting are not enabled. Cloudflare Markdown for
+sender are configured. Turnstile and the `AUTH_LIMITER` rate limit (F-006) are
+implemented and verified locally. The production widget exists; its
+`TURNSTILE_SECRET_KEY` Worker secret and the deployment are pending. Cloudflare Markdown for
 Agents remains separately gated by the zone plan.
 
 A resumable guided installer automates local preparation, account and resource
@@ -54,7 +56,9 @@ the active production-only topology.
 ## Known blockers
 
 - Better Auth is not public-ready until transactional email delivery is proven
-  in production and Turnstile and auth rate limiting (F-006) are enabled.
+  in production and F-006 passes its production check. The managed
+  `core.tanbase.dev` widget and its site key exist; set the
+  `TURNSTILE_SECRET_KEY` Worker secret before the F-006 deployment.
 - `send.tanbase.dev` is onboarded to Email Sending (2026-09-24) with its
   `cf-bounce` MX, SPF, and DKIM records and a `p=reject` DMARC policy
   published. The Worker has no `EMAIL` binding or `EMAIL_FROM` yet. Add the

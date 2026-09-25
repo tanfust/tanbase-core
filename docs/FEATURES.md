@@ -183,18 +183,26 @@ non-production branch builds are optional and disabled by default.
 
 ### F-006: Turnstile and rate limits on auth
 
-**Module:** auth | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-005
+**Module:** auth | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-005
 
 **Acceptance criteria**
 
-- [ ] Turnstile on sign-up, sign-in and forgot-password forms, verified server-side before auth runs
-- [ ] `AUTH_LIMITER` rate limits auth endpoints per IP
-- [ ] Clear UI states for a failed challenge and for a rate limit
+- [x] Turnstile on sign-up, sign-in and forgot-password forms, verified server-side before auth runs
+- [x] `AUTH_LIMITER` rate limits auth endpoints per IP
+- [x] Clear UI states for a failed challenge and for a rate limit
+- [ ] Production rejects token-less protected requests and the widget passes on `core.tanbase.dev`
 
 **Technical notes**
 
-- Use Better Auth's captcha plugin if it supports Turnstile; otherwise verify in the auth route
-- Turnstile test keys in local dev
+- Better Auth's `captcha` plugin with the `cloudflare-turnstile` provider guards
+  sign-up, sign-in, password-reset requests, and verification resends. Tokens
+  are single-use and pinned to the production hostname.
+- A configured `TURNSTILE_SITE_KEY` requires `TURNSTILE_SECRET_KEY`; auth fails
+  closed without it. An empty site key disables the challenge.
+- `AUTH_LIMITER` allows 10 requests per 60 seconds per client IP and endpoint.
+  Better Auth's in-memory limiter is disabled because Worker isolates do not
+  share memory, and client IPs come from `cf-connecting-ip`.
+- Local development and browser tests use Cloudflare's always-pass test keys.
 
 ---
 
@@ -422,6 +430,11 @@ responses.
 - [ ] Structured logs with a request id in Workers Logs
 - [ ] PostHog loads only when `POSTHOG_KEY` is set
 - [ ] `/api/health` protected or removed
+
+**Technical notes**
+
+- The CSP must allow `https://challenges.cloudflare.com` in `script-src` and
+  `frame-src` for the Turnstile widget on the auth pages.
 
 ---
 

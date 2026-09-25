@@ -2,6 +2,10 @@ import { applyEdits, modify, parse } from "jsonc-parser"
 
 export const setupStateVersion = 1
 
+// Cloudflare's documented always-pass Turnstile test secret. It pairs with the
+// local test site key in wrangler.jsonc and is not a credential.
+export const localTurnstileTestSecret = "1x0000000000000000000000000000000AA"
+
 const workerNamePattern = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
 
 export function deriveWorkerName(value) {
@@ -74,7 +78,7 @@ export function parseArguments(argv, defaultWorkerName = "tanbase-core") {
 
 export function setupPlan({ localOnly }) {
   const localSteps = [
-    "Create a local-only Better Auth secret when missing",
+    "Create local-only Better Auth and Turnstile test secrets when missing",
     "Apply and seed the isolated local D1 database",
   ]
 
@@ -94,6 +98,7 @@ export function setupPlan({ localOnly }) {
     ...localSteps,
     "Regenerate Worker types, verify, and run the production dry run",
     "Apply production migrations before application code",
+    "Keep the production Turnstile site key only when its Worker secret exists",
     "Deploy with a generated Better Auth secret when missing",
     "Reconcile the workers.dev URL and deploy the final verified build",
     "Run production health, database, SSR, auth-redirect, and SEO smoke checks",
@@ -127,6 +132,7 @@ export function readWranglerInstallation(source) {
     databaseId: productionDatabase?.database_id ?? null,
     databaseName: productionDatabase?.database_name ?? null,
     productionUrl: production?.vars?.BETTER_AUTH_URL ?? null,
+    turnstileSiteKey: production?.vars?.TURNSTILE_SITE_KEY ?? null,
     workerName: production?.name ?? config.name ?? null,
   }
 }
@@ -139,6 +145,7 @@ export function updateWranglerInstallation(
     databaseName,
     localDatabaseName,
     productionUrl,
+    turnstileSiteKey,
     workerName,
   }
 ) {
@@ -153,6 +160,12 @@ export function updateWranglerInstallation(
     [["env", "production", "d1_databases", 0, "database_name"], databaseName],
     [["env", "production", "d1_databases", 0, "database_id"], databaseId],
   ]
+  if (turnstileSiteKey !== undefined) {
+    updates.push([
+      ["env", "production", "vars", "TURNSTILE_SITE_KEY"],
+      turnstileSiteKey,
+    ])
+  }
 
   return updates.reduce(
     (updated, [path, value]) => updateJsonc(updated, path, value),
@@ -224,6 +237,16 @@ export function updateLlmsOrigin(source, origin) {
     pattern,
     `- Production origin: ${normalizeOrigin(origin)}/`
   )
+}
+
+/**
+ * A configured production site key requires TURNSTILE_SECRET_KEY on the
+ * Worker, or auth fails closed. When the secret is absent (a fresh fork that
+ * inherited the template's key), disable the challenge instead.
+ */
+export function resolveTurnstileSiteKey(configuredSiteKey, secretList) {
+  if (!configuredSiteKey) return ""
+  return hasSecret(secretList, "TURNSTILE_SECRET_KEY") ? configuredSiteKey : ""
 }
 
 export function hasSecret(secretList, name) {

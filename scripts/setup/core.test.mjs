@@ -9,6 +9,7 @@ import {
   normalizeOrigin,
   parseArguments,
   readWranglerInstallation,
+  resolveTurnstileSiteKey,
   selectAccount,
   selectDatabase,
   setupPlan,
@@ -33,6 +34,7 @@ const config = `{
         "APP_ENV": "production",
         "BETTER_AUTH_URL": "https://old.example.com",
         "EMAIL_FROM": "sender@example.com",
+        "TURNSTILE_SITE_KEY": "0x-template-site-key",
       },
       "d1_databases": [
         {
@@ -129,12 +131,38 @@ test("updates only the intended local and production Wrangler fields", () => {
     databaseId: "database-1",
     databaseName: "customer-app-production",
     productionUrl: "https://customer-app.owner.workers.dev",
+    turnstileSiteKey: "0x-template-site-key",
     workerName: "customer-app",
   })
   assert.match(updated, /"database_name": "customer-app-local"/)
   assert.equal(updated.match(/send_email/g)?.length, 2)
   assert.match(updated, /sender@example\.com/)
   assert.match(updated, /Local development stays isolated/)
+})
+
+test("Turnstile site key updates only when explicitly requested", () => {
+  const disabled = updateWranglerInstallation(config, {
+    accountId: "account-1",
+    databaseId: "database-1",
+    databaseName: "customer-app-production",
+    localDatabaseName: "customer-app-local",
+    productionUrl: "https://customer-app.owner.workers.dev",
+    turnstileSiteKey: "",
+    workerName: "customer-app",
+  })
+
+  assert.equal(readWranglerInstallation(disabled).turnstileSiteKey, "")
+})
+
+test("production Turnstile stays enabled only with its Worker secret", () => {
+  const secret = [{ name: "TURNSTILE_SECRET_KEY", type: "secret_text" }]
+  const other = [{ name: "BETTER_AUTH_SECRET", type: "secret_text" }]
+
+  assert.equal(resolveTurnstileSiteKey("0x-site", secret), "0x-site")
+  assert.equal(resolveTurnstileSiteKey("0x-site", other), "")
+  assert.equal(resolveTurnstileSiteKey("0x-site", []), "")
+  assert.equal(resolveTurnstileSiteKey("", secret), "")
+  assert.equal(resolveTurnstileSiteKey(null, secret), "")
 })
 
 test("database selection prefers the recorded id and otherwise uses the name", () => {

@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-20
+last_verified: 2026-09-24
 ---
 
 # TanBase Core
@@ -12,9 +12,10 @@ assets in the Workers runtime, with repeatable verification and
 Cloudflare-owned production deployments.
 
 The repository now includes D1 and Drizzle, ownership-scoped project and task
-repositories, Better Auth's D1 core, typed React Email templates, and optional
-native Cloudflare Email Service delivery. Authentication UI, files, realtime
-collaboration, background work, AI, and MCP remain roadmap items.
+repositories, Better Auth's D1 core with its authentication UI and task board,
+Turnstile and rate limits on auth, typed React Email templates, and optional
+native Cloudflare Email Service delivery. Files, realtime collaboration,
+background work, AI, and MCP remain roadmap items.
 
 ## Quick start
 
@@ -61,6 +62,7 @@ pnpm cf:dry-run:production
 - D1 and Drizzle schemas for projects and tasks, with local migrations and seed data
 - Ownership-scoped server repositories backed by composite database constraints
 - Better Auth core with D1-backed users, sessions, accounts, and verification state
+- Cloudflare Turnstile and per-IP rate limits on sign-up, sign-in, and email-sending auth requests
 - Typed transactional email templates with safe logging and optional Cloudflare delivery
 - Resumable guided setup for local development and essential production resources
 - Public `GET /api/health` endpoint with a live database check

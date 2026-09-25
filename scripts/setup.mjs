@@ -19,10 +19,12 @@ import {
   deriveWorkerName,
   findDeploymentUrl,
   hasSecret,
+  localTurnstileTestSecret,
   mergeSetupState,
   normalizeOrigin,
   parseArguments,
   readWranglerInstallation,
+  resolveTurnstileSiteKey,
   selectAccount,
   selectDatabase,
   setupPlan,
@@ -160,12 +162,19 @@ async function ensureLocalSecret() {
     if (error?.code !== "ENOENT") throw error
   }
 
-  if (/^BETTER_AUTH_SECRET\s*=/m.test(source)) return
+  const missing = []
+  if (!/^BETTER_AUTH_SECRET\s*=/m.test(source)) {
+    missing.push(`BETTER_AUTH_SECRET=${randomBytes(32).toString("base64url")}`)
+  }
+  if (!/^TURNSTILE_SECRET_KEY\s*=/m.test(source)) {
+    missing.push(`TURNSTILE_SECRET_KEY=${localTurnstileTestSecret}`)
+  }
+  if (missing.length === 0) return
+
   const separator = source && !source.endsWith("\n") ? "\n" : ""
-  const secret = randomBytes(32).toString("base64url")
   await writeAtomic(
     localSecretsPath,
-    `${source}${separator}BETTER_AUTH_SECRET=${secret}\n`,
+    `${source}${separator}${missing.join("\n")}\n`,
     { mode: 0o600 }
   )
   await chmod(localSecretsPath, 0o600)
@@ -245,7 +254,8 @@ async function ensureDatabase({
   return database
 }
 
-async function hasRemoteAuthSecret(manager, accountEnv) {
+// Lists production secret names (never values). A missing Worker has none.
+async function remoteSecretList(manager, accountEnv) {
   const result = await runWrangler(
     manager,
     ["secret", "list", "--env", "production", "--format", "json"],
@@ -257,12 +267,19 @@ async function hasRemoteAuthSecret(manager, accountEnv) {
       env: accountEnv,
     }
   )
-  if (result.code !== 0) return false
+  if (result.code !== 0) return []
   try {
-    return hasSecret(JSON.parse(result.output), "BETTER_AUTH_SECRET")
+    return JSON.parse(result.output)
   } catch {
-    return false
+    return []
   }
+}
+
+async function hasRemoteAuthSecret(manager, accountEnv) {
+  return hasSecret(
+    await remoteSecretList(manager, accountEnv),
+    "BETTER_AUTH_SECRET"
+  )
 }
 
 async function deploy(manager, accountEnv, configureSecret) {
@@ -297,6 +314,7 @@ async function deploy(manager, accountEnv, configureSecret) {
 
 async function main() {
   const state = (await readJson(statePath)) ?? {}
+  let turnstileEnabled = false
   const argv = process.argv.slice(2)
   const explicitlyNamed = argv.includes("--name")
   const defaultWorkerName = explicitlyNamed
@@ -447,6 +465,31 @@ async function main() {
     llmsPath,
     updateLlmsOrigin(await readFile(llmsPath, "utf8"), provisionalOrigin)
   )
+
+  // Checked after the Worker name is written, so the lookup targets this
+  // installation rather than the template's Worker.
+  const configuredSiteKey =
+    readWranglerInstallation(configuredSource).turnstileSiteKey
+  const turnstileSiteKey = resolveTurnstileSiteKey(
+    configuredSiteKey,
+    await remoteSecretList(manager, accountEnv)
+  )
+  if (turnstileSiteKey !== (configuredSiteKey ?? "")) {
+    await writeAtomic(
+      configPath,
+      updateWranglerInstallation(configuredSource, {
+        accountId: account.id,
+        databaseId: database.uuid,
+        databaseName,
+        localDatabaseName,
+        productionUrl: provisionalOrigin,
+        turnstileSiteKey,
+        workerName,
+      })
+    )
+  }
+  turnstileEnabled = turnstileSiteKey !== ""
+
   await saveState({
     completedSteps: ["cloudflare-account", "d1", "configuration"],
   })
@@ -571,6 +614,11 @@ async function main() {
   process.stdout.write(`D1: ${database.name} (${database.uuid})\n`)
   process.stdout.write(
     "Better Auth secret: configured in Cloudflare and not stored locally.\n"
+  )
+  process.stdout.write(
+    turnstileEnabled
+      ? "Turnstile: enabled with the existing TURNSTILE_SECRET_KEY Worker secret.\n"
+      : "Turnstile: disabled. Auth forms have no bot challenge until you create a widget, set TURNSTILE_SECRET_KEY, and commit its site key (docs/DEPLOYMENT.md).\n"
   )
   process.stdout.write(
     "Optional services: skipped. Configure Email Service, a custom domain, and Git deployment only when needed.\n"

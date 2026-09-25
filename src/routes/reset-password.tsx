@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/modules/auth/client"
+import { authErrorMessage } from "@/modules/auth/errors"
 
 export const Route = createFileRoute("/reset-password")({
   validateSearch: (search): { token?: string; error?: string } => ({
@@ -52,7 +53,7 @@ function ResetPasswordPage() {
     })
     setPending(false)
     if (result.error)
-      setError(result.error.message ?? "Unable to reset the password")
+      setError(authErrorMessage(result.error, "Unable to reset the password"))
     else setSuccess(true)
   }
 

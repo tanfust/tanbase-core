@@ -88,6 +88,63 @@ describe("Better Auth D1 core", () => {
     ).toThrow("Authentication is not configured")
   })
 
+  it("fails closed when a Turnstile site key has no secret", () => {
+    expect(() =>
+      createAuth({
+        database: env.DB,
+        environment: {
+          APP_ENV: "local",
+          BETTER_AUTH_SECRET: testSecret,
+          BETTER_AUTH_URL: baseURL,
+          DB: env.DB,
+          TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+        },
+      })
+    ).toThrow("Authentication is not configured")
+  })
+
+  it("requires a Turnstile token on every protected endpoint", async () => {
+    const deliveries: SendEmailInput[] = []
+    const auth = createAuth({
+      database: env.DB,
+      environment: {
+        APP_ENV: "local",
+        BETTER_AUTH_SECRET: testSecret,
+        BETTER_AUTH_URL: baseURL,
+        DB: env.DB,
+        TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+        TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+      },
+      defer: () => undefined,
+      send: async (input) => {
+        deliveries.push(input)
+      },
+    })
+    const email = `captcha-${crypto.randomUUID()}@example.com`
+    const requests: [string, Record<string, unknown>][] = [
+      ["/sign-up/email", { email, name: "Bot", password: "bot-password-123" }],
+      ["/sign-in/email", { email, password: "bot-password-123" }],
+      ["/request-password-reset", { email, redirectTo: "/reset-password" }],
+      ["/send-verification-email", { email }],
+    ]
+
+    for (const [path, body] of requests) {
+      const response = await auth.handler(authRequest(path, body))
+      expect(response.status, path).toBe(400)
+      expect(await response.json(), path).toMatchObject({
+        code: "MISSING_RESPONSE",
+      })
+    }
+
+    const signUps = await env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM user WHERE email = ?"
+    )
+      .bind(email)
+      .first<{ count: number }>()
+    expect(signUps?.count).toBe(0)
+    expect(deliveries).toHaveLength(0)
+  })
+
   it("supports the verified email, session, sign-out, and reset journey", async () => {
     const { auth, deliveries, flushDeliveries } = createTestAuth()
     const email = `owner-${crypto.randomUUID()}@example.com`

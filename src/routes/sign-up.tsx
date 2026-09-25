@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { MailCheckIcon } from "lucide-react"
 
 import { AuthShell } from "@/components/auth/auth-shell"
+import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +22,9 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
+import { authErrorMessage } from "@/modules/auth/errors"
 import { authHref, safeRedirect } from "@/modules/auth/redirects"
 
 interface SignUpSearch {
@@ -32,11 +35,14 @@ export const Route = createFileRoute("/sign-up")({
   validateSearch: (search): SignUpSearch => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
+  loader: () => getAuthChallengeConfig(),
   component: SignUpPage,
 })
 
 function SignUpPage() {
   const { redirect } = Route.useSearch()
+  const { turnstileSiteKey } = Route.useLoaderData()
+  const captcha = useTurnstile(turnstileSiteKey)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -54,6 +60,10 @@ function SignUpPage() {
       setError("Use at least 8 characters for your password.")
       return
     }
+    if (!captcha.ready) {
+      setError("Complete the security check, then try again.")
+      return
+    }
 
     setPending(true)
     setError(null)
@@ -63,10 +73,12 @@ function SignUpPage() {
       email: String(form.get("email") ?? "").trim(),
       password,
       callbackURL: `/login?verified=true&redirect=${encodeURIComponent(redirectTarget)}`,
+      fetchOptions: captcha.fetchOptions,
     })
     setPending(false)
+    captcha.reset()
     if (result.error) {
-      setError(result.error.message ?? "Unable to create the account")
+      setError(authErrorMessage(result.error, "Unable to create the account"))
       return
     }
     setSubmitted(true)
@@ -161,6 +173,7 @@ function SignUpPage() {
                     minLength={8}
                   />
                 </Field>
+                <TurnstileField captcha={captcha} />
                 {error && <FieldError>{error}</FieldError>}
                 <Field>
                   <Button type="submit" disabled={pending} className="w-full">

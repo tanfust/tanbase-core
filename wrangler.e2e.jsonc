@@ -9,7 +9,15 @@
     "APP_ENV": "local",
     "BETTER_AUTH_URL": "http://localhost:3110",
     "EMAIL_FROM": "",
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
   },
+  "ratelimits": [
+    {
+      "name": "AUTH_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",

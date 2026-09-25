@@ -78,6 +78,38 @@ Apply the auth migration before deploying the code. Do not make the auth UI
 public until transactional email delivery, Turnstile, and the auth rate limit
 have passed their own production checks.
 
+### Turnstile and auth rate limits
+
+Better Auth's captcha plugin requires a Cloudflare Turnstile token on sign-up,
+sign-in, password-reset requests, and verification resends. The production
+`TURNSTILE_SITE_KEY` Wrangler variable is public and committed. The matching
+secret is the Worker secret `TURNSTILE_SECRET_KEY`. When the site key is set and
+the secret is missing, authentication fails closed; an empty site key disables
+the challenge.
+
+To enable it, create a managed widget for the canonical hostname, store its
+secret, then commit the site key:
+
+```sh
+pnpm exec wrangler turnstile widget create "TanBase Core" --domain core.tanbase.dev --mode managed
+pnpm exec wrangler secret put TURNSTILE_SECRET_KEY --env production
+```
+
+Set the secret before deploying a commit that adds the site key. Paste the
+secret only at the Wrangler prompt, never into source, documentation, or logs.
+Production tokens are accepted only when Siteverify reports the canonical
+hostname.
+
+The `AUTH_LIMITER` rate-limit binding allows 10 `POST` requests per 60 seconds
+per client IP and endpoint for sign-up, sign-in, password-reset requests,
+password resets, and verification resends. Limited requests receive `429` with
+`Retry-After: 60`. The binding needs no provisioned resource; its
+`namespace_id` must be unique within the account. Counters are local to each
+Cloudflare location and are designed for abuse bursts, not exact accounting.
+
+When the production site key is set, the production smoke suite asserts that a
+sign-in without a token is rejected with `MISSING_RESPONSE`.
+
 ### Transactional email
 
 The email module can use the native `EMAIL` binding and needs no provider API

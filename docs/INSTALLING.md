@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, operators, agents
-last_verified: 2026-09-20
+last_verified: 2026-09-24
 ---
 
 # Guided installation
@@ -44,9 +44,11 @@ The full setup:
 1. Authenticates Wrangler and resolves one Cloudflare account.
 2. Creates or safely reuses `<worker-name>-production` in D1.
 3. Personalizes the Worker name, account ID, D1 IDs, Better Auth URL, and
-   canonical discovery origin.
-4. Creates an ignored local Better Auth secret, applies local migrations, and
-   runs the idempotent local seed.
+   canonical discovery origin. It keeps the production Turnstile site key only
+   when the Worker already has `TURNSTILE_SECRET_KEY`; otherwise it clears the
+   key, which disables the auth challenge instead of failing closed.
+4. Creates an ignored local Better Auth secret and adds Cloudflare's Turnstile
+   test secret, applies local migrations, and runs the idempotent local seed.
 5. Regenerates Worker types and runs `pnpm verify` plus the production dry run.
 6. Applies production D1 migrations before deploying application code.
 7. Generates `BETTER_AUTH_SECRET` when the Worker does not already have it and
@@ -73,9 +75,10 @@ Cloudflare again and resumes completed work.
 
 ## Intentionally skipped
 
-The default path excludes Cloudflare Email Service onboarding, a custom domain,
-Workers Builds Git integration, preview deployments, and future optional
-bindings. The application logs safe email metadata while `EMAIL_FROM` is empty,
+The default path excludes Cloudflare Email Service onboarding, Turnstile widget
+creation, a custom domain, Workers Builds Git integration, preview deployments,
+and future optional bindings. The setup summary states whether Turnstile is
+enabled; see the [deployment runbook](DEPLOYMENT.md) to enable it. The application logs safe email metadata while `EMAIL_FROM` is empty,
 so Email Service cannot block a fresh deployment.
 
 After installation, review and commit `wrangler.jsonc`, the generated Worker
