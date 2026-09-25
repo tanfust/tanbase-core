@@ -46,7 +46,10 @@ The full setup:
 3. Personalizes the Worker name, account ID, D1 IDs, Better Auth URL, and
    canonical discovery origin. It keeps the production Turnstile site key only
    when the Worker already has `TURNSTILE_SECRET_KEY`; otherwise it clears the
-   key, which disables the auth challenge instead of failing closed.
+   key, which disables the auth challenge instead of failing closed. It keeps
+   the production `EMAIL` binding and sender only when the sender's Email
+   Sending domain is onboarded and enabled in the account; otherwise it removes
+   them so email is logged as metadata and the deployment succeeds.
 4. Creates an ignored local Better Auth secret and adds Cloudflare's Turnstile
    test secret, applies local migrations, and runs the idempotent local seed.
 5. Regenerates Worker types and runs `pnpm verify` plus the production dry run.
@@ -75,8 +78,8 @@ Cloudflare again and resumes completed work.
 
 ## Intentionally skipped
 
-The default path excludes Cloudflare Email Service onboarding, Turnstile widget
-creation, a custom domain, Workers Builds Git integration, preview deployments,
+The default path excludes Cloudflare Email Service domain onboarding, Turnstile
+widget creation, a custom domain, Workers Builds Git integration, preview deployments,
 and future optional bindings. The setup summary states whether Turnstile is
 enabled; see the [deployment runbook](DEPLOYMENT.md) to enable it. The application logs safe email metadata while `EMAIL_FROM` is empty,
 so Email Service cannot block a fresh deployment.

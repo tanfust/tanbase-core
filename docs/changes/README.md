@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-25
 ---
 
 # Change records
@@ -25,6 +25,7 @@ Records:
 - [2026-09-20: Authentication and task-board UI](2026-09-20-authentication-task-board-ui.md)
 - [2026-09-24: Canonical origin on core.tanbase.dev](2026-09-24-canonical-tanbase-dev.md)
 - [2026-09-24: Turnstile and rate limits on auth](2026-09-24-auth-turnstile-rate-limits.md)
+- [2026-09-25: Production email on send.tanbase.dev](2026-09-25-production-email.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

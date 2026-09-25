@@ -112,20 +112,31 @@ sign-in without a token is rejected with `MISSING_RESPONSE`.
 
 ### Transactional email
 
-The email module can use the native `EMAIL` binding and needs no provider API
-key. The binding is omitted by default so a fresh Free account can deploy. While
-`EMAIL_FROM` is empty, the module records only non-sensitive delivery metadata
-and does not send. To enable production email:
+The email module sends through the native `EMAIL` binding and needs no provider
+API key. Production sends from `noreply@send.tanbase.dev`, with the site name
+as the display name. `send.tanbase.dev` is a dedicated Email Sending domain
+whose onboarding published its `cf-bounce` MX, SPF, and DKIM records and a
+`p=reject` DMARC policy. The production `send_email` binding is restricted to
+that one sender through `allowed_sender_addresses`.
+
+`EMAIL_FROM` is a bare address that must match the binding's allowed senders.
+While it is empty, the module records only non-sensitive delivery metadata and
+does not send. The local configuration has no `EMAIL` binding, so local
+development never sends.
+
+The binding fails to deploy on accounts without Email Sending, so the guided
+installer removes it and clears `EMAIL_FROM` unless the account has the
+sender's domain onboarded and enabled. To enable email on another
+installation:
 
 1. Confirm the account is on Workers Paid; arbitrary outbound recipients are
    not available on the Free plan.
-2. Onboard the sending domain in Cloudflare Email Service and confirm its SPF
-   and DKIM records are active.
-3. Add the production `send_email` binding named `EMAIL`.
-4. Set the production `EMAIL_FROM` Wrangler variable to a sender on that domain.
-5. Restrict the production `send_email` binding with
-   `allowed_sender_addresses` after the exact sender is known.
-6. Regenerate Worker types, run verification and the production dry run, then
+2. Onboard a sending domain in Cloudflare Email Service and confirm its SPF,
+   DKIM, and DMARC records are active.
+3. Add the production `send_email` binding named `EMAIL`, restricted with
+   `allowed_sender_addresses` to the exact sender.
+4. Set the production `EMAIL_FROM` Wrangler variable to that sender.
+5. Regenerate Worker types, run verification and the production dry run, then
    deploy the same verified commit.
 
 The authenticated operator can inspect onboarding with:
@@ -136,8 +147,11 @@ pnpm exec wrangler email sending settings <domain>
 ```
 
 Email Sending is a beta transactional service. Verify one delivery to an
-address controlled by the operator before enabling authentication emails. Do
-not use it for newsletters or bulk marketing.
+address controlled by the operator after each sender change: sign up on the
+production site with that address, confirm the verification email arrives, and
+check that SPF, DKIM, and DMARC pass in the message headers. Turnstile and
+`AUTH_LIMITER` must be active first so the public forms cannot be used to send
+mail to arbitrary recipients. Do not use it for newsletters or bulk marketing.
 
 ### Canonical production domain
 

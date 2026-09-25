@@ -81,7 +81,8 @@ Email Service onboarding cannot block a fresh account.
 
 To exercise the native binding locally, first add `send_email` to the base
 Wrangler configuration, regenerate types, and set `EMAIL_FROM` in ignored
-`.dev.vars` to an address on an onboarded sender domain. Wrangler simulates
+`.dev.vars` to a bare address on an onboarded sender domain; the site name is
+used as the display name. Wrangler simulates
 delivery unless the binding explicitly uses `remote: true`. Templates render
 both HTML and plain text at send time and have Workers-runtime coverage.
 

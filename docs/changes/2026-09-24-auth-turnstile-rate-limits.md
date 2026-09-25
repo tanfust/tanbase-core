@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, operators, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-25
 ---
 
 # 2026-09-24: Turnstile and rate limits on auth
@@ -91,12 +91,24 @@ Local:
   `env.AUTH_LIMITER (10 requests/60s)` and the production `TURNSTILE_SITE_KEY`.
 - `pnpm cf:typegen` — idempotent.
 
+Production (2026-09-25):
+
+- Workers Build `a763606d` for merge commit `3ab15ae` deployed Worker version
+  `aae32e59`. Its post-deploy smoke passed on the first attempt, including the
+  token-less sign-in rejection.
+- `pnpm smoke -- --environment production` passed independently at 09:00 UTC.
+- A sign-in without a token returned `400 MISSING_RESPONSE`, and one with a
+  forged token returned `403 VERIFICATION_FAILED` after a Siteverify call.
+- The managed production widget rendered on `https://core.tanbase.dev/login`.
+  It presented an interactive challenge to the automated browser, which was not
+  solved, so the solved-token path still needs one operator check.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                                           |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------------------------------------------ |
-| Local      | Working tree based on `a8d9100` | `http://localhost:3000`    | 2026-09-24 | Setup, verify, smoke, burst, e2e, dry run passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed                                     |
+| Target     | Commit                                | URL                        | Date                 | Result                                                                                                   |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------- |
+| Local      | Working tree based on `a8d9100`       | `http://localhost:3000`    | 2026-09-24           | Setup, verify, smoke, burst, e2e, dry run passed                                                         |
+| Production | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev` | 2026-09-25 09:00 UTC | Build `a763606d` post-deploy smoke with token-less rejection passed; forged token `403`; widget rendered |
 
 ## Rollback notes
 
@@ -107,8 +119,8 @@ reverted they are unused.
 
 ## Remaining work
 
-- Deploy after `TURNSTILE_SECRET_KEY` is set, then record the production smoke
-  and browser evidence.
+- Have an operator solve the production widget and confirm a sign-in reaches
+  the credential check.
 - Enable the restricted production `EMAIL` binding on `send.tanbase.dev` and
   prove one controlled delivery.
 - Add `https://challenges.cloudflare.com` to the CSP in F-018.
