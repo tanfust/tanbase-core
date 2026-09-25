@@ -37,9 +37,12 @@ F-010 task attachments on R2 are live: the `tanbase-core-files` bucket
 (location WEUR) backs uploads, owner-only downloads, and cleanup on delete, and
 the health endpoint reports `files: ok`.
 
-F-011 live board on Durable Objects is implemented and verified locally: a
-second browser saw a new task 4 ms and a status move 10 ms after the first.
-Production deployment and the hibernation check are pending.
+F-011 live board on Durable Objects is deployed as Worker version `d7d9401f`
+and health reports `realtime: ok`. Locally, a second browser saw a new task
+4 ms and a status move 10 ms after the first. The two-device check on
+`core.tanbase.dev` and the hibernation check are pending. Its Workers Build
+failed only because the post-deploy smoke reached a location still serving the
+previous version; smoke now waits for the deployed version.
 
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
@@ -50,7 +53,8 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                             | Date                 | Evidence                                                                                                                                                                                                                             |
 | ------------- | ------------------------------------- | ------------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Local         | Working tree based on `fbaf405`       | Isolated local D1, R2, and Durable Objects | 2026-09-25           | F-011 live board: verify, dev-client check, browser suite with two-device timing, and dry run passed                                                                                                                                 |
+| Local         | Working tree based on `eb0e127`       | Isolated local D1, R2, and Durable Objects | 2026-09-25           | Version-aware smoke: verify, local smoke with a reported version, and the wait path against production passed                                                                                                                        |
+| Production    | `eb0e127` / Worker version `d7d9401f` | `https://core.tanbase.dev`                 | 2026-09-25 22:10 UTC | F-011: Workers Build `4bbe27e4` deployed `BoardRoom` but its smoke reached `SIN`, still serving older versions; independent smoke passed with `realtime: ok`                                                                         |
 | Production D1 | `3ab15ae`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b`     | 2026-09-25           | `0000` and `0001` applied; the Workers Build reported no migrations to apply                                                                                                                                                         |
 | Production    | `dfe4f4b` / Worker version `27b14b56` | `https://core.tanbase.dev`                 | 2026-09-25 21:50 UTC | F-010: Workers Build `6db0c3c8` applied migration `0002`, deployed `FILES`, and passed post-deploy smoke; health `files: ok`; unauthenticated upload `401`/`403` and download `401`; operator confirmed upload, download, and delete |
 | Production    | `fe633cf` / Worker version `1c3b3ddf` | `https://core.tanbase.dev`                 | 2026-09-25 19:18 UTC | F-018 health and analytics: Workers Build `50df91c9` post-deploy smoke passed; CSP allows `https://*.posthog.com`; events sent to `eu.i.posthog.com` with no cookies or storage; operator confirmed PostHog receives events          |
@@ -64,7 +68,9 @@ Cloudflare Workers Builds is configured with production branch `main`, build
 command `pnpm verify`, and deploy command `pnpm cf:deploy:production`. The
 deploy command runs the production smoke suite against the canonical origin
 after `wrangler deploy`. Non-production builds and Preview URLs are disabled;
-the production `workers.dev` URL remains enabled. The account is on Workers
+the production `workers.dev` URL remains enabled. `main` is protected: changes
+land through pull requests, the three Node verify jobs and the Cloudflare types
+and dry-run job must pass, and the rules apply to administrators. The account is on Workers
 Paid; Email Sending access was confirmed on 2026-09-24.
 
 Historical preview experiments and their exact evidence remain in the immutable
@@ -75,16 +81,15 @@ the active production-only topology.
 
 - The `tanbase.dev` zone is on the Free plan. Cloudflare Markdown for Agents
   requires Pro or higher before the opt-in production smoke check can pass.
-- `main` has no GitHub branch protection, although the
-  [deployment runbook](DEPLOYMENT.md) requires protected `main` with passing CI.
 
 ## Last known deployed commit
 
-Production runs merge commit `dfe4f4b` as Worker version `27b14b56`, deployed
-by Workers Build `6db0c3c8` at 2026-09-25 21:46 UTC with F-010 attachments and
-the dev-server hydration fix. The build applied migration `0002` before
-deploying, its post-deploy smoke passed with `files: ok`, and an independent
-production smoke passed at 21:50 UTC.
+Production runs merge commit `eb0e127` as Worker version `d7d9401f`, deployed
+by Workers Build `4bbe27e4` at 2026-09-25 22:06 UTC with the F-011 live board.
+The build's post-deploy smoke failed against older versions still served in
+one location; an independent production smoke passed at 22:10 UTC.
+
+F-010 attachments shipped in version `27b14b56` from `dfe4f4b`.
 
 F-018 analytics shipped in version `1c3b3ddf` from `fe633cf`; the security
 headers in `c38f520e` from `3fa7164`.

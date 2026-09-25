@@ -31,6 +31,7 @@ Records:
 - [2026-09-25: Restore dev-server hydration](2026-09-25-dev-hydration-fix.md)
 - [2026-09-25: Task attachments on R2](2026-09-25-r2-attachments.md)
 - [2026-09-25: Live board on Durable Objects](2026-09-25-live-board.md)
+- [2026-09-25: Post-deploy smoke waits for the deployed version](2026-09-25-deploy-smoke-version.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

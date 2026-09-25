@@ -15,7 +15,8 @@ every deployment, depends on it, and external uptime monitors need an
 unauthenticated liveness URL.
 
 The response exposes no identifiers or error details. The remaining risk was
-that anyone could turn repeated requests into unbounded D1 queries.
+that anyone could turn repeated requests into unbounded D1 queries. This
+paragraph was amended on 2026-09-25; see [Amendment](#amendment-2026-09-25).
 
 ## Decision
 
@@ -40,3 +41,17 @@ Protecting the database check with a token would hide the D1 status but
 require distributing a secret to Workers Builds and every monitor. Removing the
 endpoint would leave smoke checks and monitors without a database-aware
 liveness signal.
+
+## Amendment (2026-09-25)
+
+The response now includes `version`, the running Worker version ID from the
+`version_metadata` binding. After the F-011 deployment, the Cloudflare location
+answering the Workers Build's smoke requests kept serving the two previous
+versions for at least 36 seconds, so post-deploy smoke failed against old code.
+A deployment that leaves the health contract unchanged could just as easily
+pass against old code. With the version in the response, smoke waits until the
+new version answers before asserting anything.
+
+A version ID is not a secret: it grants no access, and every Cloudflare API
+that accepts one also requires account credentials. The response still exposes
+no resource identifiers or error details. The rest of this decision stands.
