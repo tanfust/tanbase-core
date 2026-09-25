@@ -59,6 +59,27 @@ pnpm db:migrate:production
 then deploys the generated Worker. Migrations must remain compatible with the
 currently active code; destructive changes require an expand/contract rollout.
 
+### Production R2 bucket
+
+Task attachments are stored in the `tanbase-core-files` bucket, bound as
+`FILES` in the `production` Wrangler environment. R2 must be enabled for the
+account in the Cloudflare dashboard before the bucket can exist, and the
+bucket must exist before a deployment with the binding, or the deploy fails:
+
+```sh
+pnpm exec wrangler r2 bucket create tanbase-core-files
+```
+
+Objects are keyed `u/{userId}/t/{taskId}/{attachmentId}`. The Worker streams
+uploads of at most 10 MB into the bucket and streams downloads back after an
+ownership check; no bucket is public and no S3 credentials exist. Deleting an
+attachment, task, or project deletes its objects after the database rows, and
+a cleanup failure is logged as `attachment.cleanup_failed`.
+
+`GET /api/health` reports `checks.files` by probing the bucket through the
+binding, cached like the database check. Installations without the binding
+report `disabled`, and the attachment UI says attachments are off.
+
 ### Better Auth
 
 The production URL is committed as `BETTER_AUTH_URL`; the secret is not. Create

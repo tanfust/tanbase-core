@@ -259,21 +259,35 @@ non-production branch builds are optional and disabled by default.
 
 ### F-010: Attachments on R2
 
-**Module:** files | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-007
+**Module:** files | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007
 
 **Acceptance criteria**
 
-- [ ] Attachment metadata schema and ownership constraints are added to D1 with
+- [x] Attachment metadata schema and ownership constraints are added to D1 with
       this feature, not before it
-- [ ] Upload from task detail, streamed through the Worker into `FILES`
-- [ ] 10 MB cap and content-type allowlist enforced server-side
-- [ ] Download route checks ownership before streaming the object
-- [ ] Deleting an attachment, task or project deletes its R2 objects
-- [ ] Object keys follow `u/{userId}/t/{taskId}/{attachmentId}`
+- [x] Upload from task detail, streamed through the Worker into `FILES`
+- [x] 10 MB cap and content-type allowlist enforced server-side
+- [x] Download route checks ownership before streaming the object
+- [x] Deleting an attachment, task or project deletes its R2 objects
+- [x] Object keys follow `u/{userId}/t/{taskId}/{attachmentId}`
+- [ ] The production bucket exists and the upload, download, and delete journey
+      passes on `core.tanbase.dev`
 
 **Technical notes**
 
 - Streaming through the binding avoids S3 credentials. Consider presigned URLs only if files above the cap become a requirement.
+- `attachment` carries `project_id` so a composite foreign key to
+  `task(id, project_id, user_id)` proves ownership and cascades deletes, and so
+  project deletion can find its objects.
+- Uploads are raw request bodies with `Content-Length`, a type from the
+  allowlist, and a URL-encoded `X-Attachment-Name`. The route requires a
+  same-origin `Origin`, a session, and an owned task, and allows 20 files per
+  task.
+- Downloads always use `Content-Disposition: attachment`, `nosniff`, and a
+  sandboxed CSP; SVG and HTML are not accepted.
+- Object deletion runs after the database delete and logs failures, so a
+  failure can leave an orphaned object but never a dangling attachment.
+- `GET /api/health` reports `checks.files` through the real binding.
 
 **Tests**
 

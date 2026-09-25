@@ -38,16 +38,20 @@ const url = new URL(baseUrl)
 const cacheControl = "public, max-age=300"
 const contentSignal = "ai-train=no, search=yes, ai-input=yes"
 
-function turnstileSiteKey(name) {
+// The deployed environment's Wrangler settings, which smoke uses to know
+// which optional features the target should expose.
+function environmentConfig(name) {
   const config = parse(
     readFileSync(
       join(dirname(fileURLToPath(import.meta.url)), "../wrangler.jsonc"),
       "utf8"
     )
   )
-  const vars =
-    name === "production" ? config.env?.production?.vars : config.vars
-  return vars?.TURNSTILE_SITE_KEY || null
+  return (name === "production" ? config.env?.production : config) ?? {}
+}
+
+function turnstileSiteKey(name) {
+  return environmentConfig(name).vars?.TURNSTILE_SITE_KEY || null
 }
 
 function fetchWithTimeout(resource, init = {}) {
@@ -74,7 +78,14 @@ assert.deepEqual(await healthResponse.json(), {
   status: "ok",
   service: "tanbase-core",
   environment,
-  checks: { database: "ok" },
+  checks: {
+    database: "ok",
+    files: environmentConfig(environment).r2_buckets?.some(
+      (bucket) => bucket.binding === "FILES"
+    )
+      ? "ok"
+      : "disabled",
+  },
 })
 
 const rootResponse = await fetchWithTimeout(new URL("/", url))

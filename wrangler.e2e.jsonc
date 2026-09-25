@@ -18,6 +18,12 @@
       "simple": { "limit": 10, "period": 60 },
     },
   ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "tanbase-core-files-e2e",
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",

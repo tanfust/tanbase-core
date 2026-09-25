@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import { TaskAttachments } from "@/components/board/task-attachments"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -152,6 +153,8 @@ export function TaskDialog({
             </Field>
             {error && <FieldError>{error}</FieldError>}
           </FieldGroup>
+          {/* Attachments save immediately and need an existing task. */}
+          {task && <TaskAttachments taskId={task.id} />}
           <DialogFooter>
             <Button
               type="button"

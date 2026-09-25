@@ -8,6 +8,7 @@ import {
   hasSecret,
   mergeSetupState,
   normalizeOrigin,
+  r2Unavailable,
   parseArguments,
   readWranglerInstallation,
   resolveTurnstileSiteKey,
@@ -29,6 +30,7 @@ const config = `{
     { "binding": "DB", "database_name": "tanbase-core-local" },
   ],
   "send_email": [{ "name": "EMAIL" }],
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files-local" }],
   "env": {
     "production": {
       "name": "tanbase-core",
@@ -46,6 +48,9 @@ const config = `{
         },
       ],
       "send_email": [{ "name": "EMAIL" }],
+      "r2_buckets": [
+        { "binding": "FILES", "bucket_name": "tanbase-core-files" },
+      ],
     },
   },
 }
@@ -133,6 +138,7 @@ test("updates only the intended local and production Wrangler fields", () => {
     databaseId: "database-1",
     databaseName: "customer-app-production",
     emailFrom: "sender@example.com",
+    filesBucketName: "tanbase-core-files",
     productionUrl: "https://customer-app.owner.workers.dev",
     turnstileSiteKey: "0x-template-site-key",
     workerName: "customer-app",
@@ -170,7 +176,51 @@ test("disabling email removes the production binding and sender only", () => {
 
   assert.equal(readWranglerInstallation(disabled).emailFrom, "")
   assert.equal(disabled.match(/send_email/g)?.length, 1)
-  assert.match(disabled, /"send_email": \[\{ "name": "EMAIL" \}\],\n  "env"/)
+  // The local binding stays; only the production one is removed.
+  assert.match(disabled, /^  "send_email": \[\{ "name": "EMAIL" \}\],$/m)
+})
+
+test("files bucket is personalized or removed only in production", () => {
+  const personalized = updateWranglerInstallation(config, {
+    accountId: "account-1",
+    databaseId: "database-1",
+    databaseName: "customer-app-production",
+    filesBucketName: "customer-app-files",
+    localDatabaseName: "customer-app-local",
+    localFilesBucketName: "customer-app-files-local",
+    productionUrl: "https://customer-app.owner.workers.dev",
+    workerName: "customer-app",
+  })
+  assert.equal(
+    readWranglerInstallation(personalized).filesBucketName,
+    "customer-app-files"
+  )
+  assert.match(personalized, /"bucket_name": "customer-app-files-local"/)
+
+  const disabled = updateWranglerInstallation(config, {
+    accountId: "account-1",
+    databaseId: "database-1",
+    databaseName: "customer-app-production",
+    disableFiles: true,
+    localDatabaseName: "customer-app-local",
+    productionUrl: "https://customer-app.owner.workers.dev",
+    workerName: "customer-app",
+  })
+  assert.equal(readWranglerInstallation(disabled).filesBucketName, null)
+  assert.equal(disabled.match(/r2_buckets/g)?.length, 1)
+})
+
+test("R2 availability errors are recognized", () => {
+  assert.equal(
+    r2Unavailable(
+      "Please enable R2 through the Cloudflare Dashboard. [code: 10042]"
+    ),
+    true
+  )
+  assert.equal(
+    r2Unavailable("The specified bucket does not exist. [code: 10006]"),
+    false
+  )
 })
 
 test("email sending detection reads the Wrangler table by domain", () => {

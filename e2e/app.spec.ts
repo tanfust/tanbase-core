@@ -137,6 +137,42 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await expect(page.getByText("Ship TanBase Core")).toBeVisible()
   console.log("e2e: board CRUD persisted")
 
+  await page
+    .getByRole("button", { name: "Actions for Ship TanBase Core" })
+    .click()
+  await page.getByRole("menuitem", { name: "Edit" }).click()
+  const dialog = page.getByRole("dialog")
+  const chooser = dialog.getByLabel("Choose a file to attach")
+  await chooser.setInputFiles({
+    name: "release notes.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("TanBase attachment"),
+  })
+  const attachmentLink = dialog.getByRole("link", { name: "release notes.txt" })
+  await expect(attachmentLink).toBeVisible()
+  const href = await attachmentLink.getAttribute("href")
+  expect(href).toMatch(/^\/api\/attachments\//)
+  const download = await page.request.get(href!)
+  expect(download.status()).toBe(200)
+  expect(await download.text()).toBe("TanBase attachment")
+  expect(download.headers()["content-disposition"]).toContain("attachment;")
+  expect(download.headers()["content-security-policy"]).toBe(
+    "default-src 'none'; sandbox"
+  )
+  await dialog.getByRole("button", { name: "Delete release notes.txt" }).click()
+  await expect(attachmentLink).not.toBeVisible()
+  expect((await page.request.get(href!)).status()).toBe(404)
+
+  // Left in place so deleting the task later exercises object cleanup.
+  await chooser.setInputFiles({
+    name: "kept.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("a,b\n1,2\n"),
+  })
+  await expect(dialog.getByRole("link", { name: "kept.csv" })).toBeVisible()
+  await dialog.getByRole("button", { name: "Cancel" }).click()
+  console.log("e2e: attachment uploaded, downloaded, and deleted")
+
   await page.getByRole("link", { name: "Settings" }).first().click()
   await page.getByLabel("Name").fill("Browser Test Updated")
   await page.getByRole("button", { name: "Save profile" }).click()
@@ -145,11 +181,14 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await expect(page.locator("html")).toHaveClass(/dark/)
   await page.reload()
   await expect(page.locator("html")).toHaveClass(/dark/)
+  // A click before hydration would submit the form natively and change nothing.
+  await waitForHydration(page)
 
   await page.getByLabel("Current password").fill(initialPassword)
   await page.getByLabel("New password", { exact: true }).fill(changedPassword)
   await page.getByLabel("Confirm new password").fill(changedPassword)
   await page.getByRole("button", { name: "Update password" }).click()
+  await expect(page.getByText("Password updated")).toBeVisible()
   await expect(page.getByLabel("Current password")).toHaveValue("")
   console.log("e2e: settings updated")
 

@@ -94,6 +94,7 @@ export function setupPlan({ localOnly }) {
     "Install locked dependencies",
     "Authorize and select a Cloudflare account",
     "Create or safely reuse the production Worker and D1 database",
+    "Create or safely reuse the production R2 bucket, or turn attachments off when R2 is not enabled",
     "Personalize Wrangler, canonical URLs, and local configuration",
     ...localSteps,
     "Regenerate Worker types, verify, and run the production dry run",
@@ -133,6 +134,9 @@ export function readWranglerInstallation(source) {
     databaseId: productionDatabase?.database_id ?? null,
     databaseName: productionDatabase?.database_name ?? null,
     emailFrom: production?.vars?.EMAIL_FROM ?? null,
+    filesBucketName:
+      production?.r2_buckets?.find((bucket) => bucket.binding === "FILES")
+        ?.bucket_name ?? null,
     productionUrl: production?.vars?.BETTER_AUTH_URL ?? null,
     turnstileSiteKey: production?.vars?.TURNSTILE_SITE_KEY ?? null,
     workerName: production?.name ?? config.name ?? null,
@@ -146,13 +150,16 @@ export function updateWranglerInstallation(
     databaseId,
     databaseName,
     disableEmail = false,
+    disableFiles = false,
+    filesBucketName,
     localDatabaseName,
+    localFilesBucketName,
     productionUrl,
     turnstileSiteKey,
     workerName,
   }
 ) {
-  parseJsonc(source)
+  const config = parseJsonc(source)
 
   const updates = [
     [["name"], workerName],
@@ -167,6 +174,26 @@ export function updateWranglerInstallation(
     updates.push([
       ["env", "production", "vars", "TURNSTILE_SITE_KEY"],
       turnstileSiteKey,
+    ])
+  }
+  const localFiles = (config.r2_buckets ?? []).findIndex(
+    (bucket) => bucket.binding === "FILES"
+  )
+  const productionFiles = (config.env?.production?.r2_buckets ?? []).findIndex(
+    (bucket) => bucket.binding === "FILES"
+  )
+  if (localFilesBucketName !== undefined && localFiles >= 0) {
+    updates.push([
+      ["r2_buckets", localFiles, "bucket_name"],
+      localFilesBucketName,
+    ])
+  }
+  if (disableFiles) {
+    updates.push([["env", "production", "r2_buckets"], undefined])
+  } else if (filesBucketName !== undefined && productionFiles >= 0) {
+    updates.push([
+      ["env", "production", "r2_buckets", productionFiles, "bucket_name"],
+      filesBucketName,
     ])
   }
   if (disableEmail) {
@@ -255,6 +282,11 @@ export function updateLlmsOrigin(source, origin) {
 export function resolveTurnstileSiteKey(configuredSiteKey, secretList) {
   if (!configuredSiteKey) return ""
   return hasSecret(secretList, "TURNSTILE_SECRET_KEY") ? configuredSiteKey : ""
+}
+
+/** Wrangler reports code 10042 until R2 is enabled for the account. */
+export function r2Unavailable(output) {
+  return /\b10042\b|enable R2/i.test(output)
 }
 
 export function emailDomain(address) {

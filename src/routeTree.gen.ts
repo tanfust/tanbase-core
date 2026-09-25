@@ -21,7 +21,9 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AppAppRouteImport } from './routes/_app/app'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiAttachmentsAttachmentIdRouteImport } from './routes/api/attachments/$attachmentId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiTasksTaskIdAttachmentsRouteImport } from './routes/api/tasks/$taskId/attachments'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,11 +84,23 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAttachmentsAttachmentIdRoute =
+  ApiAttachmentsAttachmentIdRouteImport.update({
+    id: '/api/attachments/$attachmentId',
+    path: '/api/attachments/$attachmentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksTaskIdAttachmentsRoute =
+  ApiTasksTaskIdAttachmentsRouteImport.update({
+    id: '/api/tasks/$taskId/attachments',
+    path: '/api/tasks/$taskId/attachments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -100,7 +114,9 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppAppRoute
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -114,7 +130,9 @@ export interface FileRoutesByTo {
   '/app': typeof AppAppRoute
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -130,7 +148,9 @@ export interface FileRoutesById {
   '/_app/app': typeof AppAppRoute
   '/_app/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -146,7 +166,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/settings'
     | '/api/health'
+    | '/api/attachments/$attachmentId'
     | '/api/auth/$'
+    | '/api/tasks/$taskId/attachments'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -160,7 +182,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/settings'
     | '/api/health'
+    | '/api/attachments/$attachmentId'
     | '/api/auth/$'
+    | '/api/tasks/$taskId/attachments'
   id:
     | '__root__'
     | '/'
@@ -175,7 +199,9 @@ export interface FileRouteTypes {
     | '/_app/app'
     | '/_app/settings'
     | '/api/health'
+    | '/api/attachments/$attachmentId'
     | '/api/auth/$'
+    | '/api/tasks/$taskId/attachments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -189,7 +215,9 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiAttachmentsAttachmentIdRoute: typeof ApiAttachmentsAttachmentIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiTasksTaskIdAttachmentsRoute: typeof ApiTasksTaskIdAttachmentsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -278,11 +306,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/attachments/$attachmentId': {
+      id: '/api/attachments/$attachmentId'
+      path: '/api/attachments/$attachmentId'
+      fullPath: '/api/attachments/$attachmentId'
+      preLoaderRoute: typeof ApiAttachmentsAttachmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/$taskId/attachments': {
+      id: '/api/tasks/$taskId/attachments'
+      path: '/api/tasks/$taskId/attachments'
+      fullPath: '/api/tasks/$taskId/attachments'
+      preLoaderRoute: typeof ApiTasksTaskIdAttachmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -311,7 +353,9 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiAttachmentsAttachmentIdRoute: ApiAttachmentsAttachmentIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiTasksTaskIdAttachmentsRoute: ApiTasksTaskIdAttachmentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

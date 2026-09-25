@@ -1,6 +1,14 @@
 import { getRequestHeaders } from "@tanstack/react-start/server"
 
 import { getSessionFromHeaders } from "@/modules/auth/session.server"
+import {
+  listAttachmentKeysForProject,
+  listAttachmentKeysForTaskTree,
+} from "@/modules/files/repository.server"
+import {
+  getFilesBucket,
+  removeStoredObjects,
+} from "@/modules/files/storage.server"
 
 import type { BoardSnapshot, ProjectView, TaskView } from "./contracts"
 import {
@@ -98,9 +106,12 @@ export async function deleteProjectImpl(
   input: z.infer<typeof deleteProjectInputSchema>
 ) {
   const userId = await requireUserId()
+  // Collect object keys before the cascading delete removes their rows.
+  const keys = await listAttachmentKeysForProject(userId, input.projectId)
   if (!(await deleteProjectRecord(userId, input.projectId))) {
     throw new Error("Project not found")
   }
+  await removeStoredObjects(getFilesBucket(), keys)
   return { id: input.projectId }
 }
 
@@ -125,8 +136,11 @@ export async function deleteTaskImpl(
   input: z.infer<typeof deleteTaskInputSchema>
 ) {
   const userId = await requireUserId()
+  // Includes subtasks, which the task's cascading delete also removes.
+  const keys = await listAttachmentKeysForTaskTree(userId, input.taskId)
   if (!(await deleteTaskRecord(userId, input.taskId))) {
     throw new Error("Task not found")
   }
+  await removeStoredObjects(getFilesBucket(), keys)
   return { id: input.taskId }
 }

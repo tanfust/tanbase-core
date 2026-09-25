@@ -33,6 +33,10 @@ nonce-based CSP, root error and 404 pages, request-ID structured logging, the
 cached health check, and cookieless PostHog analytics reporting to the EU
 project. Cloudflare Web Analytics also runs on the zone.
 
+F-010 task attachments on R2 are implemented and verified locally. R2 is
+enabled for the account, and the `tanbase-core-files` bucket (location WEUR)
+was created on 2026-09-25 ahead of the deployment.
+
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
 canonical URL reconciliation, deployment, and production smoke. Its external
@@ -42,7 +46,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                    |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local         | Working tree based on `fe633cf`       | Isolated local D1                      | 2026-09-25           | Documentation-only evidence update: docs check passed                                                                                                                                                                       |
+| Local         | Working tree based on `bc8bfa2`       | Isolated local D1 and R2               | 2026-09-25           | F-010 attachments: verify, dev-client check, browser suite twice, and dry run passed                                                                                                                                        |
 | Production D1 | `3ab15ae`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-25           | `0000` and `0001` applied; the Workers Build reported no migrations to apply                                                                                                                                                |
 | Production    | `fe633cf` / Worker version `1c3b3ddf` | `https://core.tanbase.dev`             | 2026-09-25 19:18 UTC | F-018 health and analytics: Workers Build `50df91c9` post-deploy smoke passed; CSP allows `https://*.posthog.com`; events sent to `eu.i.posthog.com` with no cookies or storage; operator confirmed PostHog receives events |
 | Production    | `3fa7164` / Worker version `c38f520e` | `https://core.tanbase.dev`             | 2026-09-25 10:30 UTC | F-018 headers: Workers Build `927894c6` post-deploy smoke with header and nonce assertions passed; browser under the live CSP hydrated with zero violations                                                                 |

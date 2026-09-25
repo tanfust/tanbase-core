@@ -42,7 +42,10 @@ not wanted yet.
 The full setup:
 
 1. Authenticates Wrangler and resolves one Cloudflare account.
-2. Creates or safely reuses `<worker-name>-production` in D1.
+2. Creates or safely reuses `<worker-name>-production` in D1 and the
+   `<worker-name>-files` R2 bucket. When R2 is not enabled for the account, it
+   removes the production `FILES` binding so the deployment succeeds with
+   attachments off; enable R2 and run setup again to add them.
 3. Personalizes the Worker name, account ID, D1 IDs, Better Auth URL, and
    canonical discovery origin. It keeps the production Turnstile site key only
    when the Worker already has `TURNSTILE_SECRET_KEY`; otherwise it clears the

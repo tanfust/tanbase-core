@@ -24,6 +24,7 @@ import {
   mergeSetupState,
   normalizeOrigin,
   parseArguments,
+  r2Unavailable,
   readWranglerInstallation,
   resolveTurnstileSiteKey,
   selectAccount,
@@ -256,6 +257,62 @@ async function ensureDatabase({
   return database
 }
 
+// Returns the bucket name when it exists or was created, or null when R2 is
+// not enabled for the account, in which case attachments are turned off.
+async function ensureFilesBucket({
+  accountEnv,
+  bucketName,
+  manager,
+  nonInteractive,
+  recorded,
+  reuseExisting,
+}) {
+  const info = await runWrangler(
+    manager,
+    ["r2", "bucket", "info", bucketName, "--json"],
+    {
+      allowFailure: true,
+      capture: true,
+      cwd: root,
+      echo: false,
+      env: accountEnv,
+    }
+  )
+  const infoOutput = `${info.output}\n${info.errorOutput}`
+  if (r2Unavailable(infoOutput)) return null
+
+  if (info.code === 0) {
+    if (!recorded && !reuseExisting) {
+      const approved = await confirm(
+        `An R2 bucket named ${bucketName} already exists. Reuse it?`,
+        false,
+        nonInteractive
+      )
+      if (!approved) {
+        throw new Error(
+          "Setup stopped before touching the existing bucket. Use --name for a separate installation or --reuse-existing to reuse it."
+        )
+      }
+    }
+    return bucketName
+  }
+
+  heading("Creating the production R2 bucket")
+  const created = await runWrangler(
+    manager,
+    ["r2", "bucket", "create", bucketName],
+    {
+      allowFailure: true,
+      capture: true,
+      cwd: root,
+      env: accountEnv,
+    }
+  )
+  if (created.code === 0) return bucketName
+  if (r2Unavailable(`${created.output}\n${created.errorOutput}`)) return null
+  throw new Error(`Cloudflare did not create the R2 bucket ${bucketName}.`)
+}
+
 // Lists production secret names (never values). A missing Worker has none.
 async function remoteSecretList(manager, accountEnv) {
   const result = await runWrangler(
@@ -446,12 +503,23 @@ async function main() {
     reuseExisting: options.reuseExisting,
   })
 
+  const desiredBucketName = `${workerName}-files`
+  const filesBucket = await ensureFilesBucket({
+    accountEnv,
+    bucketName: desiredBucketName,
+    manager,
+    nonInteractive: options.yes,
+    recorded: sameInstallation && state.filesBucket === desiredBucketName,
+    reuseExisting: options.reuseExisting,
+  })
+
   let currentState = mergeSetupState(state, {
     accountId: account.id,
     accountName: account.name,
     databaseId: database.uuid,
     databaseName,
     emailSetup: "skipped",
+    filesBucket: filesBucket ?? "unavailable",
     optionalModules: "skipped",
     workerName,
   })
@@ -471,7 +539,10 @@ async function main() {
     accountId: account.id,
     databaseId: database.uuid,
     databaseName,
+    disableFiles: filesBucket === null,
+    filesBucketName: filesBucket ?? undefined,
     localDatabaseName,
+    localFilesBucketName: `${workerName}-files-local`,
     productionUrl: provisionalOrigin,
     workerName,
   })
@@ -645,6 +716,11 @@ async function main() {
     turnstileEnabled
       ? "Turnstile: enabled with the existing TURNSTILE_SECRET_KEY Worker secret.\n"
       : "Turnstile: disabled. Auth forms have no bot challenge until you create a widget, set TURNSTILE_SECRET_KEY, and commit its site key (docs/DEPLOYMENT.md).\n"
+  )
+  process.stdout.write(
+    filesBucket
+      ? `Attachments: stored in the R2 bucket ${filesBucket}.\n`
+      : "Attachments: off. Enable R2 in the Cloudflare dashboard, then run setup again to create the bucket (docs/DEPLOYMENT.md).\n"
   )
   process.stdout.write(
     emailSender
