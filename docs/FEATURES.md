@@ -259,7 +259,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-010: Attachments on R2
 
-**Module:** files | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007
+**Module:** files | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-007
 
 **Acceptance criteria**
 
@@ -270,7 +270,7 @@ non-production branch builds are optional and disabled by default.
 - [x] Download route checks ownership before streaming the object
 - [x] Deleting an attachment, task or project deletes its R2 objects
 - [x] Object keys follow `u/{userId}/t/{taskId}/{attachmentId}`
-- [ ] The production bucket exists and the upload, download, and delete journey
+- [x] The production bucket exists and the upload, download, and delete journey
       passes on `core.tanbase.dev`
 
 **Technical notes**

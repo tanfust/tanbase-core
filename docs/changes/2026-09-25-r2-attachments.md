@@ -82,12 +82,24 @@ Local:
   `tanbase-core-files` on 2026-09-25 at 21:14 UTC; `wrangler r2 bucket info`
   reports it in location WEUR with no objects.
 
+Production (2026-09-25):
+
+- Workers Build `6db0c3c8` for merge commit `dfe4f4b` applied migration `0002`
+  to production D1, deployed Worker version `27b14b56` with
+  `env.FILES (tanbase-core-files)`, and passed its post-deploy smoke.
+- `GET /api/health` returned `{"database":"ok","files":"ok"}`, and an
+  independent production smoke passed at 21:50 UTC.
+- Without a session, an upload from another origin returned `403`, a
+  same-origin upload `401`, and a download `401`.
+- Operator-reported: uploading, downloading, and deleting an attachment in the
+  task dialog on `core.tanbase.dev` all worked.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                                    |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ----------------------------------------- |
-| Local      | Working tree based on `bc8bfa2` | `http://localhost:3110`    | 2026-09-25 | Verify, browser suite, and dry run passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed; bucket created              |
+| Target     | Commit                                | URL                        | Date                 | Result                                                         |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | -------------------------------------------------------------- |
+| Local      | Working tree based on `bc8bfa2`       | `http://localhost:3110`    | 2026-09-25           | Verify, browser suite, and dry run passed                      |
+| Production | `dfe4f4b` / Worker version `27b14b56` | `https://core.tanbase.dev` | 2026-09-25 21:50 UTC | Post-deploy smoke passed; operator-verified attachment journey |
 
 ## Rollback notes
 
@@ -97,6 +109,5 @@ operation and must not be part of a code rollback.
 
 ## Remaining work
 
-- Deploy and verify the attachment journey on `core.tanbase.dev`.
 - Per-user storage quotas and upload rate limits belong to F-022.
 - A scheduled sweep for objects whose cleanup failed can run with F-012 cron.
