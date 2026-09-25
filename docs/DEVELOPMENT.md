@@ -30,6 +30,7 @@ lockfile or supply-chain validation in contributor or CI instructions.
 | `pnpm dev`                                         | Run TanStack Start inside the Workers runtime on port 3000                               |
 | `pnpm verify`                                      | Format, lint, docs, migration, type, test, boundary, and build gates                     |
 | `pnpm test:e2e`                                    | Run the isolated local-D1 authentication and board browser journey                       |
+| `pnpm test:dev-client`                             | Load the dev server's client module graph and fail on import-protection errors           |
 | `pnpm docs:check`                                  | Validate frontmatter, required sections, and internal links                              |
 | `pnpm db:generate`                                 | Generate a migration from the Drizzle schema                                             |
 | `pnpm db:check`                                    | Check generated Drizzle migration history                                                |

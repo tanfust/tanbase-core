@@ -28,6 +28,7 @@ Records:
 - [2026-09-25: Production email on send.tanbase.dev](2026-09-25-production-email.md)
 - [2026-09-25: Security headers, error pages, and request logging](2026-09-25-security-headers.md)
 - [2026-09-25: Cached health check and privacy-first analytics](2026-09-25-health-cache-analytics.md)
+- [2026-09-25: Restore dev-server hydration](2026-09-25-dev-hydration-fix.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current
