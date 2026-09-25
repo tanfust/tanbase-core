@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-25
 ---
 
 # TanBase Core
@@ -16,12 +16,12 @@ project-and-task board, settings, and the transactional email module. The
 remaining application capabilities described below are planned unless marked done in
 [FEATURES.md](FEATURES.md).
 
-|              |                                                      |
-| ------------ | ---------------------------------------------------- |
-| Status       | Deployed at core.tanbase.dev; auth hardening pending |
-| License      | MIT                                                  |
-| Repo         | github.com/tanfust/tanbase-core (public)             |
-| Last updated | 2026-09-24                                           |
+|              |                                                                 |
+| ------------ | --------------------------------------------------------------- |
+| Status       | Live at core.tanbase.dev; auth and email verified in production |
+| License      | MIT                                                             |
+| Repo         | github.com/tanfust/tanbase-core (public)                        |
+| Last updated | 2026-09-25                                                      |
 
 ---
 

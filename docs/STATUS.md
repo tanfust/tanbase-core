@@ -21,13 +21,12 @@ The canonical production origin is `https://core.tanbase.dev`
 temporarily redirect to it. The former `tanbase-core.tanfust.com` hostname was
 removed from the Worker on 2026-09-24 and no longer resolves.
 
-Authentication is not public-ready until production email delivery is proven.
-Turnstile and the `AUTH_LIMITER` rate limit (F-006) are live: production rejects
-sign-ins without a Turnstile token and forged tokens. The restricted production
-`EMAIL` binding for `noreply@send.tanbase.dev` is committed but not yet
-deployed; until it is, verification and reset emails are recorded as safe
-metadata only. Cloudflare Markdown for Agents remains separately gated by the
-zone plan.
+Authentication is live and verified in production. On 2026-09-25 the operator
+completed sign-up, email verification, sign-in, task creation, sign-out, and
+password reset on `core.tanbase.dev` through the production Turnstile widget.
+Verification and reset emails arrived from `noreply@send.tanbase.dev` with SPF,
+DKIM, and DMARC passing. Cloudflare Markdown for Agents remains separately
+gated by the zone plan.
 
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
@@ -40,6 +39,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Local         | Working tree based on `3ab15ae`       | Isolated local D1                      | 2026-09-25           | Production email configuration: verify and production dry run passed                                                                                                                                       |
 | Production D1 | `3ab15ae`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-25           | `0000` and `0001` applied; the Workers Build reported no migrations to apply                                                                                                                               |
+| Production    | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev`             | 2026-09-25 09:17 UTC | Email: Workers Build `7ab31bd3` post-deploy smoke passed; restricted `EMAIL` binding deployed. Operator-reported full auth journey passed with SPF, DKIM, and DMARC passing                                |
 | Production    | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev`             | 2026-09-25 09:00 UTC | F-006: Workers Build `a763606d` post-deploy smoke, including token-less sign-in rejection, passed on the first attempt; independent smoke passed; forged token returned `403`; the managed widget rendered |
 | Production    | `0c6ea5a` / Worker version `b469d461` | `https://core.tanbase.dev`             | 2026-09-24 20:08 UTC | Canonical origin: Workers Build `fbf5f087` post-deploy smoke passed; HTTPS, apex, and `www` redirects passed                                                                                               |
 | Production    | `fcdee3c` / Worker version `dfc781da` | `https://tanbase-core.tanfust.com`     | 2026-09-24 19:27 UTC | Former hostname, retired later that day: full smoke passed after the secret was set                                                                                                                        |
@@ -57,13 +57,6 @@ the active production-only topology.
 
 ## Known blockers
 
-- Better Auth is not public-ready until one controlled production delivery
-  from `noreply@send.tanbase.dev` passes SPF, DKIM, and DMARC and the complete
-  sign-up, verification, sign-in, and reset journey passes on
-  `core.tanbase.dev`.
-- F-006 still needs one operator check that a solved production widget reaches
-  the credential check, which proves the Turnstile secret and hostname pinning.
-  Automated browsers are shown an interactive challenge.
 - The `tanbase.dev` zone is on the Free plan. Cloudflare Markdown for Agents
   requires Pro or higher before the opt-in production smoke check can pass.
 - `main` has no GitHub branch protection, although the
@@ -72,12 +65,14 @@ the active production-only topology.
 
 ## Last known deployed commit
 
-Production runs merge commit `3ab15ae` as Worker version `aae32e59`, deployed
-by Workers Build `a763606d` on 2026-09-25. It adds Turnstile and the
-`AUTH_LIMITER` binding. The build's post-deploy smoke, including the token-less
-sign-in rejection, passed on its first attempt, and an independent production
-smoke passed at 2026-09-25 09:00 UTC. The `TURNSTILE_SECRET_KEY` Worker secret
-was set on 2026-09-24 before the deployment (version `dbcd3a7b`).
+Production runs merge commit `b811368` as Worker version `0519d547`, deployed
+by Workers Build `7ab31bd3` at 2026-09-25 09:13 UTC with the restricted `EMAIL`
+binding. The build's post-deploy smoke passed on its first attempt, and an
+independent production smoke passed at 09:14 UTC. The operator then completed
+the full authentication journey in production.
+
+F-006 (Turnstile and `AUTH_LIMITER`) shipped in the previous version,
+`aae32e59`, from merge commit `3ab15ae`.
 
 Update this file after every first-of-kind production smoke check. Keep local
 verification and production deployment evidence separate.

@@ -150,7 +150,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-005: Auth core
 
-**Module:** auth | **Priority:** P0 | **Status:** 🚧 In progress | **Depends on:** F-003, F-004
+**Module:** auth | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-003, F-004
 
 **What:** Email and password sign-up with verification and reset, sessions, and a protected app area.
 
@@ -162,7 +162,7 @@ non-production branch builds are optional and disabled by default.
 - [x] Sessions and verification state use authoritative D1 storage; KV is not
       used because it cannot satisfy Better Auth's atomic secondary-storage
       contract ([ADR-0006](decisions/0006-d1-auth-session-storage.md))
-- [ ] Sign up, verify, sign in, sign out, forgot and reset password all work **in production**, not only locally
+- [x] Sign up, verify, sign in, sign out, forgot and reset password all work **in production**, not only locally
 - [x] Pathless `_app` layout redirects to `/login` without a session and returns to the original URL after sign-in
 - [x] A default project is created idempotently on first sign-in
 
@@ -185,14 +185,14 @@ non-production branch builds are optional and disabled by default.
 
 ### F-006: Turnstile and rate limits on auth
 
-**Module:** auth | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-005
+**Module:** auth | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-005
 
 **Acceptance criteria**
 
 - [x] Turnstile on sign-up, sign-in and forgot-password forms, verified server-side before auth runs
 - [x] `AUTH_LIMITER` rate limits auth endpoints per IP
 - [x] Clear UI states for a failed challenge and for a rate limit
-- [ ] Production rejects token-less protected requests and the widget passes on `core.tanbase.dev`
+- [x] Production rejects token-less protected requests and the widget passes on `core.tanbase.dev`
 
 **Technical notes**
 
