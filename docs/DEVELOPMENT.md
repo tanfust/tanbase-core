@@ -142,6 +142,10 @@ works; use `pnpm build` and `pnpm exec vite preview --port 4291` to exercise
 the enforcing policy. Render inline scripts with `ScriptOnce` so they carry the
 nonce, and add any new external origin to `src/platform/security-headers.ts`.
 
+Analytics stays off locally. To test the PostHog integration, add a
+`POSTHOG_KEY` to ignored `.dev.vars`, then build and preview; remove it
+afterwards so local sessions never report to a real project.
+
 Log with `log.info`, `log.warn`, or `log.error` from `src/platform/log.ts`.
 Entries are structured objects that include the request ID from
 `src/platform/request-context.ts`; never log credentials, tokens, message

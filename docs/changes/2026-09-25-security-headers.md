@@ -77,12 +77,22 @@ Local:
   unknown path rendered the new not-found page.
 - `pnpm cf:dry-run:production` — passed; 81 Worker modules.
 
+Production (2026-09-25):
+
+- Workers Build `927894c6` for merge commit `3fa7164` deployed Worker version
+  `c38f520e`; its post-deploy smoke passed on the first attempt with the new
+  header, nonce, and asset assertions.
+- `pnpm smoke -- --environment production` passed independently at 10:30 UTC.
+- In the browser on `https://core.tanbase.dev`, the homepage hydrated, the
+  client-side navigation to `/login` rendered the Turnstile container, and no
+  CSP violations were reported.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                                              |
-| ---------- | ------------------------------- | -------------------------- | ---------- | --------------------------------------------------- |
-| Local      | Working tree based on `6015166` | `http://localhost:4291`    | 2026-09-25 | Verify, preview CSP, browser checks, dry run passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed                                        |
+| Target     | Commit                                | URL                        | Date                 | Result                                              |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | --------------------------------------------------- |
+| Local      | Working tree based on `6015166`       | `http://localhost:4291`    | 2026-09-25           | Verify, preview CSP, browser checks, dry run passed |
+| Production | `3fa7164` / Worker version `c38f520e` | `https://core.tanbase.dev` | 2026-09-25 10:30 UTC | Post-deploy smoke and live CSP browser check passed |
 
 ## Rollback notes
 
@@ -92,5 +102,5 @@ Cloudflare's default asset headers.
 
 ## Remaining work
 
-- Decide the `/api/health` approach and PostHog integration to complete F-018.
+- The cached health check and PostHog are delivered by the following change.
 - Consider CSP violation reporting once a reporting endpoint exists.

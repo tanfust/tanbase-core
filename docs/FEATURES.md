@@ -430,8 +430,10 @@ responses.
 - [x] Security headers: CSP, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, frame-ancestors
 - [x] Root error boundary and 404 page
 - [x] Structured logs with a request id in Workers Logs
-- [ ] PostHog loads only when `POSTHOG_KEY` is set
-- [ ] `/api/health` protected or removed
+- [x] PostHog loads only when `POSTHOG_KEY` is set
+      ([ADR-0010](decisions/0010-privacy-first-analytics.md))
+- [x] `/api/health` hardened: public, with a database check cached for 30
+      seconds per location ([ADR-0009](decisions/0009-public-health-endpoint.md))
 
 **Technical notes**
 
@@ -445,6 +447,9 @@ responses.
   headers and immutable caching for fingerprinted `/assets/*`.
 - `src/platform/log.ts` writes structured objects with the Cloudflare Ray ID as
   `requestId`, which responses also return in `X-Request-Id`.
+- PostHog is bundled and dynamically imported only when the `POSTHOG_KEY`
+  Worker secret exists. It runs cookieless, records page views and page leaves,
+  loads no remote scripts, and strips query strings and fragments from URLs.
 
 ---
 

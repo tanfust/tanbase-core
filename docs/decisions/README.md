@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-25
 ---
 
 # Architecture decision records
@@ -20,6 +20,8 @@ Accepted decisions:
 - [ADR-0006: D1 as the Better Auth session store](0006-d1-auth-session-storage.md)
 - [ADR-0007: Resumable guided setup](0007-resumable-guided-setup.md)
 - [ADR-0008: Canonical production domain](0008-canonical-production-domain.md)
+- [ADR-0009: Public health endpoint with a cached database check](0009-public-health-endpoint.md)
+- [ADR-0010: Optional, privacy-first PostHog analytics](0010-privacy-first-analytics.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

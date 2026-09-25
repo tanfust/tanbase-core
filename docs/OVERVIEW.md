@@ -297,7 +297,8 @@ CLAUDE.md
 - **SEO:** per-route head (title, description, canonical, OG), `sitemap.xml`, `robots.txt`, JSON-LD on marketing pages, OG images generated on the Worker, `llms.txt`.
 - **Security:** per-response nonce CSP on documents, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Frame-Options and `frame-ancestors 'none'`, and Cross-Origin-Opener-Policy. Static assets receive theirs from `public/_headers`.
 - **Errors:** root error boundary, 404 page, and structured logs carrying the Cloudflare Ray ID as the request id, which responses return in `X-Request-Id`.
-- **Analytics:** PostHog, loaded only when `POSTHOG_KEY` is set.
+- **Analytics:** optional, cookieless PostHog page views, loaded only when the `POSTHOG_KEY` Worker secret is set ([ADR-0010](decisions/0010-privacy-first-analytics.md)).
+- **Health:** public `GET /api/health` with a D1 check cached for 30 seconds per location ([ADR-0009](decisions/0009-public-health-endpoint.md)).
 - **CI:** GitHub Actions runs verification, generated-type drift detection, and a production packaging dry run. Workers Builds deploys production from `main`; branch previews are optional.
 - **Agent layer:** `AGENTS.md` (stack, module map, rules, commands), `CLAUDE.md` pointing to it, skills in `.claude/skills/`.
 

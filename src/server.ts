@@ -2,6 +2,10 @@ import { env } from "cloudflare:workers"
 import handler from "@tanstack/react-start/server-entry"
 
 import { addHomepageDiscoveryHeaders } from "@/modules/seo/discovery"
+import {
+  analyticsConnectSources,
+  readAnalyticsConfig,
+} from "@/platform/analytics"
 import { log } from "@/platform/log"
 import { runWithRequestContext } from "@/platform/request-context"
 import { applySecurityHeaders, createNonce } from "@/platform/security-headers"
@@ -41,6 +45,7 @@ export default {
       return applySecurityHeaders(
         addHomepageDiscoveryHeaders(request, response),
         {
+          connectSources: analyticsConnectSources(readAnalyticsConfig(env)),
           enforceCsp: !import.meta.env.DEV,
           nonce,
           production: env.APP_ENV === "production",

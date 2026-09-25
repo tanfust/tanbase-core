@@ -28,9 +28,10 @@ Verification and reset emails arrived from `noreply@send.tanbase.dev` with SPF,
 DKIM, and DMARC passing. Cloudflare Markdown for Agents remains separately
 gated by the zone plan.
 
-F-018 hardening is in progress: security headers with a nonce-based CSP, root
-error and 404 pages, and request-ID structured logging are verified locally on a
-production build and not yet deployed. PostHog and the health endpoint remain.
+F-018 hardening: security headers with a nonce-based CSP, root error and 404
+pages, and request-ID structured logging are live in production. The cached
+health check and optional cookieless PostHog analytics are verified locally
+and not yet deployed; analytics stays off until the `POSTHOG_KEY` secret is set.
 
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
@@ -41,8 +42,9 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                   |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local         | Working tree based on `6015166`       | Isolated local D1                      | 2026-09-25           | F-018 headers: verify, dry run, enforcing CSP on a production build, and browser checks passed                                                                                                             |
+| Local         | Working tree based on `3fa7164`       | Isolated local D1                      | 2026-09-25           | Health cache and analytics: verify, dry run, and production-build browser checks passed                                                                                                                    |
 | Production D1 | `3ab15ae`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-25           | `0000` and `0001` applied; the Workers Build reported no migrations to apply                                                                                                                               |
+| Production    | `3fa7164` / Worker version `c38f520e` | `https://core.tanbase.dev`             | 2026-09-25 10:30 UTC | F-018 headers: Workers Build `927894c6` post-deploy smoke with header and nonce assertions passed; browser under the live CSP hydrated with zero violations                                                |
 | Production    | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev`             | 2026-09-25 09:17 UTC | Email: Workers Build `7ab31bd3` post-deploy smoke passed; restricted `EMAIL` binding deployed. Operator-reported full auth journey passed with SPF, DKIM, and DMARC passing                                |
 | Production    | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev`             | 2026-09-25 09:00 UTC | F-006: Workers Build `a763606d` post-deploy smoke, including token-less sign-in rejection, passed on the first attempt; independent smoke passed; forged token returned `403`; the managed widget rendered |
 | Production    | `0c6ea5a` / Worker version `b469d461` | `https://core.tanbase.dev`             | 2026-09-24 20:08 UTC | Canonical origin: Workers Build `fbf5f087` post-deploy smoke passed; HTTPS, apex, and `www` redirects passed                                                                                               |
@@ -65,18 +67,17 @@ the active production-only topology.
   requires Pro or higher before the opt-in production smoke check can pass.
 - `main` has no GitHub branch protection, although the
   [deployment runbook](DEPLOYMENT.md) requires protected `main` with passing CI.
-- The public health endpoint remains intentionally minimal until hardening.
 
 ## Last known deployed commit
 
-Production runs merge commit `b811368` as Worker version `0519d547`, deployed
-by Workers Build `7ab31bd3` at 2026-09-25 09:13 UTC with the restricted `EMAIL`
-binding. The build's post-deploy smoke passed on its first attempt, and an
-independent production smoke passed at 09:14 UTC. The operator then completed
-the full authentication journey in production.
+Production runs merge commit `3fa7164` as Worker version `c38f520e`, deployed
+by Workers Build `927894c6` at 2026-09-25 10:03 UTC with the F-018 security
+headers. The build's post-deploy smoke, including the CSP nonce and asset-header
+assertions, passed on its first attempt, and an independent production smoke
+passed at 10:30 UTC.
 
-F-006 (Turnstile and `AUTH_LIMITER`) shipped in the previous version,
-`aae32e59`, from merge commit `3ab15ae`.
+Production email shipped in the previous version, `0519d547`, from merge
+commit `b811368`; the operator then completed the full authentication journey.
 
 Update this file after every first-of-kind production smoke check. Keep local
 verification and production deployment evidence separate.
