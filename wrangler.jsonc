@@ -56,6 +56,11 @@
   "env": {
     "production": {
       "name": "tanbase-core",
+      // Runs the Worker next to this installation's D1 primary (WEUR, in
+      // Marseille), so each query stays local however far the visitor's edge
+      // location is. The guided installer drops it when production points at
+      // a different database. See ADR-0011.
+      "placement": { "region": "azure:francesouth" },
       "vars": {
         "APP_ENV": "production",
         "BETTER_AUTH_URL": "https://core.tanbase.dev",

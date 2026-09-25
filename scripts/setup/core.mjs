@@ -201,6 +201,14 @@ export function updateWranglerInstallation(
     updates.push([["env", "production", "send_email"], undefined])
     updates.push([["env", "production", "vars", "EMAIL_FROM"], ""])
   }
+  // A placement hint describes where one database's primary lives, so it
+  // cannot follow production to a different database.
+  if (
+    config.env?.production?.placement !== undefined &&
+    config.env.production.d1_databases?.[0]?.database_id !== databaseId
+  ) {
+    updates.push([["env", "production", "placement"], undefined])
+  }
 
   return updates.reduce(
     (updated, [path, value]) => updateJsonc(updated, path, value),

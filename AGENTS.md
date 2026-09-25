@@ -64,6 +64,8 @@ relays live board events without storing data. Queues, Workflows, AI, and MCP
 are not configured yet. The public health endpoint includes
 a D1 check cached for 30 seconds per location (ADR-0009). PostHog analytics is
 optional and loads only when the `POSTHOG_KEY` Worker secret is set (ADR-0010).
+Production runs next to its D1 primary through a placement hint that belongs to
+that database (ADR-0011).
 
 The guided installer owns clone personalization and essential Cloudflare setup.
 It must remain resumable, must never persist production secrets, and must keep
