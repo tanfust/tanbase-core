@@ -28,6 +28,10 @@ Verification and reset emails arrived from `noreply@send.tanbase.dev` with SPF,
 DKIM, and DMARC passing. Cloudflare Markdown for Agents remains separately
 gated by the zone plan.
 
+F-018 hardening is in progress: security headers with a nonce-based CSP, root
+error and 404 pages, and request-ID structured logging are verified locally on a
+production build and not yet deployed. PostHog and the health endpoint remain.
+
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
 canonical URL reconciliation, deployment, and production smoke. Its external
@@ -37,7 +41,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                   |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local         | Working tree based on `3ab15ae`       | Isolated local D1                      | 2026-09-25           | Production email configuration: verify and production dry run passed                                                                                                                                       |
+| Local         | Working tree based on `6015166`       | Isolated local D1                      | 2026-09-25           | F-018 headers: verify, dry run, enforcing CSP on a production build, and browser checks passed                                                                                                             |
 | Production D1 | `3ab15ae`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-25           | `0000` and `0001` applied; the Workers Build reported no migrations to apply                                                                                                                               |
 | Production    | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev`             | 2026-09-25 09:17 UTC | Email: Workers Build `7ab31bd3` post-deploy smoke passed; restricted `EMAIL` binding deployed. Operator-reported full auth journey passed with SPF, DKIM, and DMARC passing                                |
 | Production    | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev`             | 2026-09-25 09:00 UTC | F-006: Workers Build `a763606d` post-deploy smoke, including token-less sign-in rejection, passed on the first attempt; independent smoke passed; forged token returned `403`; the managed widget rendered |

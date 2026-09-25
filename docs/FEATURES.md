@@ -423,20 +423,28 @@ responses.
 
 ### F-018: Hardening
 
-**Module:** platform | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-005
+**Module:** platform | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-005
 
 **Acceptance criteria**
 
-- [ ] Security headers: CSP, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, frame-ancestors
-- [ ] Root error boundary and 404 page
-- [ ] Structured logs with a request id in Workers Logs
+- [x] Security headers: CSP, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, frame-ancestors
+- [x] Root error boundary and 404 page
+- [x] Structured logs with a request id in Workers Logs
 - [ ] PostHog loads only when `POSTHOG_KEY` is set
 - [ ] `/api/health` protected or removed
 
 **Technical notes**
 
-- The CSP must allow `https://challenges.cloudflare.com` in `script-src` and
-  `frame-src` for the Turnstile widget on the auth pages.
+- Documents get a per-response nonce CSP. `src/server.ts` creates the nonce,
+  the router stamps it on its SSR scripts, and the theme script uses
+  `ScriptOnce`. Only `'self'` and `https://challenges.cloudflare.com` may serve
+  scripts; Turnstile is the only allowed frame.
+- The Vite dev server has no CSP; `vite build` plus `vite preview` exercises the
+  enforcing policy locally.
+- Static assets bypass the Worker, so `public/_headers` sets their security
+  headers and immutable caching for fingerprinted `/assets/*`.
+- `src/platform/log.ts` writes structured objects with the Cloudflare Ray ID as
+  `requestId`, which responses also return in `X-Request-Id`.
 
 ---
 

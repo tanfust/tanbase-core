@@ -112,6 +112,61 @@ assert.equal(
   "root must expose the selected Content Signals policy"
 )
 
+const baseSecurityHeaders = {
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+}
+for (const [name, value] of Object.entries(baseSecurityHeaders)) {
+  assert.equal(rootResponse.headers.get(name), value, `root must send ${name}`)
+}
+assert.ok(
+  rootResponse.headers.get("x-request-id"),
+  "root must send a request ID"
+)
+
+if (environment === "production") {
+  assert.match(
+    rootResponse.headers.get("strict-transport-security") ?? "",
+    /max-age=\d{7,}/,
+    "production root must send HSTS"
+  )
+
+  const csp = rootResponse.headers.get("content-security-policy") ?? ""
+  const nonce = csp.match(/'nonce-([^']+)'/)?.[1]
+  assert.ok(nonce, "production root must send a nonce-based CSP")
+  assert.match(csp, /frame-ancestors 'none'/, "CSP must forbid framing")
+  const nonceAttribute = new RegExp(
+    `\\bnonce=["']${nonce.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}["']`
+  )
+  const inlineScripts = [...html.matchAll(/<script\b([^>]*)>/g)]
+    .map((match) => match[1])
+    .filter((attributes) => !/\bsrc=/.test(attributes))
+  assert.ok(inlineScripts.length > 0, "root must render inline SSR scripts")
+  for (const attributes of inlineScripts) {
+    assert.match(
+      attributes,
+      nonceAttribute,
+      "every inline script must carry the CSP nonce"
+    )
+  }
+
+  const asset = html.match(/<script[^>]+src="(\/assets\/[^"]+\.js)"/)?.[1]
+  assert.ok(asset, "root must load a fingerprinted module script")
+  const assetResponse = await fetchWithTimeout(new URL(asset, url))
+  assert.equal(assetResponse.status, 200, "fingerprinted asset must load")
+  assert.match(
+    assetResponse.headers.get("cache-control") ?? "",
+    /immutable/,
+    "fingerprinted assets must be cached as immutable"
+  )
+  assert.equal(
+    assetResponse.headers.get("x-content-type-options"),
+    "nosniff",
+    "static assets must send nosniff"
+  )
+}
+
 const protectedResponse = await fetchWithTimeout(new URL("/app", url), {
   redirect: "manual",
 })

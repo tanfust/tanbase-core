@@ -1,12 +1,14 @@
 import type { QueryClient } from "@tanstack/react-query"
 import {
   HeadContent,
+  ScriptOnce,
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 
+import { ErrorPage, NotFoundPage } from "@/components/status-page"
 import { ThemeProvider, themeScript } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toast"
 import { canonicalUrl, siteConfig } from "@/lib/site"
@@ -50,12 +52,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
     ],
   }),
-  notFoundComponent: () => (
-    <main className="container mx-auto p-4 pt-16">
-      <h1>404</h1>
-      <p>The requested page could not be found.</p>
-    </main>
-  ),
+  errorComponent: ErrorPage,
+  notFoundComponent: NotFoundPage,
   shellComponent: RootDocument,
 })
 
@@ -64,7 +62,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Runs before paint to avoid a theme flash; carries the CSP nonce. */}
+        <ScriptOnce>{themeScript}</ScriptOnce>
       </head>
       <body>
         <ThemeProvider>

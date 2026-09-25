@@ -1,0 +1,21 @@
+import { AsyncLocalStorage } from "node:async_hooks"
+
+export interface RequestContext {
+  /** Cloudflare Ray ID when present, so logs correlate with Workers Logs. */
+  requestId: string
+  /** Per-response CSP nonce for server-rendered inline scripts. */
+  nonce: string
+}
+
+const storage = new AsyncLocalStorage<RequestContext>()
+
+export function runWithRequestContext<T>(
+  context: RequestContext,
+  callback: () => T
+): T {
+  return storage.run(context, callback)
+}
+
+export function getRequestContext(): RequestContext | undefined {
+  return storage.getStore()
+}
