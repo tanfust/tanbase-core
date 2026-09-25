@@ -79,12 +79,27 @@ Local:
 - `pnpm cf:dry-run:production` — passed; 84 Worker modules with
   `POSTHOG_HOST ("https://eu.i.posthog.com")`.
 
+Production (2026-09-25):
+
+- Workers Build `50df91c9` for merge commit `fe633cf` deployed Worker version
+  `1c3b3ddf` with `POSTHOG_HOST ("https://eu.i.posthog.com")`; its post-deploy
+  smoke passed.
+- `pnpm smoke -- --environment production` passed independently at 19:18 UTC,
+  and the live CSP contains `connect-src 'self' https://*.posthog.com`.
+- In the browser on `https://core.tanbase.dev`, the root loader delivered the EU
+  host, the only PostHog request went to `https://eu.i.posthog.com/e/`, no
+  cookie or `localStorage` entry was written, and navigation reported no CSP
+  violations. Operator-reported: the EU PostHog project receives the events.
+- The browser also ran Cloudflare's edge-injected Web Analytics beacon, which
+  carried the response's CSP nonce and reports to the site's own
+  `/cdn-cgi/rum`.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                                          |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ----------------------------------------------- |
-| Local      | Working tree based on `3fa7164` | `http://localhost:4291`    | 2026-09-25 | Verify, preview, browser checks, dry run passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed                                    |
+| Target     | Commit                                | URL                        | Date                 | Result                                          |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | ----------------------------------------------- |
+| Local      | Working tree based on `3fa7164`       | `http://localhost:4291`    | 2026-09-25           | Verify, preview, browser checks, dry run passed |
+| Production | `fe633cf` / Worker version `1c3b3ddf` | `https://core.tanbase.dev` | 2026-09-25 19:18 UTC | Post-deploy smoke passed; EU events confirmed   |
 
 ## Rollback notes
 
@@ -94,5 +109,4 @@ holds only a marker response and needs no cleanup.
 
 ## Remaining work
 
-- After deployment, confirm that events from `core.tanbase.dev` arrive in the EU
-  PostHog project, then record the production evidence and mark F-018 done.
+- Decide whether to keep both Cloudflare Web Analytics and PostHog.

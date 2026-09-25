@@ -28,12 +28,10 @@ Verification and reset emails arrived from `noreply@send.tanbase.dev` with SPF,
 DKIM, and DMARC passing. Cloudflare Markdown for Agents remains separately
 gated by the zone plan.
 
-F-018 hardening: security headers with a nonce-based CSP, root error and 404
-pages, and request-ID structured logging are live in production. The cached
-health check and optional cookieless PostHog analytics are verified locally
-and not yet deployed. Production is configured for the EU PostHog project: the
-`POSTHOG_KEY` Worker secret is set and `POSTHOG_HOST` is committed, so
-analytics starts with that deployment.
+F-018 hardening is complete in production: security headers with a
+nonce-based CSP, root error and 404 pages, request-ID structured logging, the
+cached health check, and cookieless PostHog analytics reporting to the EU
+project. Cloudflare Web Analytics also runs on the zone.
 
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
@@ -42,15 +40,16 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 ## Verification snapshot
 
-| Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                   |
-| ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local         | Working tree based on `3fa7164`       | Isolated local D1                      | 2026-09-25           | Health cache and analytics: verify, dry run, and production-build browser checks passed                                                                                                                    |
-| Production D1 | `3ab15ae`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-25           | `0000` and `0001` applied; the Workers Build reported no migrations to apply                                                                                                                               |
-| Production    | `3fa7164` / Worker version `c38f520e` | `https://core.tanbase.dev`             | 2026-09-25 10:30 UTC | F-018 headers: Workers Build `927894c6` post-deploy smoke with header and nonce assertions passed; browser under the live CSP hydrated with zero violations                                                |
-| Production    | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev`             | 2026-09-25 09:17 UTC | Email: Workers Build `7ab31bd3` post-deploy smoke passed; restricted `EMAIL` binding deployed. Operator-reported full auth journey passed with SPF, DKIM, and DMARC passing                                |
-| Production    | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev`             | 2026-09-25 09:00 UTC | F-006: Workers Build `a763606d` post-deploy smoke, including token-less sign-in rejection, passed on the first attempt; independent smoke passed; forged token returned `403`; the managed widget rendered |
-| Production    | `0c6ea5a` / Worker version `b469d461` | `https://core.tanbase.dev`             | 2026-09-24 20:08 UTC | Canonical origin: Workers Build `fbf5f087` post-deploy smoke passed; HTTPS, apex, and `www` redirects passed                                                                                               |
-| Production    | `fcdee3c` / Worker version `dfc781da` | `https://tanbase-core.tanfust.com`     | 2026-09-24 19:27 UTC | Former hostname, retired later that day: full smoke passed after the secret was set                                                                                                                        |
+| Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                    |
+| ------------- | ------------------------------------- | -------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local         | Working tree based on `fe633cf`       | Isolated local D1                      | 2026-09-25           | Documentation-only evidence update: docs check passed                                                                                                                                                                       |
+| Production D1 | `3ab15ae`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-25           | `0000` and `0001` applied; the Workers Build reported no migrations to apply                                                                                                                                                |
+| Production    | `fe633cf` / Worker version `1c3b3ddf` | `https://core.tanbase.dev`             | 2026-09-25 19:18 UTC | F-018 health and analytics: Workers Build `50df91c9` post-deploy smoke passed; CSP allows `https://*.posthog.com`; events sent to `eu.i.posthog.com` with no cookies or storage; operator confirmed PostHog receives events |
+| Production    | `3fa7164` / Worker version `c38f520e` | `https://core.tanbase.dev`             | 2026-09-25 10:30 UTC | F-018 headers: Workers Build `927894c6` post-deploy smoke with header and nonce assertions passed; browser under the live CSP hydrated with zero violations                                                                 |
+| Production    | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev`             | 2026-09-25 09:17 UTC | Email: Workers Build `7ab31bd3` post-deploy smoke passed; restricted `EMAIL` binding deployed. Operator-reported full auth journey passed with SPF, DKIM, and DMARC passing                                                 |
+| Production    | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev`             | 2026-09-25 09:00 UTC | F-006: Workers Build `a763606d` post-deploy smoke, including token-less sign-in rejection, passed on the first attempt; independent smoke passed; forged token returned `403`; the managed widget rendered                  |
+| Production    | `0c6ea5a` / Worker version `b469d461` | `https://core.tanbase.dev`             | 2026-09-24 20:08 UTC | Canonical origin: Workers Build `fbf5f087` post-deploy smoke passed; HTTPS, apex, and `www` redirects passed                                                                                                                |
+| Production    | `fcdee3c` / Worker version `dfc781da` | `https://tanbase-core.tanfust.com`     | 2026-09-24 19:27 UTC | Former hostname, retired later that day: full smoke passed after the secret was set                                                                                                                                         |
 
 Cloudflare Workers Builds is configured with production branch `main`, build
 command `pnpm verify`, and deploy command `pnpm cf:deploy:production`. The
@@ -72,14 +71,13 @@ the active production-only topology.
 
 ## Last known deployed commit
 
-Production runs merge commit `3fa7164` as Worker version `c38f520e`, deployed
-by Workers Build `927894c6` at 2026-09-25 10:03 UTC with the F-018 security
-headers. The build's post-deploy smoke, including the CSP nonce and asset-header
-assertions, passed on its first attempt, and an independent production smoke
-passed at 10:30 UTC.
+Production runs merge commit `fe633cf` as Worker version `1c3b3ddf`, deployed
+by Workers Build `50df91c9` at 2026-09-25 12:35 UTC with the cached health
+check and PostHog analytics. The build's post-deploy smoke passed, and an
+independent production smoke passed at 19:18 UTC.
 
-Production email shipped in the previous version, `0519d547`, from merge
-commit `b811368`; the operator then completed the full authentication journey.
+The F-018 security headers shipped in version `c38f520e` from merge commit
+`3fa7164`; production email shipped in `0519d547` from `b811368`.
 
 Update this file after every first-of-kind production smoke check. Keep local
 verification and production deployment evidence separate.

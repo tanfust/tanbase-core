@@ -185,6 +185,12 @@ pnpm build
 pnpm exec vite preview --port 4291
 ```
 
+Cloudflare Web Analytics is enabled on the `tanbase.dev` zone. Cloudflare
+injects its beacon from `static.cloudflareinsights.com` into HTML responses at
+the edge, copies the response's CSP nonce onto that script, and the beacon
+reports to the site's own `/cdn-cgi/rum`, so the policy needs no extra origin.
+It is cookieless and runs alongside the optional PostHog integration.
+
 Production smoke fails when the document lacks the CSP or HSTS, when any
 inline script lacks the CSP nonce, or when a fingerprinted asset lacks
 `immutable` caching or `nosniff`. If a CSP change blocks resources in
