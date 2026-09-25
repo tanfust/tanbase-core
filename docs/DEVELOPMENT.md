@@ -72,6 +72,16 @@ The seed uses stable IDs and `INSERT OR IGNORE`, so rerunning it creates no
 duplicates. Tests use `@cloudflare/vitest-plugin`, apply the real generated SQL,
 and receive an isolated D1 database for each test file.
 
+## Local attachment workflow
+
+The base Wrangler configuration binds `FILES` to a simulated local R2 bucket,
+so attachments work in `pnpm dev`, the Workers-runtime tests, and the browser
+suite without an account. Local objects live in `.wrangler` state. Apply the
+local migrations first; attachments use migration `0002`.
+
+Upload rules live in `src/modules/files/limits.ts` and are shared by the
+browser, the upload route, and the database constraint.
+
 ## Local email workflow
 
 `sendEmail()` defaults to a metadata-only log when `EMAIL_FROM` is empty. The

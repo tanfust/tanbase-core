@@ -30,6 +30,13 @@
       "simple": { "limit": 10, "period": 60 },
     },
   ],
+  // Task attachments. Local development uses Wrangler's simulated bucket.
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "tanbase-core-files-local",
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",
@@ -66,6 +73,14 @@
         {
           "name": "EMAIL",
           "allowed_sender_addresses": ["noreply@send.tanbase.dev"],
+        },
+      ],
+      // Requires R2 to be enabled on the account and the bucket to exist
+      // before deployment. The guided installer creates it or removes this.
+      "r2_buckets": [
+        {
+          "binding": "FILES",
+          "bucket_name": "tanbase-core-files",
         },
       ],
       "d1_databases": [

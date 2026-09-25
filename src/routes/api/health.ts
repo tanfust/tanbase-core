@@ -7,9 +7,13 @@ export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
       GET: async ({ request }) =>
-        createHealthResponse(env.APP_ENV, env.DB, {
-          cache: await caches.open("health"),
-          key: new URL("/api/health/database-check", request.url).toString(),
+        createHealthResponse(env.APP_ENV, {
+          cache: {
+            cache: await caches.open("health"),
+            origin: new URL(request.url).origin,
+          },
+          database: env.DB,
+          files: (env as { FILES?: R2Bucket }).FILES ?? null,
         }),
     },
   },
