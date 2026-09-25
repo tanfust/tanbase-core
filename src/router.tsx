@@ -3,7 +3,15 @@ import { QueryClient } from "@tanstack/react-query"
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query"
 import { routeTree } from "./routeTree.gen"
 
-export function getRouter() {
+// The server stamps this request's CSP nonce on the scripts it renders. The
+// client never renders inline scripts, so it has no nonce.
+async function requestNonce() {
+  if (!import.meta.env.SSR) return undefined
+  const { getRequestContext } = await import("./platform/request-context")
+  return getRequestContext()?.nonce
+}
+
+export async function getRouter() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { staleTime: 10_000, retry: 1 },
@@ -17,6 +25,7 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    ssr: { nonce: await requestNonce() },
   })
 
   setupRouterSsrQueryIntegration({ router, queryClient })
@@ -26,6 +35,6 @@ export function getRouter() {
 
 declare module "@tanstack/react-router" {
   interface Register {
-    router: ReturnType<typeof getRouter>
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }

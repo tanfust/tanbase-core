@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers"
 
 import { siteConfig } from "@/lib/site"
+import { log } from "@/platform/log"
 
 import { renderEmail } from "./render"
 import type { EmailDeliveryResult, SendEmailInput } from "./types"
@@ -22,7 +23,7 @@ interface EmailSenderDependencies {
 
 const defaultDependencies: EmailSenderDependencies = {
   environment: env,
-  logger: console,
+  logger: log,
 }
 
 function recipientCount(to: string | string[]) {

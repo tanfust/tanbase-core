@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-25
 ---
 
 # Development
@@ -133,6 +133,19 @@ The public authentication pages cover sign-up, verification guidance, sign-in,
 verification resend, forgot password, and reset password. Protected routes use
 the responsive application shell, while `/settings` manages the display name,
 password, and persisted light, dark, or system appearance.
+
+## Security headers and logging
+
+The Worker entry adds security headers to every response and a nonce-based CSP
+to documents built for production. `pnpm dev` omits the CSP so Vite's client
+works; use `pnpm build` and `pnpm exec vite preview --port 4291` to exercise
+the enforcing policy. Render inline scripts with `ScriptOnce` so they carry the
+nonce, and add any new external origin to `src/platform/security-headers.ts`.
+
+Log with `log.info`, `log.warn`, or `log.error` from `src/platform/log.ts`.
+Entries are structured objects that include the request ID from
+`src/platform/request-context.ts`; never log credentials, tokens, message
+bodies, or recipient addresses.
 
 ## Server-only boundaries
 

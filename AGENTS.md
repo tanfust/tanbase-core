@@ -1,7 +1,7 @@
 ---
 status: active
 audience: agents, contributors, maintainers
-last_verified: 2026-09-24
+last_verified: 2026-09-25
 ---
 
 # AI agent operating contract
@@ -41,6 +41,9 @@ change note as current truth. A superseded ADR must link to its replacement.
 - Do not add Cloudflare bindings without a product feature that exercises them
   and a documented local/remote verification path.
 - Never store credentials in source, generated output, docs, fixtures, or logs.
+- Log through `src/platform/log.ts` so entries carry the request ID. Add any new
+  external script, frame, or connection origin to the CSP in
+  `src/platform/security-headers.ts`, and verify it with a production build.
 - Update active docs with behavior changes and add one change record for each
   meaningful implementation PR. Historical change records are immutable except
   for factual corrections.

@@ -6,6 +6,7 @@ import { tanstackStartCookies } from "better-auth/tanstack-start"
 import { sendEmail } from "@/modules/email/send-email.server"
 import type { SendEmailInput } from "@/modules/email/types"
 import { ensureDefaultProject } from "@/modules/tasks/repository.server"
+import { log } from "@/platform/log"
 
 import { getAuthDatabase } from "./repository.server"
 
@@ -111,6 +112,20 @@ export function createAuth(dependencies: AuthDependencies = {}) {
     // not share. AUTH_LIMITER enforces limits in the auth route instead.
     rateLimit: {
       enabled: false,
+    },
+    // Forward only the level, message, and error messages; extra arguments
+    // can carry request URLs or account details.
+    logger: {
+      level: "warn",
+      log: (level, message, ...args) => {
+        const errors = args
+          .filter((value): value is Error => value instanceof Error)
+          .map((error) => error.message)
+        const fields = { event: "auth.log", level, errors }
+        if (level === "error") log.error(message, fields)
+        else if (level === "warn") log.warn(message, fields)
+        else log.info(message, fields)
+      },
     },
     emailAndPassword: {
       enabled: true,

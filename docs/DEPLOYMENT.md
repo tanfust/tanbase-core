@@ -153,6 +153,43 @@ check that SPF, DKIM, and DMARC pass in the message headers. Turnstile and
 `AUTH_LIMITER` must be active first so the public forms cannot be used to send
 mail to arbitrary recipients. Do not use it for newsletters or bulk marketing.
 
+### Security headers
+
+`src/server.ts` adds security headers to every Worker response and a
+`Content-Security-Policy` to HTML documents. Static assets are served before the
+Worker runs, so `public/_headers` sets their headers.
+
+| Header                                   | Value                                                                             |
+| ---------------------------------------- | --------------------------------------------------------------------------------- |
+| `Content-Security-Policy` (documents)    | Per-response nonce; scripts from `'self'` and Turnstile; `frame-ancestors 'none'` |
+| `Strict-Transport-Security` (production) | `max-age=63072000; includeSubDomains`                                             |
+| `X-Content-Type-Options`                 | `nosniff`                                                                         |
+| `X-Frame-Options`                        | `DENY`                                                                            |
+| `Referrer-Policy`                        | `strict-origin-when-cross-origin`                                                 |
+| `Permissions-Policy`                     | Camera, microphone, geolocation, payment, USB, and Topics disabled                |
+| `Cross-Origin-Opener-Policy`             | `same-origin`                                                                     |
+| `X-Request-Id`                           | Cloudflare Ray ID, also logged as `requestId`                                     |
+
+Every request creates a random nonce. TanStack Router stamps it on the scripts
+it renders during SSR, and the theme script is rendered with `ScriptOnce` so it
+carries the same nonce. Any new third-party script, frame, or connection origin
+must be added to `contentSecurityPolicy()` in
+`src/platform/security-headers.ts`, or browsers will block it.
+
+The Vite dev server does not send the CSP, because its client relies on inline
+code. Check the enforcing policy on a production build before deploying policy
+changes:
+
+```sh
+pnpm build
+pnpm exec vite preview --port 4291
+```
+
+Production smoke fails when the document lacks the CSP or HSTS, when any
+inline script lacks the CSP nonce, or when a fingerprinted asset lacks
+`immutable` caching or `nosniff`. If a CSP change blocks resources in
+production, roll back the Worker version first.
+
 ### Canonical production domain
 
 The canonical origin is `https://core.tanbase.dev`
