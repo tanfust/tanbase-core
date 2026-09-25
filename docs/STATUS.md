@@ -33,9 +33,9 @@ nonce-based CSP, root error and 404 pages, request-ID structured logging, the
 cached health check, and cookieless PostHog analytics reporting to the EU
 project. Cloudflare Web Analytics also runs on the zone.
 
-F-010 task attachments on R2 are implemented and verified locally. Production
-needs R2 enabled for the account and the `tanbase-core-files` bucket created
-before the change deploys.
+F-010 task attachments on R2 are implemented and verified locally. R2 is
+enabled for the account, and the `tanbase-core-files` bucket (location WEUR)
+was created on 2026-09-25 ahead of the deployment.
 
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
@@ -68,9 +68,6 @@ the active production-only topology.
 
 ## Known blockers
 
-- R2 is not enabled for the Cloudflare account (Wrangler reports code 10042).
-  Enable it in the dashboard and create `tanbase-core-files` before the F-010
-  deployment; a deploy with the `FILES` binding and no bucket fails.
 - The `tanbase.dev` zone is on the Free plan. Cloudflare Markdown for Agents
   requires Pro or higher before the opt-in production smoke check can pass.
 - `main` has no GitHub branch protection, although the

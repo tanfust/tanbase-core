@@ -77,15 +77,17 @@ Local:
 - `pnpm test:dev-client` — 72 client modules loaded.
 - `pnpm cf:dry-run:production` — passed; 88 Worker modules with
   `env.FILES (tanbase-core-files)`.
-- `wrangler r2 bucket list` in the production account failed with code 10042:
-  R2 is not yet enabled.
+- `wrangler r2 bucket list` in the production account first failed with code
+  10042 because R2 was not enabled. The operator enabled R2 and created
+  `tanbase-core-files` on 2026-09-25 at 21:14 UTC; `wrangler r2 bucket info`
+  reports it in location WEUR with no objects.
 
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                                       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | -------------------------------------------- |
-| Local      | Working tree based on `bc8bfa2` | `http://localhost:3110`    | 2026-09-25 | Verify, browser suite, and dry run passed    |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed; R2 not enabled for the account |
+| Target     | Commit                          | URL                        | Date       | Result                                    |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ----------------------------------------- |
+| Local      | Working tree based on `bc8bfa2` | `http://localhost:3110`    | 2026-09-25 | Verify, browser suite, and dry run passed |
+| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed; bucket created              |
 
 ## Rollback notes
 
@@ -95,7 +97,6 @@ operation and must not be part of a code rollback.
 
 ## Remaining work
 
-- Enable R2, create `tanbase-core-files`, deploy, and verify the attachment
-  journey on `core.tanbase.dev`.
+- Deploy and verify the attachment journey on `core.tanbase.dev`.
 - Per-user storage quotas and upload rate limits belong to F-022.
 - A scheduled sweep for objects whose cleanup failed can run with F-012 cron.
