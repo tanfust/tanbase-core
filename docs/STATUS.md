@@ -43,6 +43,10 @@ hibernated between events. The first F-011 Workers Build failed only because
 its post-deploy smoke reached a location still serving the previous version;
 smoke now waits until `/api/health` reports the deployed version.
 
+The production Worker runs next to its D1 primary in Marseille. Server
+functions for traffic entering Cloudflare far away, such as Rio de Janeiro,
+fell from seconds to about 100 ms of Worker time.
+
 A resumable guided installer automates local preparation, account and resource
 selection, D1 provisioning and migrations, Better Auth secret deployment,
 canonical URL reconciliation, deployment, and production smoke. Its external
@@ -52,6 +56,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                             |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Production    | `8d2581d` / Worker version `cfb92e4c` | `https://core.tanbase.dev`             | 2026-09-25 22:58 UTC | Placement next to D1: Workers Build `1984aacc` post-deploy smoke passed; `cf-placement: remote-MRS`; server functions through `GIG` 24–165 ms of wall time, down from 1.7–4.3 s; board Live                                          |
 | Production    | `9712b8e` / Worker version `d97edb50` | `https://core.tanbase.dev`             | 2026-09-25 22:23 UTC | F-011 and version-aware smoke: Workers Build `adb4430f` post-deploy smoke passed on the first attempt; operator synced two devices; room held two sockets for about 42 s with 402 ms of active time                                  |
 | Production    | `eb0e127` / Worker version `d7d9401f` | `https://core.tanbase.dev`             | 2026-09-25 22:10 UTC | F-011: Workers Build `4bbe27e4` deployed `BoardRoom` but its smoke reached `SIN`, still serving older versions; independent smoke passed with `realtime: ok`                                                                         |
 | Production D1 | `dfe4f4b`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-25           | `0000` through `0002` applied; Workers Build `6db0c3c8` applied `0002`, and later builds reported no migrations to apply                                                                                                             |
@@ -83,10 +88,14 @@ the active production-only topology.
 
 ## Last known deployed commit
 
-Production runs merge commit `9712b8e` as Worker version `d97edb50`, deployed
-by Workers Build `adb4430f` at 2026-09-25 22:22 UTC with the F-011 live board
-and version-aware post-deploy smoke, which passed on the first attempt.
-The first F-011 deployment, `d7d9401f` from `eb0e127`, is recorded above.
+Production runs merge commit `8d2581d` as Worker version `cfb92e4c`, deployed
+by Workers Build `1984aacc` at 2026-09-25 22:39 UTC. It runs next to the D1
+primary in Marseille through a placement hint
+([ADR-0011](decisions/0011-placement-near-d1.md)); its post-deploy smoke passed
+on the first attempt.
+
+F-011 and version-aware smoke shipped in version `d97edb50` from `9712b8e`; the
+first F-011 deployment, `d7d9401f` from `eb0e127`, is recorded above.
 
 F-010 attachments shipped in version `27b14b56` from `dfe4f4b`.
 
