@@ -2,6 +2,7 @@ import { useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 
 import { AuthShell } from "@/components/auth/auth-shell"
+import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -19,17 +20,22 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
+import { authErrorMessage } from "@/modules/auth/errors"
 
 export const Route = createFileRoute("/forgot-password")({
   validateSearch: (search): { redirect?: string } => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
+  loader: () => getAuthChallengeConfig(),
   component: ForgotPasswordPage,
 })
 
 function ForgotPasswordPage() {
   const { redirect } = Route.useSearch()
+  const { turnstileSiteKey } = Route.useLoaderData()
+  const captcha = useTurnstile(turnstileSiteKey)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -37,15 +43,21 @@ function ForgotPasswordPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const email = String(new FormData(event.currentTarget).get("email") ?? "")
+    if (!captcha.ready) {
+      setError("Complete the security check, then try again.")
+      return
+    }
     setPending(true)
     setError(null)
     const result = await authClient.requestPasswordReset({
       email,
       redirectTo: "/reset-password",
+      fetchOptions: captcha.fetchOptions,
     })
     setPending(false)
+    captcha.reset()
     if (result.error)
-      setError(result.error.message ?? "Unable to request a reset")
+      setError(authErrorMessage(result.error, "Unable to request a reset"))
     else setSuccess(true)
   }
 
@@ -82,6 +94,7 @@ function ForgotPasswordPage() {
                     required
                   />
                 </Field>
+                <TurnstileField captcha={captcha} />
                 {error && <FieldError>{error}</FieldError>}
                 <Field>
                   <Button type="submit" disabled={pending} className="w-full">

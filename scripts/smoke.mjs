@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
+import { parse } from "jsonc-parser"
+
 const args = process.argv.slice(2)
 
 function option(name) {
@@ -35,6 +37,18 @@ if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
 const url = new URL(baseUrl)
 const cacheControl = "public, max-age=300"
 const contentSignal = "ai-train=no, search=yes, ai-input=yes"
+
+function turnstileSiteKey(name) {
+  const config = parse(
+    readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "../wrangler.jsonc"),
+      "utf8"
+    )
+  )
+  const vars =
+    name === "production" ? config.env?.production?.vars : config.vars
+  return vars?.TURNSTILE_SITE_KEY || null
+}
 
 function fetchWithTimeout(resource, init = {}) {
   return fetch(resource, {
@@ -110,6 +124,32 @@ assert.match(
   /^\/login\?redirect=%2Fapp(?:&|$)/,
   "protected app must preserve the requested path in the login redirect"
 )
+
+// When the environment configures a Turnstile site key, a sign-in without a
+// challenge token must be rejected before any credential check runs.
+if (turnstileSiteKey(environment)) {
+  const challengeResponse = await fetchWithTimeout(
+    new URL("/api/auth/sign-in/email", url),
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: url.origin },
+      body: JSON.stringify({
+        email: "smoke-check@example.invalid",
+        password: "smoke-check-only",
+      }),
+    }
+  )
+  assert.equal(
+    challengeResponse.status,
+    400,
+    `sign-in without a Turnstile token must be rejected, got ${challengeResponse.status}`
+  )
+  assert.equal(
+    (await challengeResponse.json()).code,
+    "MISSING_RESPONSE",
+    "sign-in must require the Turnstile challenge"
+  )
+}
 
 const rootLinks = rootResponse.headers.get("link") ?? ""
 assert.ok(

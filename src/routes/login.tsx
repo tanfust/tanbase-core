@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { CheckCircle2Icon } from "lucide-react"
 
 import { AuthShell } from "@/components/auth/auth-shell"
+import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +22,9 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
+import { authErrorMessage } from "@/modules/auth/errors"
 import { authHref, safeRedirect } from "@/modules/auth/redirects"
 
 interface LoginSearch {
@@ -37,11 +40,14 @@ export const Route = createFileRoute("/login")({
       search.verified === true || search.verified === "true" ? true : undefined,
     error: typeof search.error === "string" ? search.error : undefined,
   }),
+  loader: () => getAuthChallengeConfig(),
   component: LoginPage,
 })
 
 function LoginPage() {
   const search = Route.useSearch()
+  const { turnstileSiteKey } = Route.useLoaderData()
+  const captcha = useTurnstile(turnstileSiteKey)
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -51,12 +57,21 @@ function LoginPage() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
+    if (!captcha.ready) {
+      setError("Complete the security check, then try again.")
+      return
+    }
     setPending(true)
     setError(null)
-    const result = await authClient.signIn.email({ email, password })
+    const result = await authClient.signIn.email({
+      email,
+      password,
+      fetchOptions: captcha.fetchOptions,
+    })
     setPending(false)
+    captcha.reset()
     if (result.error) {
-      setError(result.error.message ?? "Unable to sign in")
+      setError(authErrorMessage(result.error, "Unable to sign in"))
       return
     }
     await navigate({ to: safeRedirect(search.redirect) })
@@ -67,16 +82,22 @@ function LoginPage() {
       setError("Enter your email first, then resend the verification message.")
       return
     }
+    if (!captcha.ready) {
+      setError("Complete the security check, then try again.")
+      return
+    }
     setResending(true)
     const callbackURL = authHref("/login?verified=true", search.redirect)
     const result = await authClient.sendVerificationEmail({
       email,
       callbackURL,
+      fetchOptions: captcha.fetchOptions,
     })
     setResending(false)
+    captcha.reset()
     setError(
       result.error
-        ? (result.error.message ?? "Unable to resend verification")
+        ? authErrorMessage(result.error, "Unable to resend verification")
         : "Verification email requested. Check your inbox."
     )
   }
@@ -143,6 +164,7 @@ function LoginPage() {
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </Field>
+              <TurnstileField captcha={captcha} />
               {error && <FieldError>{error}</FieldError>}
               <Field>
                 <Button type="submit" disabled={pending} className="w-full">

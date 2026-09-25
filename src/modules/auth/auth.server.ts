@@ -1,5 +1,6 @@
 import { env, waitUntil } from "cloudflare:workers"
 import { betterAuth } from "better-auth"
+import { captcha } from "better-auth/plugins"
 import { tanstackStartCookies } from "better-auth/tanstack-start"
 
 import { sendEmail } from "@/modules/email/send-email.server"
@@ -13,7 +14,18 @@ interface AuthEnvironment {
   BETTER_AUTH_SECRET?: string
   BETTER_AUTH_URL: string
   DB: D1Database
+  TURNSTILE_SECRET_KEY?: string
+  TURNSTILE_SITE_KEY?: string
 }
+
+// Endpoints that create accounts, check credentials, or send email. Each
+// request needs a fresh Turnstile token in the x-captcha-response header.
+export const captchaProtectedEndpoints = [
+  "/sign-up/email",
+  "/sign-in/email",
+  "/request-password-reset",
+  "/send-verification-email",
+]
 
 interface AuthDependencies {
   database?: D1Database
@@ -40,6 +52,31 @@ function validateAuthEnvironment(environment: AuthEnvironment) {
   } catch {
     throw new Error("Authentication is not configured")
   }
+
+  // A configured site key means the challenge is required, so a missing
+  // secret fails closed instead of silently disabling bot protection.
+  if (environment.TURNSTILE_SITE_KEY && !environment.TURNSTILE_SECRET_KEY) {
+    throw new Error("Authentication is not configured")
+  }
+}
+
+function captchaPlugins(environment: AuthEnvironment) {
+  if (!environment.TURNSTILE_SITE_KEY || !environment.TURNSTILE_SECRET_KEY) {
+    return []
+  }
+
+  return [
+    captcha({
+      provider: "cloudflare-turnstile",
+      secretKey: environment.TURNSTILE_SECRET_KEY,
+      endpoints: captchaProtectedEndpoints,
+      // Test keys report a placeholder hostname, so only production pins it.
+      allowedHostnames:
+        environment.APP_ENV === "production"
+          ? [new URL(environment.BETTER_AUTH_URL).hostname]
+          : undefined,
+    }),
+  ]
 }
 
 export function createAuth(dependencies: AuthDependencies = {}) {
@@ -64,6 +101,16 @@ export function createAuth(dependencies: AuthDependencies = {}) {
       database: {
         generateId: "uuid",
       },
+      // Cloudflare sets cf-connecting-ip at the edge; x-forwarded-for can be
+      // supplied by the client.
+      ipAddress: {
+        ipAddressHeaders: ["cf-connecting-ip"],
+      },
+    },
+    // The built-in limiter keeps counters in isolate memory, which Workers do
+    // not share. AUTH_LIMITER enforces limits in the auth route instead.
+    rateLimit: {
+      enabled: false,
     },
     emailAndPassword: {
       enabled: true,
@@ -104,7 +151,8 @@ export function createAuth(dependencies: AuthDependencies = {}) {
         },
       },
     },
-    plugins: [tanstackStartCookies()],
+    // tanstackStartCookies() must remain the last plugin.
+    plugins: [...captchaPlugins(environment), tanstackStartCookies()],
   })
 }
 

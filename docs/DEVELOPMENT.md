@@ -99,6 +99,19 @@ Generate the value locally with a cryptographically secure password generator;
 never copy a production secret into local development. `BETTER_AUTH_URL` is
 already `http://localhost:3000` in the base Wrangler configuration.
 
+Local development and the browser suite use Cloudflare's always-pass Turnstile
+test site key from the base Wrangler configuration. Add its paired test secret
+to `.dev.vars`; `pnpm run setup --local-only` adds it when missing:
+
+```dotenv
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+```
+
+Without it, authentication fails closed with "Authentication is not
+configured". The widget loads from `challenges.cloudflare.com`, so the auth
+pages and `pnpm test:e2e` need network access. Wrangler simulates the
+`AUTH_LIMITER` binding locally; all local requests share one client bucket.
+
 ```sh
 pnpm db:migrate:local
 pnpm dev

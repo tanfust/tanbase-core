@@ -36,6 +36,14 @@ async function waitForHydration(page: Page) {
   )
 }
 
+// The local test site key always passes, but the token arrives asynchronously.
+// Protected auth requests need a fresh token, so wait before each submit.
+async function waitForChallenge(page: Page) {
+  await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(
+    /.+/
+  )
+}
+
 test("authentication, board CRUD, settings, persistence, and reset", async ({
   page,
 }) => {
@@ -48,6 +56,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await waitForHydration(page)
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password", { exact: true }).fill(initialPassword)
+  await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
   await expect(page).toHaveURL(/\/app\?project=preserved$/)
   await expect(page.getByText("The board could not be loaded")).toBeVisible()
@@ -63,6 +72,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByLabel("Email").fill(signupEmail)
   await page.getByLabel("Password", { exact: true }).fill(initialPassword)
   await page.getByLabel("Confirm password").fill(initialPassword)
+  await waitForChallenge(page)
   await page.getByRole("button", { name: "Create account" }).click()
   await expect(
     page.getByText("Check your email", { exact: true })
@@ -72,6 +82,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await waitForHydration(page)
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password", { exact: true }).fill(initialPassword)
+  await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
   await expect(page).toHaveURL(/\/app$/)
   console.log("e2e: signed in")
@@ -152,6 +163,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await waitForHydration(page)
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password", { exact: true }).fill(changedPassword)
+  await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
   await expect(page).toHaveURL(/\/app$/)
   await page
@@ -163,6 +175,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.goto("/forgot-password")
   await waitForHydration(page)
   await page.getByLabel("Email").fill(email)
+  await waitForChallenge(page)
   await page.getByRole("button", { name: "Send reset link" }).click()
   await expect(
     page.getByText("If the address belongs to an account")
@@ -189,6 +202,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByRole("button", { name: "Sign in" }).click()
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password", { exact: true }).fill(resetPassword)
+  await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
   await expect(page).toHaveURL(/\/app$/)
 
