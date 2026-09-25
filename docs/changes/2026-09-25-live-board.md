@@ -77,7 +77,7 @@ Local:
 | Target     | Commit                          | URL                        | Date       | Result                                    |
 | ---------- | ------------------------------- | -------------------------- | ---------- | ----------------------------------------- |
 | Local      | Working tree based on `fbaf405` | `http://localhost:3110`    | 2026-09-25 | Verify, browser suite, and dry run passed |
-| Production | `eb0e127` / version `d7d9401f`  | `https://core.tanbase.dev` | 2026-09-25 | Deployed; smoke passed independently      |
+| Production | `9712b8e` / version `d97edb50`  | `https://core.tanbase.dev` | 2026-09-25 | Two devices synced; room hibernated       |
 
 Production:
 
@@ -90,6 +90,18 @@ Production:
 - An independent `pnpm smoke -- --environment production` passed against
   `d7d9401f` at 22:10 UTC with `realtime: ok`. The live CSP `connect-src` is
   `'self' wss://core.tanbase.dev https://*.posthog.com`.
+- Workers Build `adb4430f` redeployed the board unchanged in version
+  `d97edb50` at 22:22 UTC. At 22:23 UTC the operator signed in on two
+  devices, served from the `GIG` and `BCN` locations, and confirmed that a
+  change on one appeared on the other without a refresh. Durable Object
+  analytics for that minute show one board room with two concurrent sockets
+  and two outbound messages, and the Worker logs show the broadcast RPC
+  succeeding.
+- Hibernation: the room's sockets were open from about 22:23:16 until at least
+  the 22:23:57 broadcast, roughly 42 seconds, but the room accrued only
+  402 ms of `activeTime` (the wall-clock time Durable Objects bill), covering
+  the two upgrades and the broadcast. A room kept awake by its sockets would
+  have accrued the whole 42 seconds.
 
 ## Rollback notes
 
@@ -99,7 +111,4 @@ needs a later migration with `deleted_classes`, not just deleting the binding.
 
 ## Remaining work
 
-- After deployment, confirm two devices update each other on
-  `core.tanbase.dev` and that an idle room with an open socket shows no
-  Durable Object duration growth.
 - New projects are not announced to other devices until they refetch.
