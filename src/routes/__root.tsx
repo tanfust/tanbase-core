@@ -8,10 +8,12 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 
+import { Analytics } from "@/components/analytics"
 import { ErrorPage, NotFoundPage } from "@/components/status-page"
 import { ThemeProvider, themeScript } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toast"
 import { canonicalUrl, siteConfig } from "@/lib/site"
+import { getAnalyticsConfig } from "@/modules/analytics/config"
 
 import appCss from "../styles.css?url"
 
@@ -20,6 +22,9 @@ interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  // Configuration only changes with a deployment, so load it once per visit.
+  loader: () => getAnalyticsConfig(),
+  staleTime: Number.POSITIVE_INFINITY,
   head: () => ({
     meta: [
       {
@@ -58,6 +63,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const analytics = Route.useLoaderData()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -69,6 +76,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ThemeProvider>
           <Toaster>{children}</Toaster>
         </ThemeProvider>
+        <Analytics config={analytics} />
         <TanStackDevtools
           config={{
             position: "bottom-right",

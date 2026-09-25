@@ -22,4 +22,5 @@ allowBuilds:
   msw: false
   workerd: true
   "@prisma/client": false
+  core-js: false
   better-sqlite3: false

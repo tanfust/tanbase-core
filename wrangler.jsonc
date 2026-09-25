@@ -18,6 +18,9 @@
     // Cloudflare's always-pass Turnstile test site key; pair it with the test
     // secret in ignored .dev.vars. Production uses its own widget.
     "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    // PostHog loads only when the POSTHOG_KEY Worker secret is set; empty
+    // uses PostHog's US ingestion host.
+    "POSTHOG_HOST": "",
   },
   // Per-IP, per-endpoint limit for credential and email-sending auth requests.
   "ratelimits": [
@@ -47,6 +50,8 @@
         // TURNSTILE_SECRET_KEY Worker secret is required and auth fails closed
         // without it. Empty disables the challenge.
         "TURNSTILE_SITE_KEY": "0x4AAAAAAFCqjjSEV5UqAPfK",
+        // EU PostHog project; analytics stays off without POSTHOG_KEY.
+        "POSTHOG_HOST": "https://eu.i.posthog.com",
       },
       "ratelimits": [
         {

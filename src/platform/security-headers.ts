@@ -12,7 +12,10 @@ export function createNonce(): string {
  */
 export function contentSecurityPolicy(
   nonce: string,
-  { production }: { production: boolean }
+  {
+    connectSources = [],
+    production,
+  }: { connectSources?: readonly string[]; production: boolean }
 ): string {
   const directives = [
     "default-src 'self'",
@@ -20,7 +23,7 @@ export function contentSecurityPolicy(
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    "connect-src 'self'",
+    ["connect-src 'self'", ...connectSources].join(" "),
     `frame-src ${turnstileOrigin}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -43,6 +46,8 @@ export const baseSecurityHeaders = {
 export const strictTransportSecurity = "max-age=63072000; includeSubDomains"
 
 interface SecurityHeaderOptions {
+  /** Extra origins the page may fetch from, such as enabled analytics. */
+  connectSources?: readonly string[]
   /** Apply the CSP. Off for the Vite dev server, whose client needs inline code. */
   enforceCsp: boolean
   nonce: string
@@ -52,7 +57,13 @@ interface SecurityHeaderOptions {
 
 export function applySecurityHeaders(
   response: Response,
-  { enforceCsp, nonce, production, requestId }: SecurityHeaderOptions
+  {
+    connectSources,
+    enforceCsp,
+    nonce,
+    production,
+    requestId,
+  }: SecurityHeaderOptions
 ): Response {
   const secured = new Response(response.body, response)
   const { headers } = secured
@@ -70,7 +81,7 @@ export function applySecurityHeaders(
   if (enforceCsp && isHtml) {
     headers.set(
       "Content-Security-Policy",
-      contentSecurityPolicy(nonce, { production })
+      contentSecurityPolicy(nonce, { connectSources, production })
     )
   }
 

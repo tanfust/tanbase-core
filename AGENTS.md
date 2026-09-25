@@ -61,7 +61,8 @@ request-scoped D1 storage for users, accounts, sessions, and verification state;
 KV is intentionally not configured for auth. Turnstile and the `AUTH_LIMITER`
 rate-limit binding protect credential and email-sending auth endpoints. R2,
 Queues, Workflows, Durable Objects, AI, and MCP are not configured yet. The public health endpoint includes
-a minimal D1 check and will be reduced or protected during hardening.
+a D1 check cached for 30 seconds per location (ADR-0009). PostHog analytics is
+optional and loads only when the `POSTHOG_KEY` Worker secret is set (ADR-0010).
 
 The guided installer owns clone personalization and essential Cloudflare setup.
 It must remain resumable, must never persist production secrets, and must keep

@@ -20,6 +20,46 @@ describe("health response", () => {
     }
   )
 
+  it("reuses a successful database check and never caches failures", async () => {
+    let queries = 0
+    let failing = false
+    const database = {
+      prepare: () => ({
+        first: () => {
+          queries += 1
+          return failing
+            ? Promise.reject(new Error("unavailable"))
+            : Promise.resolve({ healthy: 1 })
+        },
+      }),
+    } as unknown as D1Database
+    const cached = {
+      cache: await caches.open(`health-${crypto.randomUUID()}`),
+      key: "https://core.tanbase.dev/api/health/database-check",
+    }
+
+    for (let request = 0; request < 3; request += 1) {
+      const response = await createHealthResponse(
+        "production",
+        database,
+        cached
+      )
+      expect(response.status).toBe(200)
+      expect(response.headers.get("Cache-Control")).toBe("no-store")
+    }
+    expect(queries).toBe(1)
+
+    await cached.cache.delete(cached.key)
+    failing = true
+    expect(
+      (await createHealthResponse("production", database, cached)).status
+    ).toBe(503)
+    expect(
+      (await createHealthResponse("production", database, cached)).status
+    ).toBe(503)
+    expect(queries).toBe(3)
+  })
+
   it("defaults unknown values to local", () => {
     expect(normalizeAppEnvironment("unknown")).toBe("local")
   })

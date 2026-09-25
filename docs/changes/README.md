@@ -27,6 +27,7 @@ Records:
 - [2026-09-24: Turnstile and rate limits on auth](2026-09-24-auth-turnstile-rate-limits.md)
 - [2026-09-25: Production email on send.tanbase.dev](2026-09-25-production-email.md)
 - [2026-09-25: Security headers, error pages, and request logging](2026-09-25-security-headers.md)
+- [2026-09-25: Cached health check and privacy-first analytics](2026-09-25-health-cache-analytics.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

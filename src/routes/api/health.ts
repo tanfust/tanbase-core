@@ -6,7 +6,11 @@ import { createHealthResponse } from "@/lib/health"
 export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
-      GET: () => createHealthResponse(env.APP_ENV, env.DB),
+      GET: async ({ request }) =>
+        createHealthResponse(env.APP_ENV, env.DB, {
+          cache: await caches.open("health"),
+          key: new URL("/api/health/database-check", request.url).toString(),
+        }),
     },
   },
 })

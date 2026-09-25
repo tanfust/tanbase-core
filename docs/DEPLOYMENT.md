@@ -190,6 +190,34 @@ inline script lacks the CSP nonce, or when a fingerprinted asset lacks
 `immutable` caching or `nosniff`. If a CSP change blocks resources in
 production, roll back the Worker version first.
 
+### Health endpoint
+
+`GET /api/health` is public so smoke checks and uptime monitors need no secret
+([ADR-0009](decisions/0009-public-health-endpoint.md)). A successful D1 check is
+cached for 30 seconds in each Cloudflare location; failures are never cached.
+Clients always receive `Cache-Control: no-store` and the same JSON contract.
+
+### Analytics
+
+PostHog is off by default ([ADR-0010](decisions/0010-privacy-first-analytics.md)).
+To enable it for this installation:
+
+1. In the PostHog project settings, enable **Cookieless server hash mode**.
+   Optionally enable **Discard client IP data**.
+2. Set the production `POSTHOG_HOST` Wrangler variable to the project's
+   ingestion host, such as `https://eu.i.posthog.com`, or leave it empty for
+   `https://us.i.posthog.com`. A reverse-proxy origin also works.
+3. Store the project API key as a Worker secret. It is public, but the secret
+   keeps it out of the repository so forks never report to this project:
+
+   ```sh
+   pnpm exec wrangler secret put POSTHOG_KEY --env production
+   ```
+
+The CSP adds `https://*.posthog.com`, or the proxy origin, to `connect-src` only
+while the key is set. The SDK is bundled, so `script-src` does not change.
+Delete the secret to turn analytics off.
+
 ### Canonical production domain
 
 The canonical origin is `https://core.tanbase.dev`
