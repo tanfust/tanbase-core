@@ -101,14 +101,17 @@ Production (2026-09-25):
   forged token returned `403 VERIFICATION_FAILED` after a Siteverify call.
 - The managed production widget rendered on `https://core.tanbase.dev/login`.
   It presented an interactive challenge to the automated browser, which was not
-  solved, so the solved-token path still needs one operator check.
+  solved.
+- Operator-reported, after the email change deployed: sign-up, sign-in, and
+  password reset succeeded through the solved production widget, proving the
+  `TURNSTILE_SECRET_KEY` pairing and hostname pinning.
 
 ## Deployment state
 
-| Target     | Commit                                | URL                        | Date                 | Result                                                                                                   |
-| ---------- | ------------------------------------- | -------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------- |
-| Local      | Working tree based on `a8d9100`       | `http://localhost:3000`    | 2026-09-24           | Setup, verify, smoke, burst, e2e, dry run passed                                                         |
-| Production | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev` | 2026-09-25 09:00 UTC | Build `a763606d` post-deploy smoke with token-less rejection passed; forged token `403`; widget rendered |
+| Target     | Commit                                | URL                        | Date                 | Result                                                                                                              |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Local      | Working tree based on `a8d9100`       | `http://localhost:3000`    | 2026-09-24           | Setup, verify, smoke, burst, e2e, dry run passed                                                                    |
+| Production | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev` | 2026-09-25 09:00 UTC | Build `a763606d` post-deploy smoke with token-less rejection passed; forged token `403`; operator solved the widget |
 
 ## Rollback notes
 
@@ -119,8 +122,6 @@ reverted they are unused.
 
 ## Remaining work
 
-- Have an operator solve the production widget and confirm a sign-in reaches
-  the credential check.
 - Enable the restricted production `EMAIL` binding on `send.tanbase.dev` and
   prove one controlled delivery.
 - Add `https://challenges.cloudflare.com` to the CSP in F-018.

@@ -61,12 +61,25 @@ Local:
   senders are restricted.
 - `pnpm cf:typegen` — idempotent.
 
+Production (2026-09-25):
+
+- Workers Build `7ab31bd3` for merge commit `b811368` deployed Worker version
+  `0519d547` at 09:13 UTC with
+  `env.EMAIL (unrestricted - senders: noreply@send.tanbase.dev)`. Its
+  post-deploy smoke passed on the first attempt.
+- `pnpm smoke -- --environment production` passed independently at 09:14 UTC,
+  and a token-less verification resend returned `400 MISSING_RESPONSE`.
+- Operator-reported: sign-up, email verification, sign-in, task creation,
+  sign-out, forgot password, and reset all succeeded on `core.tanbase.dev`
+  through the production Turnstile widget. The verification and reset emails
+  arrived from `noreply@send.tanbase.dev` with SPF, DKIM, and DMARC passing.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                          |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------------------------- |
-| Local      | Working tree based on `3ab15ae` | —                          | 2026-09-25 | Verify, typegen, dry run passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed                    |
+| Target     | Commit                                | URL                        | Date                 | Result                                                                     |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| Local      | Working tree based on `3ab15ae`       | —                          | 2026-09-25           | Verify, typegen, dry run passed                                            |
+| Production | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev` | 2026-09-25 09:17 UTC | Post-deploy smoke passed; operator-verified delivery and full auth journey |
 
 ## Rollback notes
 
@@ -76,9 +89,5 @@ involved; the sending domain and its DNS records can remain.
 
 ## Remaining work
 
-- After deployment, sign up on `core.tanbase.dev` with an operator-controlled
-  address and record the message ID, arrival, and SPF, DKIM, and DMARC results.
-- Complete the F-005 production journey: verify, sign in, sign out, forgot
-  password, and reset.
-- Have an operator solve the production Turnstile widget and confirm a sign-in
-  reaches the credential check.
+- Record per-message delivery IDs in Workers Logs if delivery troubleshooting
+  becomes necessary; the module currently returns the ID without logging it.
