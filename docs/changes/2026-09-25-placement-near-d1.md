@@ -59,12 +59,38 @@ connection each time, so TLS is included):
 | `/login`      | —               | 0.15 s – 0.34 s |
 | `/robots.txt` | —               | 0.10 s – 0.11 s |
 
+Production after the change:
+
+- Workers Build `1984aacc` deployed merge `8d2581d` as version `cfb92e4c` at
+  22:39:35 UTC; its post-deploy smoke passed on the first attempt.
+- Every dynamic response carries `cf-placement: remote-MRS`, including
+  requests entering through `GIG`.
+- Signed-in server functions entering through `GIG` now take 24 to 165 ms of
+  Worker wall time, against 1.7 to 4.3 seconds before; through `BCN`, 54 to
+  87 ms. A `GET /` entering through `GIG` took 9 ms of wall time.
+- The operator confirmed the board shows Live, and Worker logs show upgrades
+  through `BCN` reaching the room through the placed Worker.
+
+Time to first byte from Tunis after the change:
+
+| Path          | Before, through `MRS` | After, through `MRS` |
+| ------------- | --------------------- | -------------------- |
+| `/`           | 0.45 s                | 0.33 s – 0.36 s      |
+| `/api/health` | 0.30 s – 0.64 s       | 0.13 s – 0.15 s      |
+| `/login`      | 0.15 s – 0.34 s       | 0.13 s – 0.15 s      |
+| `/robots.txt` | 0.10 s – 0.11 s       | 0.13 s               |
+
+`/` entering through `GIG` still took 1.04 s to first byte. The Worker spent
+9 ms on it, so the rest is the network path from Tunis to Rio de Janeiro,
+which placement cannot change. `robots.txt` gained about 20 ms of forwarding,
+the expected cost for a request that does not use D1.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `660c1b5` | —                          | 2026-09-25 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `660c1b5` | —                          | 2026-09-25 | Passed |
+| Production | `8d2581d` / version `cfb92e4c`  | `https://core.tanbase.dev` | 2026-09-25 | Passed |
 
 ## Rollback notes
 
@@ -73,9 +99,7 @@ back the Worker version. Nothing else depends on it.
 
 ## Remaining work
 
-- After deployment, confirm `cf-placement` on dynamic responses, repeat the
-  baseline measurements, and compare Worker wall time for signed-in server
-  functions entering through `GIG`.
-- Confirm the live board still connects through the placed Worker.
+- Server-rendered `/app` used 62 to 160 ms of CPU in these logs, above the
+  50 ms p75 budget in OVERVIEW; F-019 owns measuring and reducing it.
 - The end-of-roadmap installation guide should explain choosing a placement
   for each installation's own D1 region.

@@ -488,7 +488,7 @@ responses.
 - [ ] Lighthouse CI on the production build and canonical production URL
 - [ ] Bundle size check for the landing page
 - [ ] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`
-- [ ] Placement tested on and off, decision recorded ([ADR-0011](decisions/0011-placement-near-d1.md) chose a hint next to D1; production comparison pending)
+- [x] Placement tested on and off, decision recorded ([ADR-0011](decisions/0011-placement-near-d1.md): server functions through `GIG` fell from 1.7–4.3 s to 24–165 ms)
 - [ ] Budgets in OVERVIEW.md met or updated with a reason
 
 ---
