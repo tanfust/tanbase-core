@@ -40,7 +40,7 @@ describe("sendEmail", () => {
     const send = createEmailSender({
       environment: {
         EMAIL: { send: providerSend },
-        EMAIL_FROM: "TanBase Core <hello@example.com>",
+        EMAIL_FROM: "hello@example.com",
       },
       logger: { info: vi.fn() },
     })
@@ -51,7 +51,7 @@ describe("sendEmail", () => {
     })
     expect(providerSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: "TanBase Core <hello@example.com>",
+        from: { email: "hello@example.com", name: "TanBase Core" },
         subject: "Verify your email",
         to: "person@example.com",
       })
@@ -67,7 +67,7 @@ describe("sendEmail", () => {
   it("returns a safe error when a sender exists without an Email binding", async () => {
     const send = createEmailSender({
       environment: {
-        EMAIL_FROM: "TanBase Core <hello@example.com>",
+        EMAIL_FROM: "hello@example.com",
       },
       logger: { info: vi.fn() },
     })
@@ -83,7 +83,7 @@ describe("sendEmail", () => {
         EMAIL: {
           send: vi.fn().mockRejectedValue(new Error("provider details")),
         },
-        EMAIL_FROM: "TanBase Core <hello@example.com>",
+        EMAIL_FROM: "hello@example.com",
       },
       logger: { info: vi.fn() },
     })

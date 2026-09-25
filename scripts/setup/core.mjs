@@ -99,6 +99,7 @@ export function setupPlan({ localOnly }) {
     "Regenerate Worker types, verify, and run the production dry run",
     "Apply production migrations before application code",
     "Keep the production Turnstile site key only when its Worker secret exists",
+    "Keep the production email sender only when its sending domain is onboarded",
     "Deploy with a generated Better Auth secret when missing",
     "Reconcile the workers.dev URL and deploy the final verified build",
     "Run production health, database, SSR, auth-redirect, and SEO smoke checks",
@@ -131,6 +132,7 @@ export function readWranglerInstallation(source) {
     accountId: config.account_id ?? null,
     databaseId: productionDatabase?.database_id ?? null,
     databaseName: productionDatabase?.database_name ?? null,
+    emailFrom: production?.vars?.EMAIL_FROM ?? null,
     productionUrl: production?.vars?.BETTER_AUTH_URL ?? null,
     turnstileSiteKey: production?.vars?.TURNSTILE_SITE_KEY ?? null,
     workerName: production?.name ?? config.name ?? null,
@@ -143,6 +145,7 @@ export function updateWranglerInstallation(
     accountId,
     databaseId,
     databaseName,
+    disableEmail = false,
     localDatabaseName,
     productionUrl,
     turnstileSiteKey,
@@ -165,6 +168,11 @@ export function updateWranglerInstallation(
       ["env", "production", "vars", "TURNSTILE_SITE_KEY"],
       turnstileSiteKey,
     ])
+  }
+  if (disableEmail) {
+    // An undefined value removes the property, so the binding is dropped.
+    updates.push([["env", "production", "send_email"], undefined])
+    updates.push([["env", "production", "vars", "EMAIL_FROM"], ""])
   }
 
   return updates.reduce(
@@ -247,6 +255,26 @@ export function updateLlmsOrigin(source, origin) {
 export function resolveTurnstileSiteKey(configuredSiteKey, secretList) {
   if (!configuredSiteKey) return ""
   return hasSecret(secretList, "TURNSTILE_SECRET_KEY") ? configuredSiteKey : ""
+}
+
+export function emailDomain(address) {
+  const match = /^[^\s@<>]+@([^\s@<>]+\.[^\s@<>]+)$/.exec(address ?? "")
+  return match ? match[1].toLowerCase() : null
+}
+
+/**
+ * Reads `wrangler email sending list` table output and reports whether the
+ * named sending domain is present and enabled. Wrangler has no JSON output
+ * for this command.
+ */
+export function sendingDomainEnabled(listOutput, domain) {
+  return listOutput.split("\n").some((line) => {
+    const cells = line
+      .split("│")
+      .map((cell) => cell.trim().toLowerCase())
+      .filter(Boolean)
+    return cells.includes(domain.toLowerCase()) && cells.includes("yes")
+  })
 }
 
 export function hasSecret(secretList, name) {

@@ -41,7 +41,8 @@
       "vars": {
         "APP_ENV": "production",
         "BETTER_AUTH_URL": "https://core.tanbase.dev",
-        "EMAIL_FROM": "",
+        // Bare address on the onboarded send.tanbase.dev sending domain.
+        "EMAIL_FROM": "noreply@send.tanbase.dev",
         // Public site key of the production Turnstile widget. When set, the
         // TURNSTILE_SECRET_KEY Worker secret is required and auth fails closed
         // without it. Empty disables the challenge.
@@ -52,6 +53,14 @@
           "name": "AUTH_LIMITER",
           "namespace_id": "1001",
           "simple": { "limit": 10, "period": 60 },
+        },
+      ],
+      // Requires Workers Paid and an onboarded Email Sending domain. The
+      // guided installer removes it for accounts without that domain.
+      "send_email": [
+        {
+          "name": "EMAIL",
+          "allowed_sender_addresses": ["noreply@send.tanbase.dev"],
         },
       ],
       "d1_databases": [

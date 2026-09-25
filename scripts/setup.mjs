@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url"
 
 import {
   deriveWorkerName,
+  emailDomain,
   findDeploymentUrl,
   hasSecret,
   localTurnstileTestSecret,
@@ -27,6 +28,7 @@ import {
   resolveTurnstileSiteKey,
   selectAccount,
   selectDatabase,
+  sendingDomainEnabled,
   setupPlan,
   updateLlmsOrigin,
   updateSiteOrigin,
@@ -275,6 +277,22 @@ async function remoteSecretList(manager, accountEnv) {
   }
 }
 
+// The production EMAIL binding fails to deploy on accounts without Email
+// Sending, so keep the sender only when its domain is onboarded and enabled.
+async function readyEmailSender(manager, accountEnv, sender) {
+  const domain = emailDomain(sender)
+  if (!domain) return null
+  const result = await runWrangler(manager, ["email", "sending", "list"], {
+    allowFailure: true,
+    capture: true,
+    cwd: root,
+    echo: false,
+    env: accountEnv,
+  })
+  if (result.code !== 0) return null
+  return sendingDomainEnabled(result.output, domain) ? sender : null
+}
+
 async function hasRemoteAuthSecret(manager, accountEnv) {
   return hasSecret(
     await remoteSecretList(manager, accountEnv),
@@ -315,6 +333,7 @@ async function deploy(manager, accountEnv, configureSecret) {
 async function main() {
   const state = (await readJson(statePath)) ?? {}
   let turnstileEnabled = false
+  let emailSender = null
   const argv = process.argv.slice(2)
   const explicitlyNamed = argv.includes("--name")
   const defaultWorkerName = explicitlyNamed
@@ -466,21 +485,28 @@ async function main() {
     updateLlmsOrigin(await readFile(llmsPath, "utf8"), provisionalOrigin)
   )
 
-  // Checked after the Worker name is written, so the lookup targets this
-  // installation rather than the template's Worker.
-  const configuredSiteKey =
-    readWranglerInstallation(configuredSource).turnstileSiteKey
+  // Checked after the Worker name is written, so the lookups target this
+  // installation rather than the template's Worker and sender.
+  const installation = readWranglerInstallation(configuredSource)
   const turnstileSiteKey = resolveTurnstileSiteKey(
-    configuredSiteKey,
+    installation.turnstileSiteKey,
     await remoteSecretList(manager, accountEnv)
   )
-  if (turnstileSiteKey !== (configuredSiteKey ?? "")) {
+  emailSender = installation.emailFrom
+    ? await readyEmailSender(manager, accountEnv, installation.emailFrom)
+    : null
+  const disableEmail = Boolean(installation.emailFrom) && !emailSender
+  if (
+    turnstileSiteKey !== (installation.turnstileSiteKey ?? "") ||
+    disableEmail
+  ) {
     await writeAtomic(
       configPath,
       updateWranglerInstallation(configuredSource, {
         accountId: account.id,
         databaseId: database.uuid,
         databaseName,
+        disableEmail,
         localDatabaseName,
         productionUrl: provisionalOrigin,
         turnstileSiteKey,
@@ -621,7 +647,12 @@ async function main() {
       : "Turnstile: disabled. Auth forms have no bot challenge until you create a widget, set TURNSTILE_SECRET_KEY, and commit its site key (docs/DEPLOYMENT.md).\n"
   )
   process.stdout.write(
-    "Optional services: skipped. Configure Email Service, a custom domain, and Git deployment only when needed.\n"
+    emailSender
+      ? `Email: sending from ${emailSender} through the EMAIL binding.\n`
+      : "Email: disabled. Delivery is logged as metadata until you onboard an Email Sending domain and restore the EMAIL binding (docs/DEPLOYMENT.md).\n"
+  )
+  process.stdout.write(
+    "Optional services: skipped. Configure a custom domain and Git deployment only when needed.\n"
   )
   process.stdout.write(
     "Review and commit wrangler.jsonc, generated Worker types, and the canonical URL changes for future Cloudflare Builds.\n"

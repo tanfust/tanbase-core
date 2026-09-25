@@ -3,6 +3,7 @@ import test from "node:test"
 
 import {
   deriveWorkerName,
+  emailDomain,
   findDeploymentUrl,
   hasSecret,
   mergeSetupState,
@@ -12,6 +13,7 @@ import {
   resolveTurnstileSiteKey,
   selectAccount,
   selectDatabase,
+  sendingDomainEnabled,
   setupPlan,
   updateLlmsOrigin,
   updateSiteOrigin,
@@ -130,6 +132,7 @@ test("updates only the intended local and production Wrangler fields", () => {
     accountId: "account-1",
     databaseId: "database-1",
     databaseName: "customer-app-production",
+    emailFrom: "sender@example.com",
     productionUrl: "https://customer-app.owner.workers.dev",
     turnstileSiteKey: "0x-template-site-key",
     workerName: "customer-app",
@@ -152,6 +155,44 @@ test("Turnstile site key updates only when explicitly requested", () => {
   })
 
   assert.equal(readWranglerInstallation(disabled).turnstileSiteKey, "")
+})
+
+test("disabling email removes the production binding and sender only", () => {
+  const disabled = updateWranglerInstallation(config, {
+    accountId: "account-1",
+    databaseId: "database-1",
+    databaseName: "customer-app-production",
+    disableEmail: true,
+    localDatabaseName: "customer-app-local",
+    productionUrl: "https://customer-app.owner.workers.dev",
+    workerName: "customer-app",
+  })
+
+  assert.equal(readWranglerInstallation(disabled).emailFrom, "")
+  assert.equal(disabled.match(/send_email/g)?.length, 1)
+  assert.match(disabled, /"send_email": \[\{ "name": "EMAIL" \}\],\n  "env"/)
+})
+
+test("email sending detection reads the Wrangler table by domain", () => {
+  const output = [
+    "┌─────────────┬──────────────────┬─────────┬─────┐",
+    "│ zone        │ name             │ enabled │ tag │",
+    "├─────────────┼──────────────────┼─────────┼─────┤",
+    "│ tanbase.dev │ send.tanbase.dev │ yes     │ e9b │",
+    "│ example.com │ mail.example.com │ no      │ a1c │",
+    "└─────────────┴──────────────────┴─────────┴─────┘",
+  ].join("\n")
+
+  assert.equal(emailDomain("noreply@Send.Tanbase.dev"), "send.tanbase.dev")
+  assert.equal(emailDomain("TanBase <noreply@send.tanbase.dev>"), null)
+  assert.equal(emailDomain(""), null)
+  assert.equal(sendingDomainEnabled(output, "send.tanbase.dev"), true)
+  assert.equal(sendingDomainEnabled(output, "mail.example.com"), false)
+  assert.equal(sendingDomainEnabled(output, "other.dev"), false)
+  assert.equal(
+    sendingDomainEnabled("No sending subdomains found.", "send.tanbase.dev"),
+    false
+  )
 })
 
 test("production Turnstile stays enabled only with its Worker secret", () => {

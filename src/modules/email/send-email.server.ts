@@ -1,10 +1,13 @@
 import { env } from "cloudflare:workers"
 
+import { siteConfig } from "@/lib/site"
+
 import { renderEmail } from "./render"
 import type { EmailDeliveryResult, SendEmailInput } from "./types"
 
 interface EmailEnvironment {
   EMAIL?: SendEmail
+  /** Bare sender address; it must match the binding's allowed senders. */
   EMAIL_FROM?: string
 }
 
@@ -56,7 +59,7 @@ export function createEmailSender(
     const rendered = await renderEmail(input)
     try {
       const response = await environment.EMAIL.send({
-        from: environment.EMAIL_FROM,
+        from: { email: environment.EMAIL_FROM, name: siteConfig.name },
         html: rendered.html,
         subject: input.subject,
         text: rendered.text,

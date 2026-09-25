@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-25
 ---
 
 # TanBase Core: Features
@@ -139,6 +139,8 @@ non-production branch builds are optional and disabled by default.
 **Technical notes**
 
 - Templates render at send time on the Worker. If rendering cost shows up in CPU metrics, prebuild them to HTML.
+- Production sends from `noreply@send.tanbase.dev` through a binding restricted
+  to that sender; the display name comes from `siteConfig.name`.
 
 **Tests**
 
