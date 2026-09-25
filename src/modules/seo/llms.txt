@@ -19,7 +19,7 @@ The implemented foundation provides server-rendered React, static assets,
 environment-specific Worker builds, observability, a public health check, CI,
 and production deployment automation. The production site also runs a personal
 task board with verified email and password accounts, protected by Cloudflare
-Turnstile and per-IP rate limits. The public sitemap, robots policy, and this
+Turnstile and per-IP rate limits, and private file attachments stored in R2. The public sitemap, robots policy, and this
 discovery document describe only currently implemented resources.
 
 Production deployment is not verified until the canonical URL passes the

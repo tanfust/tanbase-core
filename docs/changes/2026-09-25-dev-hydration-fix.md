@@ -51,10 +51,10 @@ Local:
 
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result                                    |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ----------------------------------------- |
-| Local      | Working tree based on `10401e8` | `http://localhost:3110`    | 2026-09-25 | Browser suite and dev-client check passed |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed; production was unaffected   |
+| Target     | Commit                                | URL                        | Date                 | Result                                             |
+| ---------- | ------------------------------------- | -------------------------- | -------------------- | -------------------------------------------------- |
+| Local      | Working tree based on `10401e8`       | `http://localhost:3110`    | 2026-09-25           | Browser suite and dev-client check passed          |
+| Production | `dfe4f4b` / Worker version `27b14b56` | `https://core.tanbase.dev` | 2026-09-25 21:50 UTC | Deployed with F-010; production behavior unchanged |
 
 ## Rollback notes
 
