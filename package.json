@@ -16,6 +16,7 @@
     "test:e2e": "pnpm db:migrate:e2e && node scripts/prepare-e2e-account.mjs && playwright test",
     "test:setup": "node --test scripts/setup/*.test.mjs",
     "test:boundaries": "node scripts/test-import-protection.mjs && node scripts/check-db-boundaries.mjs",
+    "test:dev-client": "node scripts/check-dev-client.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,jsonc,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,jsonc,md,yml,yaml}\"",

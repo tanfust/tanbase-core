@@ -43,3 +43,5 @@ jobs:
       - run: pnpm cf:typegen
       - run: git diff --exit-code -- src/worker-configuration.d.ts
       - run: pnpm cf:dry-run:production
+      # Builds strip dead server-only imports that the dev server still loads.
+      - run: pnpm test:dev-client
