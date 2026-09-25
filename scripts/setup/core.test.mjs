@@ -210,6 +210,34 @@ test("files bucket is personalized or removed only in production", () => {
   assert.equal(disabled.match(/r2_buckets/g)?.length, 1)
 })
 
+test("placement stays with its database and is dropped for another", () => {
+  const placed = config.replace(
+    '"production": {\n      "name": "tanbase-core",',
+    '"production": {\n      "name": "tanbase-core",\n      "placement": { "region": "azure:francesouth" },'
+  )
+  assert.match(placed, /azure:francesouth/)
+  const options = {
+    accountId: "account-1",
+    databaseName: "customer-app-production",
+    localDatabaseName: "customer-app-local",
+    productionUrl: "https://customer-app.owner.workers.dev",
+    workerName: "customer-app",
+  }
+
+  const sameDatabase = updateWranglerInstallation(placed, {
+    ...options,
+    databaseId: "old-database",
+  })
+  assert.match(sameDatabase, /"placement": \{ "region": "azure:francesouth" \}/)
+
+  const otherDatabase = updateWranglerInstallation(placed, {
+    ...options,
+    databaseId: "database-1",
+  })
+  assert.doesNotMatch(otherDatabase, /placement/)
+  assert.equal(readWranglerInstallation(otherDatabase).databaseId, "database-1")
+})
+
 test("R2 availability errors are recognized", () => {
   assert.equal(
     r2Unavailable(

@@ -59,6 +59,34 @@ pnpm db:migrate:production
 then deploys the generated Worker. Migrations must remain compatible with the
 currently active code; destructive changes require an expand/contract rollout.
 
+### Worker placement
+
+The production Worker runs next to its D1 primary rather than in the edge
+location nearest each visitor
+([ADR-0011](decisions/0011-placement-near-d1.md)). The primary of
+`tanbase-core-production` is in `WEUR`, in Marseille, so the production
+environment sets:
+
+```jsonc
+"placement": { "region": "azure:francesouth" }
+```
+
+To find a database's primary, run a read-only query through the D1 API and
+read `served_by_region` and `served_by_colo` from the result's `meta` where
+`served_by_primary` is `true`. List the accepted region identifiers with
+`GET /accounts/{account_id}/workers/placement/regions`, and choose the one
+nearest the primary.
+
+Placement moves only the Worker's `fetch` handler: static assets are still
+served from the location nearest the visitor, and each Durable Object stays
+where it was created. Dynamic responses then carry a `cf-placement` header
+such as `remote-MRS` (forwarded to Marseille) or `local-MRS` (already there).
+
+The hint belongs to one database. The guided installer removes it when it
+points production at a different database, which leaves the Worker on default
+placement until that installation chooses its own. To remove placement, delete
+the key and deploy.
+
 ### Production R2 bucket
 
 Task attachments are stored in the `tanbase-core-files` bucket, bound as
