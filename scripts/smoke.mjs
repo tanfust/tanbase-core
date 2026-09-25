@@ -85,6 +85,11 @@ assert.deepEqual(await healthResponse.json(), {
     )
       ? "ok"
       : "disabled",
+    realtime: environmentConfig(environment).durable_objects?.bindings?.some(
+      (binding) => binding.name === "BOARD"
+    )
+      ? "ok"
+      : "disabled",
   },
 })
 

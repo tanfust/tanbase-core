@@ -80,6 +80,21 @@ a cleanup failure is logged as `attachment.cleanup_failed`.
 binding, cached like the database check. Installations without the binding
 report `disabled`, and the attachment UI says attachments are off.
 
+### Durable Objects
+
+The live board uses the `BoardRoom` Durable Object class, bound as `BOARD`.
+It needs no provisioning: the `v1` migration in `wrangler.jsonc` creates the
+SQLite-backed class on the first deployment that includes it. Rooms store no
+application data, so a Worker rollback loses nothing, but a class that has
+been deployed can only be removed with a later `deleted_classes` migration,
+never by deleting its binding.
+
+WebSocket upgrades to `/api/realtime/:projectId` bypass TanStack Start and
+security-header processing, because a `101` response cannot be copied. Rooms
+hibernate between events; Durable Object duration should stay near zero while
+sockets are idle. `GET /api/health` reports `checks.realtime` through an RPC to
+a dedicated `health` room.
+
 ### Better Auth
 
 The production URL is committed as `BETTER_AUTH_URL`; the secret is not. Create

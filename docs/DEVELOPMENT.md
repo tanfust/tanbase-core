@@ -82,6 +82,14 @@ local migrations first; attachments use migration `0002`.
 Upload rules live in `src/modules/files/limits.ts` and are shared by the
 browser, the upload route, and the database constraint.
 
+## Local realtime workflow
+
+`pnpm dev` runs `BoardRoom` in the local Workers runtime and proxies WebSocket
+upgrades, so two browser windows on the same board update each other. The
+header shows **Live** once the socket is open. Durable Object classes must be
+exported from `src/server.ts` and, for the Workers-runtime tests, from
+`test/worker.ts`.
+
 ## Local email workflow
 
 `sendEmail()` defaults to a metadata-only log when `EMAIL_FROM` is empty. The

@@ -1,7 +1,13 @@
 import { env } from "cloudflare:workers"
 import handler from "@tanstack/react-start/server-entry"
 
+import { getSessionFromHeaders } from "@/modules/auth/session.server"
+import {
+  getBoardNamespace,
+  handleRealtimeUpgrade,
+} from "@/modules/realtime/rooms.server"
 import { addHomepageDiscoveryHeaders } from "@/modules/seo/discovery"
+import { getProject } from "@/modules/tasks/repository.server"
 import {
   analyticsConnectSources,
   readAnalyticsConfig,
@@ -9,6 +15,27 @@ import {
 import { log } from "@/platform/log"
 import { runWithRequestContext } from "@/platform/request-context"
 import { applySecurityHeaders, createNonce } from "@/platform/security-headers"
+
+export { BoardRoom } from "@/modules/realtime/board-room.server"
+
+const realtimePath = /^\/api\/realtime\/([^/]+)$/
+
+// WebSocket upgrades go straight to the room so TanStack never wraps the 101.
+async function realtimeResponse(request: Request, projectId: string) {
+  const session = await getSessionFromHeaders(request.headers)
+  return handleRealtimeUpgrade(request, decodeURIComponent(projectId), {
+    appOrigin: new URL(env.BETTER_AUTH_URL).origin,
+    namespace: getBoardNamespace(),
+    ownsProject: async (userId, id) => (await getProject(userId, id)) !== null,
+    userId: session?.user.id ?? null,
+  })
+}
+
+/** The page's own WebSocket origin, which `'self'` may not cover everywhere. */
+function socketOrigin(request: Request) {
+  const url = new URL(request.url)
+  return `${url.protocol === "https:" ? "wss:" : "ws:"}//${url.host}`
+}
 
 function failedResponse() {
   return new Response("Something went wrong. Please try again.", {
@@ -28,7 +55,10 @@ export default {
     return runWithRequestContext({ nonce, requestId }, async () => {
       let response: Response
       try {
-        response = await handler.fetch(request)
+        const realtime = realtimePath.exec(new URL(request.url).pathname)
+        response = realtime
+          ? await realtimeResponse(request, realtime[1])
+          : await handler.fetch(request)
       } catch (error) {
         log.error("Unhandled request error", {
           event: "request.failed",
@@ -45,7 +75,10 @@ export default {
       return applySecurityHeaders(
         addHomepageDiscoveryHeaders(request, response),
         {
-          connectSources: analyticsConnectSources(readAnalyticsConfig(env)),
+          connectSources: [
+            socketOrigin(request),
+            ...analyticsConnectSources(readAnalyticsConfig(env)),
+          ],
           enforceCsp: !import.meta.env.DEV,
           nonce,
           production: env.APP_ENV === "production",

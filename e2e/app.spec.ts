@@ -113,17 +113,36 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
     page.getByRole("heading", { level: 1, name: "Release plan" })
   ).toBeVisible()
 
+  // A second device on the same board must see changes within a second.
+  const peer = await page.context().newPage()
+  await peer.goto(page.url())
+  await waitForHydration(peer)
+  await expect(page.getByText("Live", { exact: true })).toBeVisible()
+  await expect(peer.getByText("Live", { exact: true })).toBeVisible()
+
   await page.getByRole("button", { name: "New task" }).click()
   await page.getByLabel("Title").fill("Ship the board")
   await page.getByLabel("Notes").fill("Verify the complete browser flow")
   await page.getByRole("button", { name: "Create task" }).click()
   await expect(page.getByText("Ship the board")).toBeVisible()
+  let started = Date.now()
+  await expect(peer.getByText("Ship the board")).toBeVisible({ timeout: 1000 })
+  const createdLatency = Date.now() - started
 
   await page.getByRole("button", { name: "Actions for Ship the board" }).click()
   await page.getByRole("menuitem", { name: "Move to Doing" }).click()
   await expect(page.getByRole("region", { name: "Doing" })).toContainText(
     "Ship the board"
   )
+  started = Date.now()
+  await expect(peer.getByRole("region", { name: "Doing" })).toContainText(
+    "Ship the board",
+    { timeout: 1000 }
+  )
+  console.log(
+    `e2e: realtime create ${createdLatency} ms, move ${Date.now() - started} ms`
+  )
+  await peer.close()
   await page.reload()
   await waitForHydration(page)
   await expect(page.getByRole("region", { name: "Doing" })).toContainText(

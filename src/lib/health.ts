@@ -20,10 +20,17 @@ interface HealthCache {
   origin: string
 }
 
+interface RealtimeProbe {
+  /** RPC on a dedicated room; proves the Durable Object class is deployed. */
+  connections: () => Promise<number>
+}
+
 interface HealthDependencies {
   database: D1Database
   /** The FILES bucket, or null when the installation has none. */
   files?: R2Bucket | null
+  /** The health room, or null when the installation has no BOARD binding. */
+  realtime?: RealtimeProbe | null
   cache?: HealthCache
 }
 
@@ -55,9 +62,9 @@ async function cachedCheck(
 
 export async function createHealthResponse(
   environment: string,
-  { cache, database, files }: HealthDependencies
+  { cache, database, files, realtime }: HealthDependencies
 ): Promise<Response> {
-  const [databaseStatus, filesStatus] = await Promise.all([
+  const [databaseStatus, filesStatus, realtimeStatus] = await Promise.all([
     cachedCheck(
       "database",
       () => database.prepare("SELECT 1 AS healthy").first(),
@@ -66,15 +73,25 @@ export async function createHealthResponse(
     files
       ? cachedCheck("files", () => files.head("health/probe"), cache)
       : Promise.resolve("disabled" as const),
+    realtime
+      ? cachedCheck("realtime", () => realtime.connections(), cache)
+      : Promise.resolve("disabled" as const),
   ])
-  const healthy = databaseStatus === "ok" && filesStatus !== "error"
+  const healthy =
+    databaseStatus === "ok" &&
+    filesStatus !== "error" &&
+    realtimeStatus !== "error"
 
   return Response.json(
     {
       status: healthy ? "ok" : "error",
       service: "tanbase-core",
       environment: normalizeAppEnvironment(environment),
-      checks: { database: databaseStatus, files: filesStatus },
+      checks: {
+        database: databaseStatus,
+        files: filesStatus,
+        realtime: realtimeStatus,
+      },
     },
     {
       status: healthy ? 200 : 503,

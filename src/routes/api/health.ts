@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers"
 import { createFileRoute } from "@tanstack/react-router"
 
 import { createHealthResponse } from "@/lib/health"
+import { getBoardNamespace } from "@/modules/realtime/rooms.server"
 
 export const Route = createFileRoute("/api/health")({
   server: {
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/api/health")({
           },
           database: env.DB,
           files: (env as { FILES?: R2Bucket }).FILES ?? null,
+          realtime: getBoardNamespace()?.getByName("health") ?? null,
         }),
     },
   },

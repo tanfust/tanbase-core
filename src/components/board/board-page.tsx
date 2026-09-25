@@ -82,6 +82,8 @@ import {
   renameProject,
   updateTask,
 } from "@/modules/tasks/functions"
+import { useBoardRealtime } from "@/modules/realtime/use-board-realtime"
+import type { RealtimeStatus } from "@/modules/realtime/use-board-realtime"
 import { boardQueryKey, boardQueryOptions } from "@/modules/tasks/queries"
 
 const columns: Array<{
@@ -95,6 +97,31 @@ const columns: Array<{
 ]
 
 type TaskValues = Pick<TaskView, "title" | "notes" | "status" | "dueAt">
+
+const realtimeLabels: Record<RealtimeStatus, string> = {
+  connecting: "Connecting…",
+  live: "Live",
+  reconnecting: "Reconnecting…",
+}
+
+function RealtimeIndicator({ status }: { status: RealtimeStatus }) {
+  return (
+    <span
+      role="status"
+      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+    >
+      <span
+        aria-hidden="true"
+        className={
+          status === "live"
+            ? "size-2 rounded-full bg-emerald-500"
+            : "size-2 animate-pulse rounded-full bg-amber-500"
+        }
+      />
+      {realtimeLabels[status]}
+    </span>
+  )
+}
 
 export function BoardPage({ projectId }: { projectId?: string }) {
   const query = useSuspenseQuery(boardQueryOptions(projectId))
@@ -281,6 +308,29 @@ export function BoardPage({ projectId }: { projectId?: string }) {
       }),
   })
 
+  const realtimeStatus = useBoardRealtime({
+    queryKey: key,
+    projectId: snapshot.activeProject?.id ?? null,
+    onProjectEvent: (event) => {
+      if (event.type === "project.renamed") {
+        void router.invalidate()
+        return
+      }
+      // This device's own delete already navigated; only react to others.
+      if (event.type !== "project.deleted" || !deleteProjectMutation.isIdle) {
+        return
+      }
+      toast.add({
+        type: "info",
+        title: "Project deleted",
+        description: "It was deleted on another device.",
+      })
+      void queryClient.invalidateQueries({ queryKey: ["board"] })
+      void router.invalidate()
+      void navigate({ to: "/app", search: {} })
+    },
+  })
+
   async function saveProject(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const name = String(
@@ -338,7 +388,10 @@ export function BoardPage({ projectId }: { projectId?: string }) {
     <div className="flex min-w-0 flex-1 flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-sm text-muted-foreground">Project board</p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-muted-foreground">Project board</p>
+            <RealtimeIndicator status={realtimeStatus} />
+          </div>
           <h1 className="truncate text-3xl font-semibold tracking-tight">
             {snapshot.activeProject.name}
           </h1>
