@@ -13,9 +13,10 @@ longer the tip of `main` skips its deploy instead of replacing newer code.
 
 ## Motivation
 
-Nothing recorded web vitals: PostHog's were off, its web-vitals code loads
-from a CDN the CSP blocks, and `core.tanbase.dev` pages carry no Cloudflare
-Web Analytics beacon. Separately, PRs #26 and #27 merged 16 seconds apart and
+PostHog recorded no web vitals: they were off, and its web-vitals code loads
+from a CDN the CSP blocks. Cloudflare Web Analytics does record them for the
+zone; an earlier check that found no beacon was wrong, corrected on
+2026-09-26. Separately, PRs #26 and #27 merged 16 seconds apart and
 the older build deployed last, serving code without #27 for eight minutes;
 both post-deploy smokes passed because each checks only its own version.
 
@@ -60,14 +61,28 @@ Local:
   18 UI, 23 setup, and 6 script tests.
 - `pnpm cf:dry-run:production` — passed.
 
-Production: pending deployment.
+Production:
+
+- Workers Build `9c9ca53f` deployed merge `a2fe387` as version `86a32108` at
+  21:47 UTC. `scripts/deploy-if-current.mjs` ran, found the build at the tip of
+  `main` without a warning, so `git ls-remote` works in Workers Builds, and
+  deployed. Post-deploy smoke passed on the first attempt.
+- `pnpm smoke -- --environment production --expect-version 86a32108-2c91-4f12-8675-c90532d5b5cc`
+  — passed at 21:50 UTC.
+- The live page in Chrome, with every PostHog request intercepted and aborted
+  so nothing reached the project: a `$pageview`, then 8 seconds later a
+  `$web_vitals` event with FCP at 1,640 ms, no attribution, and
+  `?token=secret#frag` removed from every URL; no CSP violations. Headless
+  Chromium sends nothing, because PostHog treats its `HeadlessChrome` brand as
+  a bot.
+- The skip path has not run in production yet; no builds have overlapped.
 
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result  |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------- |
-| Local      | Working tree based on `023fb25` | `http://localhost:3000`    | 2026-09-26 | Passed  |
-| Production | —                               | `https://core.tanbase.dev` | —          | Pending |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `023fb25` | `http://localhost:3000`    | 2026-09-26 | Passed |
+| Production | `a2fe387` / version `86a32108`  | `https://core.tanbase.dev` | 2026-09-26 | Passed |
 
 ## Rollback notes
 
@@ -76,5 +91,4 @@ and check `/api/health` against the newest build after each deploy.
 
 ## Remaining work
 
-- Deploy, confirm the guard logs a normal deploy, and see `$web_vitals`
-  events in PostHog.
+- Watch for the guard's skip message the next time two builds overlap.
