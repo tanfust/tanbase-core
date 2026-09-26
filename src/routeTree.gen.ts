@@ -21,6 +21,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AppAppRouteImport } from './routes/_app/app'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
 import { Route as ApiAttachmentsAttachmentIdRouteImport } from './routes/api/attachments/$attachmentId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiTasksTaskIdAttachmentsRouteImport } from './routes/api/tasks/$taskId/attachments'
@@ -84,6 +85,11 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAttachmentsAttachmentIdRoute =
   ApiAttachmentsAttachmentIdRouteImport.update({
     id: '/api/attachments/$attachmentId',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppAppRoute
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppAppRoute
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/_app/app': typeof AppAppRoute
   '/_app/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/settings'
     | '/api/health'
+    | '/oauth/consent'
     | '/api/attachments/$attachmentId'
     | '/api/auth/$'
     | '/api/tasks/$taskId/attachments'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/settings'
     | '/api/health'
+    | '/oauth/consent'
     | '/api/attachments/$attachmentId'
     | '/api/auth/$'
     | '/api/tasks/$taskId/attachments'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/_app/app'
     | '/_app/settings'
     | '/api/health'
+    | '/oauth/consent'
     | '/api/attachments/$attachmentId'
     | '/api/auth/$'
     | '/api/tasks/$taskId/attachments'
@@ -215,6 +227,7 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  OauthConsentRoute: typeof OauthConsentRoute
   ApiAttachmentsAttachmentIdRoute: typeof ApiAttachmentsAttachmentIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTasksTaskIdAttachmentsRoute: typeof ApiTasksTaskIdAttachmentsRoute
@@ -306,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/attachments/$attachmentId': {
       id: '/api/attachments/$attachmentId'
       path: '/api/attachments/$attachmentId'
@@ -353,6 +373,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHealthRoute: ApiHealthRoute,
+  OauthConsentRoute: OauthConsentRoute,
   ApiAttachmentsAttachmentIdRoute: ApiAttachmentsAttachmentIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTasksTaskIdAttachmentsRoute: ApiTasksTaskIdAttachmentsRoute,

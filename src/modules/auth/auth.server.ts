@@ -1,6 +1,7 @@
 import { env, waitUntil } from "cloudflare:workers"
+import { mcp } from "@better-auth/mcp"
 import { betterAuth } from "better-auth"
-import { captcha } from "better-auth/plugins"
+import { captcha, jwt } from "better-auth/plugins"
 import { tanstackStartCookies } from "better-auth/tanstack-start"
 
 import { sendEmail } from "@/modules/email/send-email.server"
@@ -33,6 +34,32 @@ interface AuthDependencies {
   defer?: (promise: Promise<unknown>) => void
   environment?: AuthEnvironment
   send?: (input: SendEmailInput) => Promise<unknown>
+}
+
+/** The protected MCP resource; access tokens carry it as their audience. */
+export function mcpResource(baseURL: string) {
+  return new URL("/mcp", baseURL).href
+}
+
+/** Where the OAuth provider sends users to sign in and to approve a client. */
+export const oauthLoginPage = "/login"
+export const oauthConsentPage = "/oauth/consent"
+
+// Better Auth as the OAuth 2.1 authorization server for MCP clients such as
+// Claude (ADR-0014). The JWT plugin signs the audience-bound access tokens and
+// serves the JWKS that /mcp verifies them with. Clients register through
+// Dynamic Client Registration, rate-limited in the auth route.
+function mcpPlugins(environment: AuthEnvironment) {
+  return [
+    jwt(),
+    mcp({
+      loginPage: oauthLoginPage,
+      consentPage: oauthConsentPage,
+      resource: mcpResource(environment.BETTER_AUTH_URL),
+      allowDynamicClientRegistration: true,
+      allowUnauthenticatedClientRegistration: true,
+    }),
+  ]
 }
 
 function getAuthEnvironment(): AuthEnvironment {
@@ -167,9 +194,15 @@ export function createAuth(dependencies: AuthDependencies = {}) {
       },
     },
     // tanstackStartCookies() must remain the last plugin.
-    plugins: [...captchaPlugins(environment), tanstackStartCookies()],
+    plugins: [
+      ...captchaPlugins(environment),
+      ...mcpPlugins(environment),
+      tanstackStartCookies(),
+    ],
   })
 }
+
+export type Auth = ReturnType<typeof createAuth>
 
 export function getAuth() {
   return createAuth()

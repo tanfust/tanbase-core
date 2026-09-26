@@ -36,6 +36,7 @@ Records:
 - [2026-09-26: Due-date reminders on Cron Triggers and Queues](2026-09-26-due-date-reminders.md)
 - [2026-09-26: AI task breakdown on Workers AI, AI Gateway, and Workflows](2026-09-26-ai-task-breakdown.md)
 - [2026-09-26: Reload once when a fresh deployment's assets are missing](2026-09-26-asset-recovery.md)
+- [2026-09-26: MCP server with OAuth 2.1 through Better Auth](2026-09-26-mcp-server.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

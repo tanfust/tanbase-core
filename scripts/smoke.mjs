@@ -115,6 +115,43 @@ assert.deepEqual(health, {
   },
 })
 
+// MCP: an unauthenticated call is challenged toward the OAuth discovery chain
+// that MCP clients such as Claude follow. Identifiers derive from the
+// configured auth URL; documents are fetched from the target under test.
+const authOrigin = new URL(
+  environmentConfig(environment).vars?.BETTER_AUTH_URL ?? url.origin
+)
+const mcpResource = new URL("/mcp", authOrigin).href
+const mcpChallenge = await fetchWithTimeout(new URL("/mcp", url), {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+})
+assert.equal(mcpChallenge.status, 401, "/mcp must require an access token")
+const resourceMetadataUrl = /resource_metadata="([^"]+)"/.exec(
+  mcpChallenge.headers.get("www-authenticate") ?? ""
+)?.[1]
+assert.equal(
+  resourceMetadataUrl,
+  new URL("/.well-known/oauth-protected-resource/mcp", authOrigin).href,
+  "/mcp must point clients at its protected resource metadata"
+)
+const resourceMetadata = await (
+  await fetchWithTimeout(new URL(new URL(resourceMetadataUrl).pathname, url))
+).json()
+assert.equal(resourceMetadata.resource, mcpResource)
+const issuer = new URL(resourceMetadata.authorization_servers?.[0] ?? "")
+const serverMetadata = await (
+  await fetchWithTimeout(
+    new URL(`/.well-known/oauth-authorization-server${issuer.pathname}`, url)
+  )
+).json()
+assert.equal(serverMetadata.issuer, issuer.href.replace(/\/$/, ""))
+assert.ok(
+  serverMetadata.registration_endpoint && serverMetadata.token_endpoint,
+  "the authorization server must advertise registration and token endpoints"
+)
+
 const rootResponse = await fetchWithTimeout(new URL("/", url))
 const html = await rootResponse.text()
 

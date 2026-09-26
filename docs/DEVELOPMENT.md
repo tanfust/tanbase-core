@@ -108,6 +108,15 @@ without committing it:
 `pnpm dev` then needs `wrangler login`, every breakdown is billed to the
 account, and the first call creates the account's `default` AI Gateway.
 
+## Local MCP workflow
+
+`pnpm dev` serves `/mcp` and the OAuth endpoints against local D1. Point MCP
+Inspector at `http://localhost:3000/mcp`, sign in with a verified local
+account, and select **Allow** on `/oauth/consent`. Local clients with
+loopback redirect URIs must register as `native` applications; web clients
+need HTTPS redirect URIs. Tests call the tools and the MCP handler directly,
+without tokens, and cover the `401` challenge and discovery documents.
+
 ## Local email workflow
 
 `sendEmail()` defaults to a metadata-only log when `EMAIL_FROM` is empty. The

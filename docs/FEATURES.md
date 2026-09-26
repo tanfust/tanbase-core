@@ -426,19 +426,26 @@ non-production branch builds are optional and disabled by default.
 
 ### F-015: MCP server
 
-**Module:** mcp | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-007
+**Module:** mcp | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007
 
 **Acceptance criteria**
 
-- [ ] `/mcp` endpoint built with the Agents SDK and dispatched in `src/server.ts` before TanStack
-- [ ] Tools: `list_tasks` (filter by project, status, due), `create_task`, `complete_task`
-- [ ] Every tool resolves the user through the chosen auth method and goes through repositories
-- [ ] Connects and works from Claude and from MCP Inspector
+- [x] `/mcp` endpoint dispatched in `src/server.ts` before TanStack, built with
+      the official MCP TypeScript SDK instead of the Agents SDK
+      ([ADR-0014](decisions/0014-mcp-oauth-with-better-auth.md))
+- [x] Tools: `list_tasks` (filter by project, status, due), `create_task`, `complete_task`
+- [x] Every tool resolves the user through the chosen auth method and goes through repositories
+- [ ] Connects and works from Claude and from MCP Inspector (a scripted OAuth
+      client and the browser consent flow work locally; production pending)
 
 **Technical notes**
 
-- Resolve open question 1 (MCP auth) before planning
-- Verify the current Agents SDK API and its default Durable Object binding name
+- Open question 1 is resolved: OAuth 2.1 through Better Auth's MCP plugin
+  with Dynamic Client Registration and audience-bound JWT access tokens.
+- The Agents SDK's `McpAgent` is not used, so no Durable Object binding is
+  needed.
+- Tool writes publish board events, so tasks created or completed from Claude
+  appear live.
 
 ---
 
