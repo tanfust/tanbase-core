@@ -366,7 +366,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-013: AI Gateway and quotas
 
-**Module:** ai | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-006
+**Module:** ai | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-006
 
 **Acceptance criteria**
 
@@ -377,8 +377,8 @@ non-production branch builds are optional and disabled by default.
 - [x] `AI_MODEL` and `AI_GATEWAY_ID` environment variables
 - [x] Per-user daily quota in `ai_usage`, configurable, with a clear limit message
 - [x] `AI_LIMITER` blocks bursts per user
-- [x] Requests visible in the AI Gateway dashboard (first log from a local run
-      against the remote model; production pending)
+- [x] Requests visible in the AI Gateway dashboard (production log on
+      2026-09-26: 93 input and 97 output tokens, $0.000086)
 
 **Technical notes**
 
@@ -393,7 +393,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-014: Task breakdown workflow
 
-**Module:** ai | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-011, F-013
+**Module:** ai | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-011, F-013
 
 **Acceptance criteria**
 
@@ -401,7 +401,7 @@ non-production branch builds are optional and disabled by default.
 - [x] Steps: load task, generate 3 to 7 subtasks as JSON, validate with Zod, insert in one batch, broadcast to the board
 - [x] Invalid model output retries the generation step, then fails cleanly with a message
 - [x] UI shows running, done and failed states; subtasks appear through realtime
-- [ ] A production breakdown adds subtasks on `core.tanbase.dev`
+- [x] A production breakdown adds subtasks on `core.tanbase.dev` (seven subtasks on 2026-09-26)
 
 **Tests**
 
