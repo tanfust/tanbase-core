@@ -32,7 +32,8 @@ nonce-based CSP, root error and 404 pages, request-ID structured logging, the
 cached health check, and cookieless PostHog analytics reporting to the EU
 project. Since 2026-09-26 PostHog also records uncaught browser exceptions for
 Error Tracking; source-map upload waits on three Workers Builds variables.
-Session replay and web vitals are off. Cloudflare Web Analytics is enabled on
+Core Web Vitals capture and the superseded-build deploy guard are implemented
+and verified locally, pending deployment. Session replay is off. Cloudflare Web Analytics is enabled on
 the zone, but on 2026-09-26 `core.tanbase.dev` pages carried no beacon, which
 the CSP would block anyway.
 

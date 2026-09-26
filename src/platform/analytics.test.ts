@@ -127,6 +127,32 @@ describe("analytics privacy", () => {
     expect(JSON.stringify(scrubbed)).not.toContain("secret")
   })
 
+  it("strips queries from the URLs inside web vitals metrics", () => {
+    const resetUrl = "https://core.tanbase.dev/reset-password?token=secret"
+    const event = {
+      properties: {
+        $current_url: resetUrl,
+        $web_vitals_LCP_event: {
+          name: "LCP",
+          value: 812,
+          $current_url: resetUrl,
+          navigationURL: `${resetUrl}#top`,
+        },
+        $web_vitals_LCP_value: 812,
+      },
+    }
+
+    const scrubbed = scrubEventUrls(event)
+
+    expect(scrubbed.properties.$web_vitals_LCP_event).toEqual({
+      name: "LCP",
+      value: 812,
+      $current_url: "https://core.tanbase.dev/reset-password",
+      navigationURL: "https://core.tanbase.dev/reset-password",
+    })
+    expect(JSON.stringify(scrubbed)).not.toContain("secret")
+  })
+
   it("keeps prose that only looks like a query", () => {
     expect(stripQueriesInText("Why? Because.")).toBe("Why? Because.")
     expect(stripQueriesInText("Task not found.")).toBe("Task not found.")
