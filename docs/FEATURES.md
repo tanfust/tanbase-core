@@ -454,7 +454,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-016: Landing page and SEO layer
 
-**Module:** seo | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-002
+**Module:** seo | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-002
 
 **Acceptance criteria**
 
@@ -471,7 +471,7 @@ non-production branch builds are optional and disabled by default.
       ([ADR-0015](decisions/0015-worker-served-agent-discovery.md))
 - [x] API catalog, AI Catalog, MCP server card, agent skills index, and
       WebMCP tools for the F-015 MCP server, smoke-tested on production
-- [ ] DNS-AID record published under DNSSEC by the operator
+- [x] DNS-AID record published under DNSSEC by the operator
 
 **Current slice:** Public discovery and search metadata are documented in
 [Agent discovery](AGENT_DISCOVERY.md). Every document is built from the
@@ -479,7 +479,7 @@ capability it describes. auth.md, A2A, and OpenAPI stay unpublished until
 those capabilities exist. The landing page copy lives in
 `src/modules/seo/homepage.ts`, which also renders the homepage Markdown; the
 deploy placeholder links to the guided installer until F-023 adds the
-one-click button. Only the operator's DNS-AID step remains.
+one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ---
 
