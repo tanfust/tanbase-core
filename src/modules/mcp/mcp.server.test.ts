@@ -1,8 +1,10 @@
 import { env } from "cloudflare:workers"
 import { createMcpHandler } from "@modelcontextprotocol/server"
+import { hashPassword } from "better-auth/crypto"
 import { describe, expect, it } from "vitest"
 
 import { createAuth, mcpResource } from "@/modules/auth/auth.server"
+import type { Auth } from "@/modules/auth/auth.server"
 import {
   createProject,
   createTask,
@@ -289,5 +291,175 @@ describe("MCP authorization", () => {
     })
 
     expect(oauthDiscoveryResponse(new Request(`${origin}/app`))).toBeNull()
+  })
+})
+
+const base64url = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "")
+
+// Runs the whole OAuth flow in-process: a verified user, Dynamic Client
+// Registration, sign-in, authorization, consent, and a PKCE token exchange.
+async function issueAccessToken(auth: Auth) {
+  const userId = `mcp-oauth-${crypto.randomUUID()}`
+  const email = `${userId}@example.com`
+  const password = "correct-horse-battery-staple"
+  const now = Date.now()
+  await env.DB.batch([
+    env.DB.prepare(
+      "INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUES (?, 'MCP', ?, 1, ?, ?)"
+    ).bind(userId, email, now, now),
+    env.DB.prepare(
+      "INSERT INTO account (id, account_id, provider_id, user_id, password, created_at, updated_at) VALUES (?, ?, 'credential', ?, ?, ?, ?)"
+    ).bind(
+      crypto.randomUUID(),
+      userId,
+      userId,
+      await hashPassword(password),
+      now,
+      now
+    ),
+  ])
+  const call = (path: string, init?: RequestInit) =>
+    auth.handler(new Request(`${origin}/api/auth${path}`, init))
+  const json = { "content-type": "application/json", origin }
+  const redirectUri = "http://127.0.0.1:65530/callback"
+
+  const client = await (
+    await call("/oauth2/register", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify({
+        client_name: "Test client",
+        redirect_uris: [redirectUri],
+        token_endpoint_auth_method: "none",
+        application_type: "native",
+        grant_types: ["authorization_code", "refresh_token"],
+        response_types: ["code"],
+      }),
+    })
+  ).json<{ client_id: string }>()
+
+  const signIn = await call("/sign-in/email", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({ email, password }),
+  })
+  const cookie = signIn.headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ")
+
+  const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)))
+  const challenge = base64url(
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
+    )
+  )
+  const authorize = new URL(`${origin}/api/auth/oauth2/authorize`)
+  for (const [key, value] of Object.entries({
+    response_type: "code",
+    client_id: client.client_id,
+    redirect_uri: redirectUri,
+    code_challenge: challenge,
+    code_challenge_method: "S256",
+    state: "state",
+    scope: "openid profile email offline_access",
+    resource: mcpResource(origin),
+  })) {
+    authorize.searchParams.set(key, value)
+  }
+  const authorized = await auth.handler(
+    new Request(authorize, {
+      headers: { cookie, accept: "text/html", "sec-fetch-mode": "navigate" },
+      redirect: "manual",
+    })
+  )
+  const consentUrl = new URL(authorized.headers.get("location") ?? "", origin)
+
+  const consent = await (
+    await call("/oauth2/consent", {
+      method: "POST",
+      headers: { ...json, cookie },
+      body: JSON.stringify({
+        accept: true,
+        oauth_query: consentUrl.search.slice(1),
+      }),
+    })
+  ).json<{ url?: string; redirect_uri?: string }>()
+  const code = new URL(
+    consent.url ?? consent.redirect_uri ?? ""
+  ).searchParams.get("code")
+
+  const token = await (
+    await call("/oauth2/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: code ?? "",
+        redirect_uri: redirectUri,
+        client_id: client.client_id,
+        code_verifier: verifier,
+        resource: mcpResource(origin),
+      }),
+    })
+  ).json<{ access_token?: string }>()
+
+  return { accessToken: token.access_token ?? "", userId }
+}
+
+describe("MCP with a real access token", () => {
+  it("verifies the token in-process and serves the token's user", async () => {
+    const auth = testAuth()
+    const { accessToken, userId } = await issueAccessToken(auth)
+    expect(accessToken.split(".")).toHaveLength(3)
+
+    // A Worker cannot fetch its own hostname in production; fail loudly if
+    // verification tries to.
+    const realFetch = globalThis.fetch
+    globalThis.fetch = (input, init) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url
+      if (url.startsWith(origin)) throw new Error(`Self-fetch: ${url}`)
+      return realFetch(input, init)
+    }
+    try {
+      const response = await handleMcpRequest(
+        new Request(`${origin}/mcp`, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            accept: "application/json, text/event-stream",
+            "content-type": "application/json",
+            "mcp-protocol-version": "2025-06-18",
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "tools/call",
+            params: {
+              name: "create_task",
+              arguments: { title: "From a token" },
+            },
+          }),
+        }),
+        auth
+      )
+      const text = await response.text()
+      expect(response.status).toBe(200)
+      expect(text).toContain("From a token")
+      // The task belongs to the token's user, in their first project.
+      const { tasks } = await listTasks(userId, {}, env.DB)
+      expect(tasks.map((task) => task.title)).toEqual(["From a token"])
+    } finally {
+      globalThis.fetch = realFetch
+    }
   })
 })

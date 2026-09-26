@@ -52,10 +52,10 @@ F-013 and F-014 AI task breakdown are live: on 2026-09-26 a production
 breakdown added seven subtasks to a board on `core.tanbase.dev` through the
 `default` AI Gateway for $0.000086, within the per-user daily quota.
 
-F-015 MCP server is implemented and verified locally: a scripted OAuth client
-registered, signed in, approved, exchanged its code, and called all three
-tools on `/mcp`, and the browser flow resumed from sign-in to consent.
-Production deployment and a connection from Claude are pending.
+F-015 MCP server is deployed. The first connection from Claude authorized but
+failed on `/mcp` because the Worker tried to fetch its own JWKS over its
+hostname; the fix reads the keys in-process. A connection from Claude after
+that fix is pending.
 
 The production Worker runs next to its D1 primary in Marseille. Server
 functions for traffic entering Cloudflare far away, such as Rio de Janeiro,

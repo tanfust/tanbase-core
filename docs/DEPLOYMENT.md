@@ -199,9 +199,10 @@ A client discovers everything from the `401` challenge:
 minute through `AUTH_LIMITER`), sends the user to `/login` and
 `/oauth/consent`, and exchanges the code with PKCE. Access tokens are JWTs
 for the `https://core.tanbase.dev/mcp` audience and last one hour; refresh
-tokens last 30 days. `/mcp` verifies them against `/api/auth/jwks`, fetched
-over the Worker's own Custom Domain. Signing keys are stored encrypted with
-`BETTER_AUTH_SECRET`; rotating it invalidates issued tokens.
+tokens last 30 days. `/mcp` verifies them against the public keys served at
+`/api/auth/jwks`, read in-process: a Worker cannot fetch its own hostname.
+Signing keys are stored encrypted with `BETTER_AUTH_SECRET`; rotating it
+invalidates issued tokens.
 
 Production smoke checks the `401` challenge and both discovery documents.
 There is no screen yet to list or revoke connected clients; deleting a row
