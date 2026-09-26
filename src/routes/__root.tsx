@@ -12,6 +12,7 @@ import { Analytics } from "@/components/analytics"
 import { ErrorPage, NotFoundPage } from "@/components/status-page"
 import { ThemeProvider, themeScript } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toast"
+import { WebMcpTools } from "@/components/web-mcp"
 import { assetRecoveryScript } from "@/lib/asset-recovery"
 import { canonicalUrl, siteConfig } from "@/lib/site"
 import { getAnalyticsConfig } from "@/modules/analytics/config"
@@ -80,6 +81,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <Toaster>{children}</Toaster>
         </ThemeProvider>
         <Analytics config={analytics} />
+        <WebMcpTools />
         <TanStackDevtools
           config={{
             position: "bottom-right",

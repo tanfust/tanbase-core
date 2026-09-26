@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers"
 import handler from "@tanstack/react-start/server-entry"
 
 import { getSessionFromHeaders } from "@/modules/auth/session.server"
+import { discoveryResponse } from "@/modules/discovery/well-known"
 import { enqueueDueReminders } from "@/modules/jobs/cron.server"
 import { processReminderBatch } from "@/modules/jobs/queue.server"
 import {
@@ -16,6 +17,7 @@ import {
   handleRealtimeUpgrade,
 } from "@/modules/realtime/rooms.server"
 import { addHomepageDiscoveryHeaders } from "@/modules/seo/discovery"
+import { asPageRequest, markdownPageResponse } from "@/modules/seo/negotiation"
 import { getProject } from "@/modules/tasks/repository.server"
 import {
   analyticsConnectSources,
@@ -30,11 +32,16 @@ export { BoardRoom } from "@/modules/realtime/board-room.server"
 
 const realtimePath = /^\/api\/realtime\/([^/]+)$/
 
+/** This deployment's public origin, which OAuth and MCP identifiers use. */
+function appOrigin() {
+  return new URL(env.BETTER_AUTH_URL).origin
+}
+
 // WebSocket upgrades go straight to the room so TanStack never wraps the 101.
 async function realtimeResponse(request: Request, projectId: string) {
   const session = await getSessionFromHeaders(request.headers)
   return handleRealtimeUpgrade(request, decodeURIComponent(projectId), {
-    appOrigin: new URL(env.BETTER_AUTH_URL).origin,
+    appOrigin: appOrigin(),
     namespace: getBoardNamespace(),
     ownsProject: async (userId, id) => (await getProject(userId, id)) !== null,
     userId: session?.user.id ?? null,
@@ -45,6 +52,23 @@ async function realtimeResponse(request: Request, projectId: string) {
 function socketOrigin(request: Request) {
   const url = new URL(request.url)
   return `${url.protocol === "https:" ? "wss:" : "ws:"}//${url.host}`
+}
+
+// MCP, OAuth and agent discovery, Markdown pages, and realtime upgrades are
+// served before TanStack Start.
+async function route(request: Request, pathname: string): Promise<Response> {
+  if (isCorsPath(pathname) && request.method === "OPTIONS") {
+    return corsPreflight()
+  }
+  if (pathname === "/mcp") return handleMcpRequest(request)
+  const realtime = realtimePath.exec(pathname)
+  if (realtime) return realtimeResponse(request, realtime[1])
+  return (
+    (await oauthDiscoveryResponse(request)) ??
+    (await discoveryResponse(request, appOrigin())) ??
+    markdownPageResponse(request) ??
+    handler.fetch(asPageRequest(request))
+  )
 }
 
 function failedResponse() {
@@ -67,17 +91,7 @@ export default {
       const cors = isCorsPath(pathname)
       let response: Response
       try {
-        const realtime = realtimePath.exec(pathname)
-        // MCP and OAuth discovery are served before TanStack Start.
-        response =
-          cors && request.method === "OPTIONS"
-            ? corsPreflight()
-            : pathname === "/mcp"
-              ? await handleMcpRequest(request)
-              : ((await oauthDiscoveryResponse(request)) ??
-                (realtime
-                  ? await realtimeResponse(request, realtime[1])
-                  : await handler.fetch(request)))
+        response = await route(request, pathname)
       } catch (error) {
         log.error("Unhandled request error", {
           event: "request.failed",

@@ -72,7 +72,8 @@ pnpm cf:dry-run:production
 - Resumable guided setup for local development and essential production resources
 - Public `GET /api/health` endpoint with a live database check
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
-- Homepage discovery links and Content Signals for agent-readable resources
+- Homepage discovery links, Content Signals, and a Markdown representation for agents
+- Agent discovery: an API catalog, AI Catalog, MCP server card, agent skills index, and WebMCP tools
 - CI verification, generated binding-type drift detection, and deploy dry run
 - Automatic production deployment from `main`; branch previews are optional
 - Maintained human and AI documentation

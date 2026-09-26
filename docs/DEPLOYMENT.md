@@ -419,17 +419,16 @@ retire the former hostname immediately after that deployment, because it can no
 longer sign users in. Forks keep the installer's `workers.dev` origin until they
 attach their own domain.
 
-### Markdown for Agents
+### Markdown and agent discovery
 
-Markdown negotiation is a `tanbase.dev` zone feature, not Worker source or a
-binding. After the zone is on a supported plan, enable **Markdown for Agents**
-in **AI Crawl Control**, optionally through a Configuration Rule restricted to
-`core.tanbase.dev`, then run the opt-in production smoke check.
+The Worker negotiates Markdown for `/` itself and serves the agent discovery
+documents, so neither depends on the zone plan
+([ADR-0015](decisions/0015-worker-served-agent-discovery.md)). Leave
+Cloudflare's zone-level **Markdown for Agents** off.
 
-As of 2026-09-24, the `tanbase.dev` zone is on the Free plan and Cloudflare
-documents the feature for Pro, Business, and Enterprise zones. HTML discovery
-can ship independently. Do not add an application-side converter as a
-fallback.
+DNS-AID is the one discovery channel that lives in the zone: enabling DNSSEC
+and adding the `_mcp._agents.core` SVCB record are dashboard steps, listed in
+[Agent discovery](AGENT_DISCOVERY.md#dns-aid).
 
 ## Local gates
 
@@ -499,14 +498,13 @@ attempt to retarget the generated configuration during deployment.
 
 ```sh
 pnpm smoke -- --url https://core.tanbase.dev --environment production
-# Only after Cloudflare Markdown for Agents is enabled:
-pnpm smoke -- --url https://core.tanbase.dev --environment production --expect-markdown
 ```
 
 For production, `--url` defaults to the canonical origin in `src/lib/site.ts`.
 The script checks the database-aware health contract, SSR document, canonical
-metadata, discovery headers, sitemap, robots policy, truthful `llms.txt`, and
-absence of a server-error page. Record the commit, URL, UTC date, Worker version,
+metadata, discovery headers, sitemap, robots policy, truthful `llms.txt`,
+Markdown negotiation, the agent discovery documents, and absence of a
+server-error page. Record the commit, URL, UTC date, Worker version,
 and result in [status](STATUS.md) and the active change record.
 
 ## Rollback and recovery

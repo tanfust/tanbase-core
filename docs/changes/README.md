@@ -38,6 +38,7 @@ Records:
 - [2026-09-26: Reload once when a fresh deployment's assets are missing](2026-09-26-asset-recovery.md)
 - [2026-09-26: MCP server with OAuth 2.1 through Better Auth](2026-09-26-mcp-server.md)
 - [2026-09-26: Verify MCP access tokens with in-process keys](2026-09-26-mcp-in-process-jwks.md)
+- [2026-09-26: Agent discovery for the MCP server](2026-09-26-agent-discovery.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

@@ -215,8 +215,9 @@ src/
     jobs/                cron handler, queue consumer
     email/               sendEmail(), adapters, React Email templates
     ai/                  gateway client, quota, breakdown workflow
-    mcp/                 MCP agent and tools
-    seo/                 head helper, sitemap, robots, OG images
+    mcp/                 MCP server, tools, and WebMCP browser tools
+    discovery/           API catalog, AI Catalog, server card, skills
+    seo/                 head helper, sitemap, robots, Markdown, OG images
   db/
     schema/              one schema file per module
     index.ts             getDb()
@@ -292,10 +293,11 @@ CLAUDE.md
 - Remote MCP endpoint at `/mcp`, served by the official MCP TypeScript SDK's stateless handler and dispatched in `src/server.ts` before TanStack ([ADR-0014](decisions/0014-mcp-oauth-with-better-auth.md)).
 - v1 tools: `list_tasks`, `create_task`, `complete_task`, always scoped to the authenticated user; writes appear live on the board.
 - Clients authorize with OAuth 2.1 through Better Auth (`/login`, then `/oauth/consent`) and send audience-bound JWT access tokens.
+- The same tools are offered to in-browser agents through WebMCP, acting as the signed-in session, and are described by the MCP server card, API catalog, AI Catalog, and a product skill ([ADR-0015](decisions/0015-worker-served-agent-discovery.md)).
 
 ### Production layer
 
-- **SEO:** per-route head (title, description, canonical, OG), `sitemap.xml`, `robots.txt`, JSON-LD on marketing pages, OG images generated on the Worker, `llms.txt`.
+- **SEO:** per-route head (title, description, canonical, OG), `sitemap.xml`, `robots.txt`, JSON-LD on marketing pages, OG images generated on the Worker, `llms.txt`, and the homepage as Markdown for `Accept: text/markdown`.
 - **Security:** per-response nonce CSP on documents, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Frame-Options and `frame-ancestors 'none'`, and Cross-Origin-Opener-Policy. Static assets receive theirs from `public/_headers`.
 - **Errors:** root error boundary, 404 page, and structured logs carrying the Cloudflare Ray ID as the request id, which responses return in `X-Request-Id`.
 - **Analytics:** optional, cookieless PostHog page views, loaded only when the `POSTHOG_KEY` Worker secret is set ([ADR-0010](decisions/0010-privacy-first-analytics.md)).

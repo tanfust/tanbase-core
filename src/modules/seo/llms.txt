@@ -12,6 +12,7 @@ Cloudflare Workers.
 - Feature roadmap: https://github.com/tanfust/tanbase-core/blob/main/docs/FEATURES.md
 - Current status: https://github.com/tanfust/tanbase-core/blob/main/docs/STATUS.md
 - Deployment runbook: https://github.com/tanfust/tanbase-core/blob/main/docs/DEPLOYMENT.md
+- Agent discovery: https://github.com/tanfust/tanbase-core/blob/main/docs/AGENT_DISCOVERY.md
 
 ## Current capabilities
 
@@ -19,15 +20,29 @@ The implemented foundation provides server-rendered React, static assets,
 environment-specific Worker builds, observability, a public health check, CI,
 and production deployment automation. The production site also runs a personal
 task board with verified email and password accounts, protected by Cloudflare
-Turnstile and per-IP rate limits, and private file attachments stored in R2. The public sitemap, robots policy, and this
-discovery document describe only currently implemented resources.
+Turnstile and per-IP rate limits, and private file attachments stored in R2.
 
-Production deployment is not verified until the canonical URL passes the
-repository smoke checks and that evidence is recorded in the status snapshot.
+## For agents
+
+- MCP server: https://core.tanbase.dev/mcp (Streamable HTTP) lists, creates,
+  and completes the signed-in person's tasks. Clients authorize with OAuth 2.1
+  through TanBase Core's own authorization server,
+  https://core.tanbase.dev/api/auth, using Dynamic Client Registration. The
+  person signs in and approves the client; there are no API keys.
+- Protected resource metadata: https://core.tanbase.dev/.well-known/oauth-protected-resource/mcp
+- MCP server card: https://core.tanbase.dev/mcp/server-card
+- Skill: https://core.tanbase.dev/.well-known/agent-skills/tanbase-tasks/SKILL.md,
+  listed in https://core.tanbase.dev/.well-known/agent-skills/index.json
+- API catalog: https://core.tanbase.dev/.well-known/api-catalog
+- Agentic resource catalog: https://core.tanbase.dev/.well-known/ai-catalog.json
+- In the browser, pages register the same task tools through WebMCP.
+- Requesting the homepage with `Accept: text/markdown` returns it as Markdown.
 
 ## Capabilities not currently offered
 
-TanBase Core does not currently expose a public application API, an OAuth or
-OpenID Connect authorization server, a protected agent resource, an MCP
-endpoint, a public agent registration flow, or a public product-skill catalog.
-Those capabilities remain roadmap work and are not advertised as available.
+TanBase Core does not offer a public REST API, API keys, agent registration
+without a person signing in, an A2A agent, or payments. The public sitemap,
+robots policy, and discovery documents describe only implemented resources.
+
+Production deployment is not verified until the canonical URL passes the
+repository smoke checks and that evidence is recorded in the status snapshot.

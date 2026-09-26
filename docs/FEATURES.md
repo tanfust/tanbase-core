@@ -465,12 +465,17 @@ non-production branch builds are optional and disabled by default.
 - [ ] JSON-LD (`SoftwareSourceCode`) on the landing page
 - [x] Truthful `llms.txt` served as Markdown
 - [x] Homepage canonical URL, discovery `Link` headers, and Content Signals
-- [ ] Cloudflare Markdown for Agents enabled and smoke-tested on production
+- [ ] Markdown negotiation for the homepage, served by the Worker and
+      smoke-tested on production
+      ([ADR-0015](decisions/0015-worker-served-agent-discovery.md))
+- [ ] API catalog, AI Catalog, MCP server card, agent skills index, and
+      WebMCP tools for the F-015 MCP server, smoke-tested on production
+- [ ] DNS-AID record published under DNSSEC by the operator
 
 **Current slice:** Public discovery is documented in
-[Agent discovery](AGENT_DISCOVERY.md). API, OAuth, MCP, skill, WebMCP, ARD, and
-DNS-AID metadata remain gated on real capabilities rather than placeholder
-responses.
+[Agent discovery](AGENT_DISCOVERY.md). Every document is built from the
+capability it describes. auth.md, A2A, and OpenAPI stay unpublished until
+those capabilities exist.
 
 ---
 
