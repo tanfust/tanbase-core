@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers"
 import { createMcpHandler } from "@modelcontextprotocol/server"
 import { describe, expect, it } from "vitest"
 
-import { mcpResource } from "@/modules/auth/auth.server"
+import { createAuth, mcpResource } from "@/modules/auth/auth.server"
 import {
   createProject,
   createTask,
@@ -21,6 +21,19 @@ import {
 } from "./tools.server"
 
 const origin = "http://localhost:3000"
+
+// An explicit environment, so the tests never depend on ignored .dev.vars.
+function testAuth() {
+  return createAuth({
+    database: env.DB,
+    environment: {
+      APP_ENV: "local",
+      BETTER_AUTH_SECRET: "test-only-secret-that-is-at-least-32-characters",
+      BETTER_AUTH_URL: origin,
+      DB: env.DB,
+    },
+  })
+}
 
 function user() {
   return `mcp-${crypto.randomUUID()}`
@@ -225,7 +238,8 @@ describe("MCP authorization", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
-      })
+      }),
+      testAuth()
     )
 
     expect(response.status).toBe(401)
@@ -244,14 +258,16 @@ describe("MCP authorization", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
-      })
+      }),
+      testAuth()
     )
     expect(response.status).toBe(401)
   })
 
   it("serves protected resource and authorization server metadata at the root", async () => {
     const resource = await oauthDiscoveryResponse(
-      new Request(`${origin}/.well-known/oauth-protected-resource/mcp`)
+      new Request(`${origin}/.well-known/oauth-protected-resource/mcp`),
+      testAuth
     )
     expect(resource?.status).toBe(200)
     await expect(resource?.json()).resolves.toMatchObject({
@@ -260,7 +276,8 @@ describe("MCP authorization", () => {
     })
 
     const server = await oauthDiscoveryResponse(
-      new Request(`${origin}/.well-known/oauth-authorization-server/api/auth`)
+      new Request(`${origin}/.well-known/oauth-authorization-server/api/auth`),
+      testAuth
     )
     expect(server?.status).toBe(200)
     await expect(server?.json()).resolves.toMatchObject({

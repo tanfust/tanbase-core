@@ -4,6 +4,7 @@ import {
 } from "@better-auth/oauth-provider"
 
 import { getAuth } from "@/modules/auth/auth.server"
+import type { Auth } from "@/modules/auth/auth.server"
 
 // Better Auth lives under /api/auth, so MCP clients look for its discovery
 // documents at the root with that path inserted (RFC 8414 and RFC 9728).
@@ -22,17 +23,18 @@ const protectedResourcePaths = new Set([
 
 /** Serves OAuth discovery at the root, or returns null for other paths. */
 export function oauthDiscoveryResponse(
-  request: Request
+  request: Request,
+  auth: () => Auth = getAuth
 ): Promise<Response> | null {
   const { pathname } = new URL(request.url)
   if (authorizationServerPaths.has(pathname)) {
-    return oauthProviderAuthServerMetadata(getAuth())(request)
+    return oauthProviderAuthServerMetadata(auth())(request)
   }
   if (openIdConfigurationPaths.has(pathname)) {
-    return oauthProviderOpenIdConfigMetadata(getAuth())(request)
+    return oauthProviderOpenIdConfigMetadata(auth())(request)
   }
   // The MCP plugin answers these itself, before Better Auth's routing.
-  if (protectedResourcePaths.has(pathname)) return getAuth().handler(request)
+  if (protectedResourcePaths.has(pathname)) return auth().handler(request)
   return null
 }
 

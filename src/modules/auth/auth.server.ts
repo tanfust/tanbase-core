@@ -202,6 +202,8 @@ export function createAuth(dependencies: AuthDependencies = {}) {
   })
 }
 
+export type Auth = ReturnType<typeof createAuth>
+
 export function getAuth() {
   return createAuth()
 }

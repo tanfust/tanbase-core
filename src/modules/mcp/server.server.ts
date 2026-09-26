@@ -1,4 +1,3 @@
-import { env } from "cloudflare:workers"
 import { requireMcpAuth } from "@better-auth/mcp"
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server"
 import type { AuthInfo } from "@modelcontextprotocol/server"
@@ -6,6 +5,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/server/valida
 import { z } from "zod"
 
 import { getAuth, mcpResource } from "@/modules/auth/auth.server"
+import type { Auth } from "@/modules/auth/auth.server"
 import { taskStatuses } from "@/modules/tasks/contracts"
 
 import {
@@ -169,9 +169,12 @@ function toAuthInfo(
  * `/mcp` audience, expiry, and DPoP when bound), answers unauthenticated
  * requests with the RFC 9728 challenge, then serves MCP for the token's user.
  */
-export function handleMcpRequest(request: Request): Promise<Response> {
+export function handleMcpRequest(
+  request: Request,
+  auth: Auth = getAuth()
+): Promise<Response> {
   return requireMcpAuth(
-    getAuth(),
+    auth,
     (verified, claims) => {
       const authInfo = toAuthInfo(verified, claims)
       if (!authInfo) {
@@ -179,6 +182,6 @@ export function handleMcpRequest(request: Request): Promise<Response> {
       }
       return mcpHandler().fetch(verified, { authInfo })
     },
-    { resource: mcpResource(env.BETTER_AUTH_URL) }
+    { resource: mcpResource(auth.options.baseURL) }
   )(request)
 }
