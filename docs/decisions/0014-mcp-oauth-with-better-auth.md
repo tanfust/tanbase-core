@@ -27,8 +27,8 @@ web-standard `fetch` handler.
 - `/mcp` is wrapped in `requireMcpAuth`, which verifies the signature against
   the app's own JWKS, the issuer, audience, expiry, and DPoP when a token is
   bound, and answers unauthenticated requests with the RFC 9728 challenge.
-  The JWKS is fetched from the app's own Custom Domain, which Workers allow,
-  and cached per isolate.
+  This paragraph was amended on 2026-09-26; see
+  [Amendment](#amendment-2026-09-26).
 - Clients register with unauthenticated Dynamic Client Registration, limited
   by `AUTH_LIMITER` to 10 registrations per IP per minute. Client ID Metadata
   Documents are not enabled: Better Auth requires a fetch transport that
@@ -66,3 +66,19 @@ Workers-safe transport exists.
   OAuth server beside Better Auth, duplicating identity and consent.
 - CIMD without the address-pinning transport would let clients make the
   Worker fetch arbitrary URLs.
+
+## Amendment (2026-09-26)
+
+The first production connection from Claude failed: every authenticated
+`/mcp` request returned `500` with `Jwks failed`. `requireMcpAuth` fetches the
+JWKS from the app's own hostname, and a Worker's request to its own Custom
+Domain never reaches it, although other Workers in the zone can call a Custom
+Domain. Local development did not show this because the local runtime can
+reach its own dev server.
+
+`/mcp` now hands the verifier a function that reads the public keys
+in-process with `auth.api.getJwks()`. The verifier's underlying `jwksFetch`
+accepts a function, and `requireMcpAuth` passes its `jwksUrl` option through
+unchanged; a type cast bridges the narrower option type. A test issues a real
+access token through the full OAuth flow and calls `/mcp` with self-fetches
+disabled. The rest of this decision stands.

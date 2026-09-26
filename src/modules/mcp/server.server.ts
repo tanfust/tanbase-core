@@ -165,6 +165,19 @@ function toAuthInfo(
 }
 
 /**
+ * `requireMcpAuth` fetches `jwksUrl` over the network, but a Worker cannot
+ * fetch its own hostname: the request never reaches it. The verifier's
+ * underlying `jwksFetch` also accepts a function returning the key set, and
+ * `requireMcpAuth` passes the option through, so the public keys are read
+ * in-process instead. The cast bridges the narrower option type; the MCP
+ * tests exercise this with a real token and self-fetches disabled.
+ */
+function inProcessJwks(auth: Auth): string {
+  const load = () => auth.api.getJwks()
+  return load as unknown as string
+}
+
+/**
  * `/mcp`: verifies the bearer token against the app's JWKS (issuer, the
  * `/mcp` audience, expiry, and DPoP when bound), answers unauthenticated
  * requests with the RFC 9728 challenge, then serves MCP for the token's user.
@@ -182,6 +195,9 @@ export function handleMcpRequest(
       }
       return mcpHandler().fetch(verified, { authInfo })
     },
-    { resource: mcpResource(auth.options.baseURL) }
+    {
+      resource: mcpResource(auth.options.baseURL),
+      jwksUrl: inProcessJwks(auth),
+    }
   )(request)
 }
