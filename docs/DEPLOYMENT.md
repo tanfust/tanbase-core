@@ -153,6 +153,31 @@ Placement does not apply to cron or queue handlers. To turn reminders off,
 remove the production `queues` block and set `"triggers": { "crons": [] }`;
 an empty list removes the schedule on the next deployment.
 
+### AI task breakdown
+
+**Break down with AI** on a top-level task without subtasks starts a
+`TaskBreakdownWorkflow` run (`BREAKDOWN`, named
+`tanbase-core-task-breakdown`). Before starting, the Worker checks the task,
+applies `AI_LIMITER` (5 requests per 60 seconds per user), and reserves one
+unit of the user's daily quota in `ai_usage` (`AI_DAILY_LIMIT`, 20 per UTC
+day). The run loads the task, asks `AI_MODEL` for 3 to 7 subtasks with a JSON
+Schema, validates them with Zod (two retries), inserts them in one statement,
+and broadcasts them to the board. A run that ends without subtasks refunds its
+quota. The board polls the run's status every two seconds.
+
+The `AI` binding is production-only and needs no resource. Every call goes
+through the AI Gateway named by `AI_GATEWAY_ID`; `default` is created by
+Cloudflare on the first call, and its logs, which contain task titles and
+notes, are visible under **AI > AI Gateway** in the dashboard. The model and
+gateway choice is [ADR-0013](decisions/0013-workers-ai-model-and-gateway.md).
+Workers Logs record `ai.breakdown_finished` and `ai.breakdown_failed` with the
+run ID. Workflow runs and their steps are listed under **Workers & Pages >
+Workflows**.
+
+To turn breakdown off, remove the production `ai` binding or set
+`AI_DAILY_LIMIT` to `0`; the menu item disappears and the server refuses new
+runs.
+
 ### Better Auth
 
 The production URL is committed as `BETTER_AUTH_URL`; the secret is not. Create

@@ -62,6 +62,13 @@ const config = `{
         ],
       },
       "triggers": { "crons": ["0 * * * *"] },
+      "workflows": [
+        {
+          "name": "tanbase-core-task-breakdown",
+          "binding": "BREAKDOWN",
+          "class_name": "TaskBreakdownWorkflow",
+        },
+      ],
     },
   },
 }
@@ -156,6 +163,8 @@ test("updates only the intended local and production Wrangler fields", () => {
     workerName: "customer-app",
   })
   assert.match(updated, /"database_name": "customer-app-local"/)
+  assert.match(updated, /"name": "customer-app-task-breakdown"/)
+  assert.doesNotMatch(updated, /tanbase-core-task-breakdown/)
   assert.equal(updated.match(/send_email/g)?.length, 2)
   assert.match(updated, /sender@example\.com/)
   assert.match(updated, /Local development stays isolated/)

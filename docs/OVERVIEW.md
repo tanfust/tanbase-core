@@ -272,9 +272,9 @@ CLAUDE.md
 
 ### AI
 
-- All inference goes through AI Gateway. Gateway id and model id come from `AI_GATEWAY_ID` and `AI_MODEL`.
-- A per-user daily quota in `ai_usage` is checked before any AI work starts. `AI_LIMITER` blocks bursts.
-- `TaskBreakdownWorkflow` steps: load task -> generate subtasks as JSON -> validate with Zod -> insert in one batch -> broadcast to the board. Each step retries on its own.
+- All inference goes through AI Gateway. Gateway id and model id come from `AI_GATEWAY_ID` and `AI_MODEL` ([ADR-0013](decisions/0013-workers-ai-model-and-gateway.md)). The `AI` binding exists only in production.
+- Starting a breakdown checks the task (owned, top-level, no subtasks yet), `AI_LIMITER` (5 per minute per user), and atomically reserves one unit of the per-user daily quota in `ai_usage` (`AI_DAILY_LIMIT`, UTC days).
+- `TaskBreakdownWorkflow` steps: load task -> generate subtasks as JSON and validate with Zod (retried twice) -> insert in one statement -> broadcast to the board. A run that ends without subtasks refunds its quota and fails with a clear message; the board polls the run's status and receives subtasks over the socket.
 
 ### Jobs and email
 
@@ -386,7 +386,7 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 
 1. **MCP auth.** Better Auth as an OAuth provider for MCP clients, or personal access tokens? OAuth fits the Claude connector flow; tokens are simpler. Decide at F-015 after checking current Better Auth and Agents SDK support.
 2. **UI source.** Consume the `tanfust/ui` registry, or install shadcn/ui components directly?
-3. **AI model.** Which Workers AI model returns valid subtask JSON reliably at the lowest cost? Decide at F-013 from the current catalog.
+3. **AI model.** Resolved: `@cf/mistralai/mistral-small-3.1-24b-instruct` through the `default` AI Gateway, chosen by benchmark ([ADR-0013](decisions/0013-workers-ai-model-and-gateway.md)).
 4. **Demo domain.** Resolved: `https://core.tanbase.dev`, with the apex reserved for the TanBase brand site ([ADR-0008](decisions/0008-canonical-production-domain.md)).
 
 ## Risks

@@ -52,7 +52,9 @@ The full setup:
    removes the production queue binding and the hourly cron. The live board's
    Durable Object needs no setup: deployment creates it.
 3. Personalizes the Worker name, account ID, D1 IDs, Better Auth URL, and
-   canonical discovery origin, and removes the production placement hint when
+   canonical discovery origin, renames the task-breakdown Workflow to
+   `<worker-name>-task-breakdown` (Workflow names are unique per account),
+   and removes the production placement hint when
    production points at a different database. It keeps the production
    Turnstile site key only
    when the Worker already has `TURNSTILE_SECRET_KEY`; otherwise it clears the

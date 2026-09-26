@@ -24,6 +24,7 @@ Accepted decisions:
 - [ADR-0010: Optional, privacy-first PostHog analytics](0010-privacy-first-analytics.md)
 - [ADR-0011: Place the production Worker next to its D1 primary](0011-placement-near-d1.md)
 - [ADR-0012: At-most-once due-date reminders](0012-at-most-once-reminders.md)
+- [ADR-0013: Workers AI model and gateway for task breakdown](0013-workers-ai-model-and-gateway.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

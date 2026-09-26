@@ -208,6 +208,16 @@ export function updateWranglerInstallation(
     updates.push([["env", "production", "send_email"], undefined])
     updates.push([["env", "production", "vars", "EMAIL_FROM"], ""])
   }
+  // Workflow names are unique per account, so each installation owns its own.
+  const breakdownWorkflow = (config.env?.production?.workflows ?? []).findIndex(
+    (workflow) => workflow.binding === "BREAKDOWN"
+  )
+  if (breakdownWorkflow >= 0) {
+    updates.push([
+      ["env", "production", "workflows", breakdownWorkflow, "name"],
+      `${workerName}-task-breakdown`,
+    ])
+  }
   const productionQueues = config.env?.production?.queues
   const reminderProducer = (productionQueues?.producers ?? []).findIndex(
     (producer) => producer.binding === "EMAIL_QUEUE"

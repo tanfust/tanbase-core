@@ -12,6 +12,9 @@ export default defineConfig({
   plugins: [
     cloudflareTest(async () => ({
       main: "./test/worker.ts",
+      // Workers AI only runs remotely. Tests inject a fake model instead, so
+      // they never need Cloudflare credentials or incur inference cost.
+      remoteBindings: false,
       wrangler: {
         configPath: "./wrangler.jsonc",
       },

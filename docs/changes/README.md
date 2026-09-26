@@ -34,6 +34,7 @@ Records:
 - [2026-09-25: Post-deploy smoke waits for the deployed version](2026-09-25-deploy-smoke-version.md)
 - [2026-09-25: Place the production Worker next to D1](2026-09-25-placement-near-d1.md)
 - [2026-09-26: Due-date reminders on Cron Triggers and Queues](2026-09-26-due-date-reminders.md)
+- [2026-09-26: AI task breakdown on Workers AI, AI Gateway, and Workflows](2026-09-26-ai-task-breakdown.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

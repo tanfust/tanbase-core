@@ -90,6 +90,24 @@ header shows **Live** once the socket is open. Durable Object classes must be
 exported from `src/server.ts` and, for the Workers-runtime tests, from
 `test/worker.ts`.
 
+## Local AI workflow
+
+Workers AI runs only remotely, so the local and browser-test configurations
+have no `AI` binding and **Break down with AI** is hidden. `TaskBreakdownWorkflow`
+itself runs locally; the tests mock its generation step and inject fake models,
+and Vitest runs with `remoteBindings: false` so no test needs Cloudflare
+credentials.
+
+To try the real model locally, add this to the top level of `wrangler.jsonc`
+without committing it:
+
+```jsonc
+"ai": { "binding": "AI", "remote": true },
+```
+
+`pnpm dev` then needs `wrangler login`, every breakdown is billed to the
+account, and the first call creates the account's `default` AI Gateway.
+
 ## Local email workflow
 
 `sendEmail()` defaults to a metadata-only log when `EMAIL_FROM` is empty. The
