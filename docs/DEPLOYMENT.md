@@ -39,6 +39,26 @@ Cloudflare automatically creates the Workers Builds API token. Do not add
 `CLOUDFLARE_API_TOKEN` or `CLOUDFLARE_ACCOUNT_ID` to GitHub. The generated token
 must have the minimum D1 edit permission needed by the deploy command.
 
+PostHog Error Tracking source maps are optional. To upload them, add these
+build variables to the Workers Builds configuration, under **Settings** →
+**Build** → **Build variables and secrets**:
+
+| Variable             | Value                                                                       |
+| -------------------- | --------------------------------------------------------------------------- |
+| `POSTHOG_API_KEY`    | Secret: a personal API key with the **Error tracking** write scope          |
+| `POSTHOG_PROJECT_ID` | The PostHog project ID                                                      |
+| `POSTHOG_CLI_HOST`   | The PostHog app host, such as `https://eu.posthog.com`, not the ingest host |
+
+Only the production build of the deploy command uploads: `vite.config.ts`
+requires `WORKERS_CI=1`, which Workers Builds sets, and
+`CLOUDFLARE_ENV=production`. The `pnpm verify` build step, GitHub CI, and local
+builds never upload, so the personal key belongs in Workers Builds alone, never
+in `.env`, Wrangler variables, or Worker secrets. The upload covers the browser
+bundle, then deletes the maps so they are never served. The PostHog CLI
+downloads its binary from GitHub on first use and names the release from the
+checkout's Git metadata. A failed upload fails the deploy; remove
+`POSTHOG_API_KEY` to deploy without uploading.
+
 Keep Preview URLs disabled. The active production `workers.dev` route is a
 separate setting and may remain enabled.
 
@@ -379,8 +399,12 @@ To enable it for this installation:
    ```
 
 The CSP adds `https://*.posthog.com`, or the proxy origin, to `connect-src` only
-while the key is set. The SDK is bundled, so `script-src` does not change.
-Delete the secret to turn analytics off.
+while the key is set. The SDK and its exception-capture extension are bundled,
+so `script-src` does not change. Uncaught browser errors arrive in PostHog Error
+Tracking with query strings stripped from every URL they quote; upload source
+maps, as described under
+[Required Cloudflare configuration](#required-cloudflare-configuration), for readable stack
+traces. Delete the secret to turn analytics off.
 
 ### Canonical production domain
 

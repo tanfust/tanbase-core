@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   scrubEventUrls,
+  stripQueriesInText,
   stripQueryAndFragment,
 } from "@/modules/analytics/privacy"
 
@@ -87,6 +88,48 @@ describe("analytics privacy", () => {
     )
     expect(JSON.stringify(scrubbed)).not.toContain("secret")
     expect(JSON.stringify(scrubbed)).not.toContain("person@example.com")
+  })
+
+  it("strips queries from URLs inside exception messages and frames", () => {
+    const event = {
+      properties: {
+        $current_url: "https://core.tanbase.dev/reset-password?token=secret",
+        $exception_list: [
+          {
+            type: "Error",
+            value:
+              "Failed to load https://core.tanbase.dev/reset-password?token=secret#top and /api/x?code=secret2.",
+            stacktrace: {
+              frames: [
+                {
+                  filename:
+                    "https://core.tanbase.dev/assets/index.js?token=secret",
+                  lineno: 1,
+                },
+                { filename: "<anonymous>" },
+              ],
+            },
+          },
+        ],
+      },
+    }
+
+    const scrubbed = scrubEventUrls(event)
+    const [exception] = scrubbed.properties.$exception_list
+
+    expect(exception.value).toBe(
+      "Failed to load https://core.tanbase.dev/reset-password and /api/x."
+    )
+    expect(exception.stacktrace.frames.map((frame) => frame.filename)).toEqual([
+      "https://core.tanbase.dev/assets/index.js",
+      "<anonymous>",
+    ])
+    expect(JSON.stringify(scrubbed)).not.toContain("secret")
+  })
+
+  it("keeps prose that only looks like a query", () => {
+    expect(stripQueriesInText("Why? Because.")).toBe("Why? Because.")
+    expect(stripQueriesInText("Task not found.")).toBe("Task not found.")
   })
 
   it("leaves non-URL values and empty events untouched", () => {

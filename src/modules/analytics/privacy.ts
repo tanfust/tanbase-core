@@ -20,6 +20,35 @@ export function stripQueryAndFragment(value: unknown): unknown {
   }
 }
 
+// An absolute URL or a root-relative path, then its query or fragment,
+// leaving any sentence punctuation that follows.
+const urlWithQuery =
+  /((?:https?:\/\/[^\s?#"'<>]+)|(?:\/[^\s?#"'<>]*))[?#](?:[^\s"'<>]*[^\s"'<>.,;:!?)\]])?/g
+
+/** Removes the query string and fragment from every URL quoted in `text`. */
+export function stripQueriesInText(text: string): string {
+  return text.replace(urlWithQuery, "$1")
+}
+
+interface ExceptionEntry {
+  value?: unknown
+  stacktrace?: { frames?: { filename?: unknown }[] }
+}
+
+// Exception messages and stack frames can quote the page URL, reset token
+// included.
+function scrubExceptions(list: unknown) {
+  if (!Array.isArray(list)) return
+  for (const entry of list as ExceptionEntry[]) {
+    if (typeof entry.value === "string") {
+      entry.value = stripQueriesInText(entry.value)
+    }
+    for (const frame of entry.stacktrace?.frames ?? []) {
+      frame.filename = stripQueryAndFragment(frame.filename)
+    }
+  }
+}
+
 interface AnalyticsEvent {
   properties?: Record<string, unknown>
   $set?: Record<string, unknown>
@@ -34,5 +63,6 @@ export function scrubEventUrls<T extends AnalyticsEvent | null>(event: T): T {
       if (key in bag) bag[key] = stripQueryAndFragment(bag[key])
     }
   }
+  scrubExceptions(event.properties?.$exception_list)
   return event
 }
