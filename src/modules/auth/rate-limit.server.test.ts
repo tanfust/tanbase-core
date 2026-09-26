@@ -59,6 +59,22 @@ describe("auth rate limiting", () => {
     })
   })
 
+  it("limits unauthenticated OAuth client registration but not token exchange", async () => {
+    const { keys, limiter } = recordingLimiter(false)
+
+    const registration = await limitAuthRequest(
+      authRequest("/oauth2/register", "POST", {
+        "cf-connecting-ip": "203.0.113.9",
+      }),
+      limiter
+    )
+    expect(registration?.status).toBe(429)
+    expect(
+      await limitAuthRequest(authRequest("/oauth2/token"), limiter)
+    ).toBeNull()
+    expect(keys).toEqual(["203.0.113.9:/oauth2/register"])
+  })
+
   it("leaves session reads and unlisted endpoints unlimited", async () => {
     const { keys, limiter } = recordingLimiter(false)
 

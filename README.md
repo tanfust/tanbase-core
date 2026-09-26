@@ -67,6 +67,7 @@ pnpm cf:dry-run:production
 - A live board: one hibernating Durable Object per project relays task changes to every open device over WebSockets
 - Due-date reminders: an hourly cron enqueues due tasks and a queue consumer emails each reminder at most once
 - AI task breakdown: a Workflow asks Workers AI, through AI Gateway, for 3 to 7 validated subtasks, behind a per-user daily quota and burst limit
+- A remote MCP server at `/mcp`: Claude and other MCP clients sign in with OAuth 2.1 and can list, create, and complete tasks
 - Typed transactional email templates with safe logging and optional Cloudflare delivery
 - Resumable guided setup for local development and essential production resources
 - Public `GET /api/health` endpoint with a live database check

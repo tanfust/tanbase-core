@@ -25,7 +25,12 @@ import { Spinner } from "@/components/ui/spinner"
 import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
-import { authHref, safeRedirect } from "@/modules/auth/redirects"
+import {
+  authHref,
+  hasOAuthQuery,
+  oauthContinuation,
+  safeRedirect,
+} from "@/modules/auth/redirects"
 
 interface LoginSearch {
   redirect?: string
@@ -72,6 +77,14 @@ function LoginPage() {
     captcha.reset()
     if (result.error) {
       setError(authErrorMessage(result.error, "Unable to sign in"))
+      return
+    }
+    // An MCP client sent the user here to sign in; resume its authorization.
+    const next = hasOAuthQuery(window.location.search)
+      ? oauthContinuation(result.data)
+      : null
+    if (next) {
+      window.location.assign(next)
       return
     }
     await navigate({ to: safeRedirect(search.redirect) })

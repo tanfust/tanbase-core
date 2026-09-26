@@ -178,6 +178,35 @@ To turn breakdown off, remove the production `ai` binding or set
 `AI_DAILY_LIMIT` to `0`; the menu item disappears and the server refuses new
 runs.
 
+### MCP server
+
+`/mcp` is a remote MCP server with three tools: `list_tasks` (filter by
+project, status, or due date), `create_task`, and `complete_task`. Better Auth
+is its OAuth 2.1 authorization server
+([ADR-0014](decisions/0014-mcp-oauth-with-better-auth.md)); it needs no
+resource or secret beyond `BETTER_AUTH_SECRET`, and migration `0004` creates
+its tables.
+
+To connect Claude, add a custom connector with the URL
+`https://core.tanbase.dev/mcp`, then sign in and select **Allow**. In Claude
+Code, run `claude mcp add --transport http tanbase https://core.tanbase.dev/mcp`
+and authenticate with `/mcp`. MCP Inspector works with the same URL.
+
+A client discovers everything from the `401` challenge:
+`/.well-known/oauth-protected-resource/mcp`, then
+`/.well-known/oauth-authorization-server/api/auth`. It registers through
+`/api/auth/oauth2/register` (Dynamic Client Registration, 10 per IP per
+minute through `AUTH_LIMITER`), sends the user to `/login` and
+`/oauth/consent`, and exchanges the code with PKCE. Access tokens are JWTs
+for the `https://core.tanbase.dev/mcp` audience and last one hour; refresh
+tokens last 30 days. `/mcp` verifies them against `/api/auth/jwks`, fetched
+over the Worker's own Custom Domain. Signing keys are stored encrypted with
+`BETTER_AUTH_SECRET`; rotating it invalidates issued tokens.
+
+Production smoke checks the `401` challenge and both discovery documents.
+There is no screen yet to list or revoke connected clients; deleting a row
+from `oauth_client` revokes that client and its tokens.
+
 ### Better Auth
 
 The production URL is committed as `BETTER_AUTH_URL`; the secret is not. Create

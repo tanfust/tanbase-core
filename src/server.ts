@@ -5,6 +5,13 @@ import { getSessionFromHeaders } from "@/modules/auth/session.server"
 import { enqueueDueReminders } from "@/modules/jobs/cron.server"
 import { processReminderBatch } from "@/modules/jobs/queue.server"
 import {
+  corsPreflight,
+  isCorsPath,
+  oauthDiscoveryResponse,
+  withCors,
+} from "@/modules/mcp/discovery.server"
+import { handleMcpRequest } from "@/modules/mcp/server.server"
+import {
   getBoardNamespace,
   handleRealtimeUpgrade,
 } from "@/modules/realtime/rooms.server"
@@ -56,12 +63,21 @@ export default {
     const nonce = createNonce()
 
     return runWithRequestContext({ nonce, requestId }, async () => {
+      const { pathname } = new URL(request.url)
+      const cors = isCorsPath(pathname)
       let response: Response
       try {
-        const realtime = realtimePath.exec(new URL(request.url).pathname)
-        response = realtime
-          ? await realtimeResponse(request, realtime[1])
-          : await handler.fetch(request)
+        const realtime = realtimePath.exec(pathname)
+        // MCP and OAuth discovery are served before TanStack Start.
+        response =
+          cors && request.method === "OPTIONS"
+            ? corsPreflight()
+            : pathname === "/mcp"
+              ? await handleMcpRequest(request)
+              : ((await oauthDiscoveryResponse(request)) ??
+                (realtime
+                  ? await realtimeResponse(request, realtime[1])
+                  : await handler.fetch(request)))
       } catch (error) {
         log.error("Unhandled request error", {
           event: "request.failed",
@@ -75,7 +91,7 @@ export default {
       // Upgrade responses carry a socket and cannot be copied.
       if (response.webSocket) return response
 
-      return applySecurityHeaders(
+      const secured = applySecurityHeaders(
         addHomepageDiscoveryHeaders(request, response),
         {
           connectSources: [
@@ -88,6 +104,7 @@ export default {
           requestId,
         }
       )
+      return cors ? withCors(secured) : secured
     })
   },
 

@@ -1,11 +1,13 @@
 // POST endpoints that check credentials, create accounts, consume reset
-// tokens, or send email. Session reads and sign-out stay unlimited.
+// tokens, send email, or register OAuth clients without authentication.
+// Session reads, sign-out, and token exchange stay unlimited.
 export const rateLimitedAuthEndpoints = new Set([
   "/sign-up/email",
   "/sign-in/email",
   "/request-password-reset",
   "/send-verification-email",
   "/reset-password",
+  "/oauth2/register",
 ])
 
 const authBasePath = "/api/auth"

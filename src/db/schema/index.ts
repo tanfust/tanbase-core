@@ -1,5 +1,6 @@
 export * from "./ai-usage"
 export * from "./attachments"
 export * from "./auth"
+export * from "./oauth"
 export * from "./projects"
 export * from "./tasks"

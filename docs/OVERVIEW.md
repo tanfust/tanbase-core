@@ -289,9 +289,9 @@ CLAUDE.md
 
 ### MCP
 
-- Remote MCP endpoint at `/mcp`, built with the Cloudflare Agents SDK and dispatched in `src/server.ts` before TanStack.
-- v1 tools: `list_tasks`, `create_task`, `complete_task`, always scoped to the authenticated user.
-- Auth method is open question 1.
+- Remote MCP endpoint at `/mcp`, served by the official MCP TypeScript SDK's stateless handler and dispatched in `src/server.ts` before TanStack ([ADR-0014](decisions/0014-mcp-oauth-with-better-auth.md)).
+- v1 tools: `list_tasks`, `create_task`, `complete_task`, always scoped to the authenticated user; writes appear live on the board.
+- Clients authorize with OAuth 2.1 through Better Auth (`/login`, then `/oauth/consent`) and send audience-bound JWT access tokens.
 
 ### Production layer
 
@@ -384,7 +384,7 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 
 ## Open questions
 
-1. **MCP auth.** Better Auth as an OAuth provider for MCP clients, or personal access tokens? OAuth fits the Claude connector flow; tokens are simpler. Decide at F-015 after checking current Better Auth and Agents SDK support.
+1. **MCP auth.** Resolved: Better Auth is the OAuth 2.1 authorization server for MCP clients, with Dynamic Client Registration and audience-bound JWT access tokens ([ADR-0014](decisions/0014-mcp-oauth-with-better-auth.md)).
 2. **UI source.** Consume the `tanfust/ui` registry, or install shadcn/ui components directly?
 3. **AI model.** Resolved: `@cf/mistralai/mistral-small-3.1-24b-instruct` through the `default` AI Gateway, chosen by benchmark ([ADR-0013](decisions/0013-workers-ai-model-and-gateway.md)).
 4. **Demo domain.** Resolved: `https://core.tanbase.dev`, with the apex reserved for the TanBase brand site ([ADR-0008](decisions/0008-canonical-production-domain.md)).

@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, eq, isNotNull, lte, sql } from "drizzle-orm"
 
 import { getDb } from "@/db"
 import { projects, tasks } from "@/db/schema"
@@ -173,6 +173,44 @@ export async function listTasksByProject(
     where: and(eq(tasks.userId, userId), eq(tasks.projectId, projectId)),
     orderBy: [asc(tasks.status), asc(tasks.position), asc(tasks.id)],
   })
+}
+
+export interface TaskFilters {
+  projectId?: string
+  status?: TaskStatus
+  /** Only tasks with a due date at or before this time. */
+  dueBefore?: number
+  limit: number
+}
+
+/** One owner's tasks across projects, newest due dates last. */
+export async function listTasksForUser(
+  userId: string,
+  filters: TaskFilters,
+  database?: D1Database
+): Promise<(Task & { projectName: string })[]> {
+  const db = getDb(database)
+  const rows = await db
+    .select({ task: tasks, projectName: projects.name })
+    .from(tasks)
+    .innerJoin(
+      projects,
+      and(eq(projects.id, tasks.projectId), eq(projects.userId, tasks.userId))
+    )
+    .where(
+      and(
+        eq(tasks.userId, userId),
+        filters.projectId ? eq(tasks.projectId, filters.projectId) : undefined,
+        filters.status ? eq(tasks.status, filters.status) : undefined,
+        filters.dueBefore === undefined
+          ? undefined
+          : and(isNotNull(tasks.dueAt), lte(tasks.dueAt, filters.dueBefore))
+      )
+    )
+    .orderBy(asc(tasks.status), asc(tasks.dueAt), asc(tasks.position))
+    .limit(filters.limit)
+
+  return rows.map(({ task, projectName }) => ({ ...task, projectName }))
 }
 
 export async function updateTask(
