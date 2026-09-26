@@ -165,10 +165,6 @@ export const homepage = {
         "A 10 MB upload cap with a file type allowlist",
       ],
     },
-    proof: {
-      status: "Planned",
-      text: "After 30 days of public demo, the real invoice and per-product usage go in the README.",
-    },
   },
   deploy: {
     heading: "Deploy your own",
@@ -253,8 +249,6 @@ export function createHomepageMarkdown(): string {
     `${cost.guardrails.heading}:`,
     "",
     ...cost.guardrails.items.map((item) => `- ${item}`),
-    "",
-    `${cost.proof.status}: ${cost.proof.text}`,
     "",
     `## ${deploy.heading}`,
     "",

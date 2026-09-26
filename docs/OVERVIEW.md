@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-26
+last_verified: 2026-09-27
 ---
 
 # TanBase Core
@@ -36,7 +36,7 @@ It is not a bare framework template. It is a working product, a task board, wher
 - Hosted backends bill per project. Running several small apps means paying per app or accepting projects that go to sleep.
 - Cloudflare bills per account on usage and scales to zero. Many apps can share one $5 plan.
 - Existing TanStack Start + Cloudflare templates stop at auth and a database. None prove that Durable Objects, Workflows, Queues, Cron, R2 and AI run together in one Worker under a TanStack Start app, with a production layer (SEO, security headers, CI, agent docs) on top.
-- The cost claim is published, not promised: the demo's real Cloudflare invoice goes in the README after 30 days.
+- The cost target is stated with the allowances it relies on and the guardrails that keep usage inside them, checked against Cloudflare's pricing pages.
 
 ## Who it's for
 
@@ -85,8 +85,8 @@ Subtasks are tasks with a `parent_id`.
 5. Update the display name and password, or choose light, dark, or system appearance.
 
 Turnstile and per-IP rate limits guard sign-up, sign-in, and email-sending auth
-requests. Google and magic-link sign-in and drag ordering remain later feature
-slices.
+requests. Google and magic-link sign-in, drag ordering, and other app features
+beyond exercising each primitive are left to forks.
 
 ---
 
@@ -248,8 +248,9 @@ CLAUDE.md
 - Better Auth mounted at `src/routes/api/auth/$.ts` as a server route with GET and POST handlers, not a server function.
 - `tanstackStartCookies()` is the last plugin in the array.
 - The protected area is a pathless `_app` layout that checks the session in `beforeLoad`.
-- Core methods are email and password with verification and password reset;
-  magic link and Google arrive in F-009.
+- Core methods are email and password with verification and password reset.
+  Magic link and Google are left to forks: Better Auth adds both through
+  plugins, and the email module already renders a magic-link template.
 - Sessions and one-time verification state remain in D1. Cloudflare KV is not
   used as Better Auth secondary storage because its eventual-consistency model
   cannot provide the atomic consume and increment operations required by the
@@ -363,15 +364,14 @@ What can push the bill past $5:
 - Workers AI usage beyond the free daily allocation.
 - Abuse of the public demo: signups, uploads, AI calls.
 
-Guardrails, shipped before the demo URL is public:
+Guardrails running now:
 
 - Turnstile on auth forms and rate limits on auth and AI.
 - Per-user daily AI quota.
 - 10 MB upload cap and a content-type allowlist.
-- Nightly demo data wipe.
-- Cloudflare billing notifications at $6 and $10.
 
-Proof: after 30 days of public demo, the invoice and per-product usage go in the README.
+After launch, F-022 adds a separate demo environment with a nightly data wipe
+and Cloudflare billing notifications at $6 and $10.
 
 ---
 
@@ -385,6 +385,8 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 - Internationalization and per-user time zones
 - Supabase adapter
 - Native mobile app
+- App features beyond exercising each primitive, such as drag ordering, magic
+  link and Google sign-in, and digests; forks add what they need
 
 ## Open questions
 
@@ -395,19 +397,18 @@ Proof: after 30 days of public demo, the invoice and per-product usage go in the
 
 ## Risks
 
-| Risk                                                                          | Mitigation                                                                                                       |
-| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Requests hanging on Workers have been reported with Better Auth on this stack | Workers-runtime tests cover the core; prove the full browser flow in production before completing F-005          |
-| Custom entry not picked up                                                    | `main` points to `./src/server.ts`; the F-001 health check exercises every handler                               |
-| Too many primitives make forks heavy                                          | Module removal documented and verified in F-021                                                                  |
-| Cloudflare Email Service is in beta                                           | Keep the provider boundary in `sendEmail()` and verify delivery before auth rollout                              |
-| Demo abuse drives cost                                                        | Guardrails in F-022 ship before the demo is public                                                               |
-| Crowded template space                                                        | Differentiate on all primitives proven together, the production layer, the agent layer and the published invoice |
+| Risk                                                                          | Mitigation                                                                                                                    |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Requests hanging on Workers have been reported with Better Auth on this stack | Workers-runtime tests cover the core; prove the full browser flow in production before completing F-005                       |
+| Custom entry not picked up                                                    | `main` points to `./src/server.ts`; the F-001 health check exercises every handler                                            |
+| Too many primitives make forks heavy                                          | Module removal documented and verified in F-021                                                                               |
+| Cloudflare Email Service is in beta                                           | Keep the provider boundary in `sendEmail()` and verify delivery before auth rollout                                           |
+| Demo abuse drives cost                                                        | Turnstile, rate limits, the AI quota, and the upload cap run now; F-022 adds the nightly wipe and billing alerts after launch |
+| Crowded template space                                                        | Differentiate on all primitives proven together, the production layer, and the agent layer                                    |
 
 ## Success criteria
 
 - The F-001 health check passes in production with every binding live.
 - The full user flow works end to end on the public demo.
-- The 30-day demo invoice is $5, or is published with the exact overage and its cause.
 - A developer goes from README to their own deployed copy in under 15 minutes.
 - The social scheduler starts from Core.
