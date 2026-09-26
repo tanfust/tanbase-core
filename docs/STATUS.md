@@ -56,13 +56,15 @@ F-015 MCP server is live: on 2026-09-26 Claude connected to
 task tools. The first attempt failed because the Worker tried to fetch its own
 JWKS over its hostname; it now reads the keys in-process.
 
-Agent discovery for F-015 is implemented and verified locally
+Agent discovery for F-015 is live
 ([ADR-0015](decisions/0015-worker-served-agent-discovery.md)): the Worker
 negotiates Markdown for the homepage, no longer answers non-HTML page requests
 with a 500, and serves the API catalog, AI Catalog, MCP server card, and agent
-skills index. Pages register the task tools through WebMCP. Production
-deployment is pending. DNS-AID waits on the operator enabling DNSSEC and adding
-its record.
+skills index; pages register the task tools through WebMCP. On 2026-09-26 the
+isitagentready.com scan rose from level 2, Bot-Aware, to level 5,
+Agent-Native. DNS-AID waits on the operator enabling DNSSEC and adding its
+record; the root protected resource metadata and auth.md checks fail by
+design.
 
 The production Worker runs next to its D1 primary in Marseille. Server
 functions for traffic entering Cloudflare far away, such as Rio de Janeiro,
@@ -75,23 +77,23 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 ## Verification snapshot
 
-| Target        | Commit                                | URL / resource                             | Date                 | Evidence                                                                                                                                                                                                                             |
-| ------------- | ------------------------------------- | ------------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Local         | Working tree based on `65bd6c6`       | Local D1, dev server, and production build | 2026-09-26           | Agent discovery: verify, local smoke against dev and the CSP-enforcing build, and the WebMCP browser test passed; the tool chunk loaded under the CSP with zero violations                                                           |
-| Production    | `244e2ea` / Worker version `217220f7` | `https://core.tanbase.dev`                 | 2026-09-26 19:53 UTC | F-015: Claude connected over OAuth; `/mcp` answered 200 with no 500s after the in-process JWKS fix (Workers Build `17dc0246`); migration `0004` applied by `becfb2d0`                                                                |
-| Production    | `05e926e` / Worker version `71ef181c` | `https://core.tanbase.dev`                 | 2026-09-26 15:41 UTC | F-013/F-014: Workers Build `7c13a06c` applied `0003` and created the Workflow; smoke passed on retry after a brief asset 404; a production breakdown added seven subtasks and AI Gateway logged $0.000086                            |
-| Production    | `c685ee5` / Worker version `cb0ad7be` | `https://core.tanbase.dev`                 | 2026-09-26 10:00 UTC | F-012: Workers Build `34bb2c71` post-deploy smoke passed; the 10:00 UTC cron enqueued 1 reminder, the consumer sent it, and D1 recorded `reminder_sent_at`; operator received the email                                              |
-| Production    | `8d2581d` / Worker version `cfb92e4c` | `https://core.tanbase.dev`                 | 2026-09-25 22:58 UTC | Placement next to D1: Workers Build `1984aacc` post-deploy smoke passed; `cf-placement: remote-MRS`; server functions through `GIG` 24–165 ms of wall time, down from 1.7–4.3 s; board Live                                          |
-| Production    | `9712b8e` / Worker version `d97edb50` | `https://core.tanbase.dev`                 | 2026-09-25 22:23 UTC | F-011 and version-aware smoke: Workers Build `adb4430f` post-deploy smoke passed on the first attempt; operator synced two devices; room held two sockets for about 42 s with 402 ms of active time                                  |
-| Production    | `eb0e127` / Worker version `d7d9401f` | `https://core.tanbase.dev`                 | 2026-09-25 22:10 UTC | F-011: Workers Build `4bbe27e4` deployed `BoardRoom` but its smoke reached `SIN`, still serving older versions; independent smoke passed with `realtime: ok`                                                                         |
-| Production D1 | `131393d`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b`     | 2026-09-26           | `0000` through `0004` applied; Workers Build `becfb2d0` applied `0004`                                                                                                                                                               |
-| Production    | `dfe4f4b` / Worker version `27b14b56` | `https://core.tanbase.dev`                 | 2026-09-25 21:50 UTC | F-010: Workers Build `6db0c3c8` applied migration `0002`, deployed `FILES`, and passed post-deploy smoke; health `files: ok`; unauthenticated upload `401`/`403` and download `401`; operator confirmed upload, download, and delete |
-| Production    | `fe633cf` / Worker version `1c3b3ddf` | `https://core.tanbase.dev`                 | 2026-09-25 19:18 UTC | F-018 health and analytics: Workers Build `50df91c9` post-deploy smoke passed; CSP allows `https://*.posthog.com`; events sent to `eu.i.posthog.com` with no cookies or storage; operator confirmed PostHog receives events          |
-| Production    | `3fa7164` / Worker version `c38f520e` | `https://core.tanbase.dev`                 | 2026-09-25 10:30 UTC | F-018 headers: Workers Build `927894c6` post-deploy smoke with header and nonce assertions passed; browser under the live CSP hydrated with zero violations                                                                          |
-| Production    | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev`                 | 2026-09-25 09:17 UTC | Email: Workers Build `7ab31bd3` post-deploy smoke passed; restricted `EMAIL` binding deployed. Operator-reported full auth journey passed with SPF, DKIM, and DMARC passing                                                          |
-| Production    | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev`                 | 2026-09-25 09:00 UTC | F-006: Workers Build `a763606d` post-deploy smoke, including token-less sign-in rejection, passed on the first attempt; independent smoke passed; forged token returned `403`; the managed widget rendered                           |
-| Production    | `0c6ea5a` / Worker version `b469d461` | `https://core.tanbase.dev`                 | 2026-09-24 20:08 UTC | Canonical origin: Workers Build `fbf5f087` post-deploy smoke passed; HTTPS, apex, and `www` redirects passed                                                                                                                         |
-| Production    | `fcdee3c` / Worker version `dfc781da` | `https://tanbase-core.tanfust.com`         | 2026-09-24 19:27 UTC | Former hostname, retired later that day: full smoke passed after the secret was set                                                                                                                                                  |
+| Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                         |
+| ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `9e695ab` / Worker version `fd71435d` | `https://core.tanbase.dev`             | 2026-09-26 20:43 UTC | Agent discovery: Workers Build `a5d3387f` post-deploy smoke, now covering Markdown and every discovery document, passed; independent smoke passed; the scan found Markdown, the API catalog, server card, skills index, three WebMCP tools, and the ARD manifest |
+| Production    | `244e2ea` / Worker version `217220f7` | `https://core.tanbase.dev`             | 2026-09-26 19:53 UTC | F-015: Claude connected over OAuth; `/mcp` answered 200 with no 500s after the in-process JWKS fix (Workers Build `17dc0246`); migration `0004` applied by `becfb2d0`                                                                                            |
+| Production    | `05e926e` / Worker version `71ef181c` | `https://core.tanbase.dev`             | 2026-09-26 15:41 UTC | F-013/F-014: Workers Build `7c13a06c` applied `0003` and created the Workflow; smoke passed on retry after a brief asset 404; a production breakdown added seven subtasks and AI Gateway logged $0.000086                                                        |
+| Production    | `c685ee5` / Worker version `cb0ad7be` | `https://core.tanbase.dev`             | 2026-09-26 10:00 UTC | F-012: Workers Build `34bb2c71` post-deploy smoke passed; the 10:00 UTC cron enqueued 1 reminder, the consumer sent it, and D1 recorded `reminder_sent_at`; operator received the email                                                                          |
+| Production    | `8d2581d` / Worker version `cfb92e4c` | `https://core.tanbase.dev`             | 2026-09-25 22:58 UTC | Placement next to D1: Workers Build `1984aacc` post-deploy smoke passed; `cf-placement: remote-MRS`; server functions through `GIG` 24–165 ms of wall time, down from 1.7–4.3 s; board Live                                                                      |
+| Production    | `9712b8e` / Worker version `d97edb50` | `https://core.tanbase.dev`             | 2026-09-25 22:23 UTC | F-011 and version-aware smoke: Workers Build `adb4430f` post-deploy smoke passed on the first attempt; operator synced two devices; room held two sockets for about 42 s with 402 ms of active time                                                              |
+| Production    | `eb0e127` / Worker version `d7d9401f` | `https://core.tanbase.dev`             | 2026-09-25 22:10 UTC | F-011: Workers Build `4bbe27e4` deployed `BoardRoom` but its smoke reached `SIN`, still serving older versions; independent smoke passed with `realtime: ok`                                                                                                     |
+| Production D1 | `131393d`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-26           | `0000` through `0004` applied; Workers Build `becfb2d0` applied `0004`                                                                                                                                                                                           |
+| Production    | `dfe4f4b` / Worker version `27b14b56` | `https://core.tanbase.dev`             | 2026-09-25 21:50 UTC | F-010: Workers Build `6db0c3c8` applied migration `0002`, deployed `FILES`, and passed post-deploy smoke; health `files: ok`; unauthenticated upload `401`/`403` and download `401`; operator confirmed upload, download, and delete                             |
+| Production    | `fe633cf` / Worker version `1c3b3ddf` | `https://core.tanbase.dev`             | 2026-09-25 19:18 UTC | F-018 health and analytics: Workers Build `50df91c9` post-deploy smoke passed; CSP allows `https://*.posthog.com`; events sent to `eu.i.posthog.com` with no cookies or storage; operator confirmed PostHog receives events                                      |
+| Production    | `3fa7164` / Worker version `c38f520e` | `https://core.tanbase.dev`             | 2026-09-25 10:30 UTC | F-018 headers: Workers Build `927894c6` post-deploy smoke with header and nonce assertions passed; browser under the live CSP hydrated with zero violations                                                                                                      |
+| Production    | `b811368` / Worker version `0519d547` | `https://core.tanbase.dev`             | 2026-09-25 09:17 UTC | Email: Workers Build `7ab31bd3` post-deploy smoke passed; restricted `EMAIL` binding deployed. Operator-reported full auth journey passed with SPF, DKIM, and DMARC passing                                                                                      |
+| Production    | `3ab15ae` / Worker version `aae32e59` | `https://core.tanbase.dev`             | 2026-09-25 09:00 UTC | F-006: Workers Build `a763606d` post-deploy smoke, including token-less sign-in rejection, passed on the first attempt; independent smoke passed; forged token returned `403`; the managed widget rendered                                                       |
+| Production    | `0c6ea5a` / Worker version `b469d461` | `https://core.tanbase.dev`             | 2026-09-24 20:08 UTC | Canonical origin: Workers Build `fbf5f087` post-deploy smoke passed; HTTPS, apex, and `www` redirects passed                                                                                                                                                     |
+| Production    | `fcdee3c` / Worker version `dfc781da` | `https://tanbase-core.tanfust.com`     | 2026-09-24 19:27 UTC | Former hostname, retired later that day: full smoke passed after the secret was set                                                                                                                                                                              |
 
 Cloudflare Workers Builds is configured with production branch `main`, build
 command `pnpm verify`, and deploy command `pnpm cf:deploy:production`. The
@@ -114,10 +116,12 @@ the active production-only topology.
 
 ## Last known deployed commit
 
-Production runs merge commit `244e2ea` as Worker version `217220f7`, deployed
-by Workers Build `17dc0246` at 2026-09-26 19:31 UTC with the F-015 MCP server,
-the in-process JWKS fix, and asset recovery. Its post-deploy smoke passed on
-the first attempt.
+Production runs merge commit `9e695ab` as Worker version `fd71435d`, deployed
+by Workers Build `a5d3387f` at 2026-09-26 20:37 UTC with agent discovery. Its
+post-deploy smoke passed on the first attempt.
+
+The F-015 MCP server, the in-process JWKS fix, and asset recovery shipped in
+version `217220f7` from `244e2ea`.
 
 F-013 and F-014 AI task breakdown shipped in version `71ef181c` from
 `05e926e`.

@@ -465,10 +465,10 @@ non-production branch builds are optional and disabled by default.
 - [ ] JSON-LD (`SoftwareSourceCode`) on the landing page
 - [x] Truthful `llms.txt` served as Markdown
 - [x] Homepage canonical URL, discovery `Link` headers, and Content Signals
-- [ ] Markdown negotiation for the homepage, served by the Worker and
+- [x] Markdown negotiation for the homepage, served by the Worker and
       smoke-tested on production
       ([ADR-0015](decisions/0015-worker-served-agent-discovery.md))
-- [ ] API catalog, AI Catalog, MCP server card, agent skills index, and
+- [x] API catalog, AI Catalog, MCP server card, agent skills index, and
       WebMCP tools for the F-015 MCP server, smoke-tested on production
 - [ ] DNS-AID record published under DNSSEC by the operator
 
