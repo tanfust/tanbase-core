@@ -366,38 +366,59 @@ non-production branch builds are optional and disabled by default.
 
 ### F-013: AI Gateway and quotas
 
-**Module:** ai | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-006
+**Module:** ai | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-006
 
 **Acceptance criteria**
 
-- [ ] `ai_usage` schema and quota indexes are added to D1 with this feature, not
-      before it
-- [ ] AI Gateway created; every Workers AI call passes the gateway id
-- [ ] `AI_MODEL` and `AI_GATEWAY_ID` environment variables
-- [ ] Per-user daily quota in `ai_usage`, configurable, with a clear limit message
-- [ ] `AI_LIMITER` blocks bursts per user
-- [ ] Requests visible in the AI Gateway dashboard
+- [x] `ai_usage` schema and quota indexes are added to D1 with this feature, not
+      before it (migration `0003`, keyed on user and UTC day)
+- [x] AI Gateway created; every Workers AI call passes the gateway id (the
+      `default` gateway, created by the first call on 2026-09-26)
+- [x] `AI_MODEL` and `AI_GATEWAY_ID` environment variables
+- [x] Per-user daily quota in `ai_usage`, configurable, with a clear limit message
+- [x] `AI_LIMITER` blocks bursts per user
+- [x] Requests visible in the AI Gateway dashboard (first log from a local run
+      against the remote model; production pending)
 
 **Technical notes**
 
-- Resolve open question 3 (model choice) before planning
+- Open question 3 is resolved by benchmark: Mistral Small 3.1 24B through the
+  `default` gateway ([ADR-0013](decisions/0013-workers-ai-model-and-gateway.md)).
+- The `AI` binding is production-only, so local development and CI need no
+  Cloudflare credentials; Vitest runs with `remoteBindings: false`.
+- Quota reservation is one conditional upsert, so concurrent requests cannot
+  exceed the limit; a run that fails without subtasks refunds its unit.
 
 ---
 
 ### F-014: Task breakdown workflow
 
-**Module:** ai | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-011, F-013
+**Module:** ai | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-011, F-013
 
 **Acceptance criteria**
 
-- [ ] "Break down" on a task checks the quota, then starts `TaskBreakdownWorkflow` with task id and user id
-- [ ] Steps: load task, generate 3 to 7 subtasks as JSON, validate with Zod, insert in one batch, broadcast to the board
-- [ ] Invalid model output retries the generation step, then fails cleanly with a message
-- [ ] UI shows running, done and failed states; subtasks appear through realtime
+- [x] "Break down" on a task checks the quota, then starts `TaskBreakdownWorkflow` with task id and user id
+- [x] Steps: load task, generate 3 to 7 subtasks as JSON, validate with Zod, insert in one batch, broadcast to the board
+- [x] Invalid model output retries the generation step, then fails cleanly with a message
+- [x] UI shows running, done and failed states; subtasks appear through realtime
+- [ ] A production breakdown adds subtasks on `core.tanbase.dev`
 
 **Tests**
 
-- Validation step against malformed model output fixtures
+- Validation step against malformed model output fixtures: prose, truncated
+  JSON, bare arrays, wrong keys, too few or many subtasks, empty, non-string,
+  and over-long titles, and duplicates
+- Workflow runs through `introspectWorkflowInstance`: a mocked generation
+  inserts subtasks and completes; a failing generation refunds the quota and
+  errors with the user-facing message
+
+**Technical notes**
+
+- Only top-level tasks without subtasks can be broken down. Subtasks join the
+  Todo column after its last card, show "Part of" their parent, and the parent
+  shows a subtask count.
+- Run IDs start with the owner's user ID, so status lookups are owner-scoped
+  without storing anything.
 
 ---
 

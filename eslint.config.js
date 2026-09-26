@@ -20,6 +20,8 @@ export default [
       ".prettierrc",
       "src/routeTree.gen.ts",
       "src/worker-configuration.d.ts",
+      // Ignored browser-test reports and traces.
+      "output/**",
     ],
   },
   {

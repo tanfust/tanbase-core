@@ -44,6 +44,23 @@ export function publishBoardEvent(
   )
 }
 
+/**
+ * Delivers events and waits for the room, for callers with no response to
+ * outlive, such as workflow steps. Returns the number of sockets reached.
+ */
+export async function broadcastBoardEvents(
+  userId: string,
+  projectId: string,
+  events: BoardEvent[],
+  namespace: BoardNamespace | null = getBoardNamespace()
+): Promise<number> {
+  if (!namespace) return 0
+  const room = namespace.getByName(boardRoomName(userId, projectId))
+  let delivered = 0
+  for (const event of events) delivered += await room.broadcast(event)
+  return delivered
+}
+
 interface UpgradeDependencies {
   appOrigin: string
   namespace: BoardNamespace | null

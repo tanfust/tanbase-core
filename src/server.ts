@@ -18,6 +18,7 @@ import { log } from "@/platform/log"
 import { runWithRequestContext } from "@/platform/request-context"
 import { applySecurityHeaders, createNonce } from "@/platform/security-headers"
 
+export { TaskBreakdownWorkflow } from "@/modules/ai/breakdown-workflow.server"
 export { BoardRoom } from "@/modules/realtime/board-room.server"
 
 const realtimePath = /^\/api\/realtime\/([^/]+)$/

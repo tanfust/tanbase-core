@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -8,10 +9,13 @@ import { useNavigate, useRouter } from "@tanstack/react-router"
 import { format } from "date-fns"
 import {
   CalendarIcon,
+  CornerDownRightIcon,
   EllipsisIcon,
   FolderPlusIcon,
+  ListTreeIcon,
   PencilIcon,
   PlusIcon,
+  SparklesIcon,
   Trash2Icon,
 } from "lucide-react"
 
@@ -69,6 +73,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "@/components/ui/toast"
+import type { BreakdownState } from "@/modules/ai/contracts"
+import { startTaskBreakdown } from "@/modules/ai/functions"
+import {
+  aiStatusQueryOptions,
+  breakdownQueryOptions,
+} from "@/modules/ai/queries"
 import type {
   BoardSnapshot,
   TaskStatus,
@@ -147,6 +157,9 @@ export function BoardPage({ projectId }: { projectId?: string }) {
   const [deleteTaskTarget, setDeleteTaskTarget] = useState<TaskView | null>(
     null
   )
+  // Running AI breakdowns, by task ID.
+  const [breakdowns, setBreakdowns] = useState<Record<string, string>>({})
+  const aiStatus = useQuery(aiStatusQueryOptions()).data
 
   function updateCache(updater: (current: BoardSnapshot) => BoardSnapshot) {
     queryClient.setQueryData<BoardSnapshot>(key, (current) =>
@@ -182,10 +195,16 @@ export function BoardPage({ projectId }: { projectId?: string }) {
       return { previous, tempId }
     },
     onSuccess: (task, _values, context) => {
+      // The realtime echo of this task can arrive before this response, so
+      // drop that copy while the optimistic entry takes the real task.
       updateCache((current) => ({
         ...current,
-        tasks: current.tasks.map((item) =>
-          item.id === context.tempId ? task : item
+        tasks: current.tasks.flatMap((item) =>
+          item.id === context.tempId
+            ? [task]
+            : item.id === task.id
+              ? []
+              : [item]
         ),
       }))
       setTaskDialog((current) => ({ ...current, open: false }))
@@ -239,6 +258,44 @@ export function BoardPage({ projectId }: { projectId?: string }) {
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
   })
+
+  const breakdownMutation = useMutation({
+    mutationFn: (taskId: string) => startTaskBreakdown({ data: { taskId } }),
+    onSuccess: ({ instanceId }, taskId) => {
+      setBreakdowns((current) => ({ ...current, [taskId]: instanceId }))
+      void queryClient.invalidateQueries({
+        queryKey: aiStatusQueryOptions().queryKey,
+      })
+    },
+    onError: (error) => {
+      toast.add({
+        type: "error",
+        title: "Breakdown did not start",
+        description: error.message,
+      })
+    },
+  })
+
+  function finishBreakdown(taskId: string, result: BreakdownState) {
+    setBreakdowns(({ [taskId]: _finished, ...rest }) => rest)
+    // Subtasks normally arrive over the socket; refetch in case it was down.
+    void queryClient.invalidateQueries({ queryKey: key })
+    void queryClient.invalidateQueries({
+      queryKey: aiStatusQueryOptions().queryKey,
+    })
+    if (result.state === "done") {
+      toast.add({
+        type: "success",
+        title: `Added ${result.created} subtasks`,
+      })
+    } else if (result.state === "failed") {
+      toast.add({
+        type: "error",
+        title: "Breakdown failed",
+        description: result.message,
+      })
+    }
+  }
 
   const deleteTaskMutation = useMutation({
     mutationFn: (taskId: string) => deleteTask({ data: { taskId } }),
@@ -440,6 +497,18 @@ export function BoardPage({ projectId }: { projectId?: string }) {
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
         {columns.map((column) => {
+          const titles = new Map(
+            snapshot.tasks.map((task) => [task.id, task.title])
+          )
+          const subtaskCounts = new Map<string, number>()
+          for (const task of snapshot.tasks) {
+            if (task.parentId) {
+              subtaskCounts.set(
+                task.parentId,
+                (subtaskCounts.get(task.parentId) ?? 0) + 1
+              )
+            }
+          }
           const tasks = snapshot.tasks.filter(
             (task) => task.status === column.status
           )
@@ -486,6 +555,14 @@ export function BoardPage({ projectId }: { projectId?: string }) {
                 tasks.map((task) => (
                   <Card key={task.id} size="sm">
                     <CardHeader>
+                      {task.parentId && titles.has(task.parentId) && (
+                        <p className="flex min-w-0 items-center gap-1 pe-8 text-xs text-muted-foreground">
+                          <CornerDownRightIcon className="size-3 shrink-0" />
+                          <span className="truncate">
+                            Part of {titles.get(task.parentId)}
+                          </span>
+                        </p>
+                      )}
                       <CardTitle className="pe-8">{task.title}</CardTitle>
                       <CardDescription>
                         {task.notes || "No notes"}
@@ -493,6 +570,15 @@ export function BoardPage({ projectId }: { projectId?: string }) {
                       <CardAction>
                         <TaskMenu
                           task={task}
+                          onBreakdown={
+                            aiStatus?.enabled &&
+                            !task.parentId &&
+                            !subtaskCounts.has(task.id) &&
+                            !breakdowns[task.id] &&
+                            !task.id.startsWith("optimistic:")
+                              ? () => breakdownMutation.mutate(task.id)
+                              : undefined
+                          }
                           onEdit={() =>
                             setTaskDialog({
                               open: true,
@@ -510,12 +596,30 @@ export function BoardPage({ projectId }: { projectId?: string }) {
                         />
                       </CardAction>
                     </CardHeader>
-                    {task.dueAt && (
-                      <CardContent>
-                        <Badge variant="outline">
-                          <CalendarIcon />
-                          {format(task.dueAt, "MMM d, yyyy")}
-                        </Badge>
+                    {(task.dueAt ||
+                      subtaskCounts.has(task.id) ||
+                      breakdowns[task.id]) && (
+                      <CardContent className="flex flex-wrap items-center gap-2">
+                        {task.dueAt && (
+                          <Badge variant="outline">
+                            <CalendarIcon />
+                            {format(task.dueAt, "MMM d, yyyy")}
+                          </Badge>
+                        )}
+                        {subtaskCounts.has(task.id) && (
+                          <Badge variant="outline">
+                            <ListTreeIcon />
+                            {subtaskCounts.get(task.id)} subtasks
+                          </Badge>
+                        )}
+                        {breakdowns[task.id] && (
+                          <BreakdownProgress
+                            instanceId={breakdowns[task.id]}
+                            onFinished={(result) =>
+                              finishBreakdown(task.id, result)
+                            }
+                          />
+                        )}
                       </CardContent>
                     )}
                   </Card>
@@ -568,14 +672,42 @@ export function BoardPage({ projectId }: { projectId?: string }) {
   )
 }
 
+function BreakdownProgress({
+  instanceId,
+  onFinished,
+}: {
+  instanceId: string
+  onFinished: (result: BreakdownState) => void
+}) {
+  const { data, error } = useQuery(breakdownQueryOptions(instanceId))
+
+  useEffect(() => {
+    if (data && data.state !== "running") onFinished(data)
+    if (error) onFinished({ state: "failed", message: error.message })
+    // Only a new result matters; onFinished is recreated on every render.
+  }, [data, error])
+
+  return (
+    <span
+      role="status"
+      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+    >
+      <Spinner className="size-3" />
+      Breaking down…
+    </span>
+  )
+}
+
 function TaskMenu({
   task,
   onEdit,
+  onBreakdown,
   onDelete,
   onMove,
 }: {
   task: TaskView
   onEdit: () => void
+  onBreakdown?: () => void
   onDelete: () => void
   onMove: (status: TaskStatus) => void
 }) {
@@ -597,6 +729,11 @@ function TaskMenu({
           <DropdownMenuItem onClick={onEdit}>
             <PencilIcon /> Edit
           </DropdownMenuItem>
+          {onBreakdown && (
+            <DropdownMenuItem onClick={onBreakdown}>
+              <SparklesIcon /> Break down with AI
+            </DropdownMenuItem>
+          )}
           {columns
             .filter((column) => column.status !== task.status)
             .map((column) => (

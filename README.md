@@ -66,6 +66,7 @@ pnpm cf:dry-run:production
 - Task attachments streamed into R2, with ownership checks, a 10 MB cap, a type allowlist, and cleanup on delete
 - A live board: one hibernating Durable Object per project relays task changes to every open device over WebSockets
 - Due-date reminders: an hourly cron enqueues due tasks and a queue consumer emails each reminder at most once
+- AI task breakdown: a Workflow asks Workers AI, through AI Gateway, for 3 to 7 validated subtasks, behind a per-user daily quota and burst limit
 - Typed transactional email templates with safe logging and optional Cloudflare delivery
 - Resumable guided setup for local development and essential production resources
 - Public `GET /api/health` endpoint with a live database check
