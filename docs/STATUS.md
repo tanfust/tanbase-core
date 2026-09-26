@@ -43,10 +43,10 @@ hibernated between events. The first F-011 Workers Build failed only because
 its post-deploy smoke reached a location still serving the previous version;
 smoke now waits until `/api/health` reports the deployed version.
 
-F-012 due-date reminders are implemented and verified locally: the hourly cron
-enqueued a due task, the consumer claimed it and logged the email, and
-duplicate messages send nothing. The production queues and a first
-production reminder are pending.
+F-012 due-date reminders are live: the hourly cron enqueues due tasks on
+`tanbase-core-email`, and on 2026-09-26 the first production reminder arrived
+from `noreply@send.tanbase.dev` at the 10:00 UTC run, with `reminder_sent_at`
+recorded once.
 
 The production Worker runs next to its D1 primary in Marseille. Server
 functions for traffic entering Cloudflare far away, such as Rio de Janeiro,
@@ -61,7 +61,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                             |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Local         | Working tree based on `bbcd2e5`       | Isolated local D1 and Queues           | 2026-09-26           | F-012 reminders: verify, installer tests, and a cron-to-email run on `vite dev` through `/cdn-cgi/handler/scheduled` passed                                                                                                          |
+| Production    | `c685ee5` / Worker version `cb0ad7be` | `https://core.tanbase.dev`             | 2026-09-26 10:00 UTC | F-012: Workers Build `34bb2c71` post-deploy smoke passed; the 10:00 UTC cron enqueued 1 reminder, the consumer sent it, and D1 recorded `reminder_sent_at`; operator received the email                                              |
 | Production    | `8d2581d` / Worker version `cfb92e4c` | `https://core.tanbase.dev`             | 2026-09-25 22:58 UTC | Placement next to D1: Workers Build `1984aacc` post-deploy smoke passed; `cf-placement: remote-MRS`; server functions through `GIG` 24–165 ms of wall time, down from 1.7–4.3 s; board Live                                          |
 | Production    | `9712b8e` / Worker version `d97edb50` | `https://core.tanbase.dev`             | 2026-09-25 22:23 UTC | F-011 and version-aware smoke: Workers Build `adb4430f` post-deploy smoke passed on the first attempt; operator synced two devices; room held two sockets for about 42 s with 402 ms of active time                                  |
 | Production    | `eb0e127` / Worker version `d7d9401f` | `https://core.tanbase.dev`             | 2026-09-25 22:10 UTC | F-011: Workers Build `4bbe27e4` deployed `BoardRoom` but its smoke reached `SIN`, still serving older versions; independent smoke passed with `realtime: ok`                                                                         |
@@ -94,11 +94,14 @@ the active production-only topology.
 
 ## Last known deployed commit
 
-Production runs merge commit `8d2581d` as Worker version `cfb92e4c`, deployed
-by Workers Build `1984aacc` at 2026-09-25 22:39 UTC. It runs next to the D1
-primary in Marseille through a placement hint
-([ADR-0011](decisions/0011-placement-near-d1.md)); its post-deploy smoke passed
+Production runs merge commit `c685ee5` as Worker version `cb0ad7be`, deployed
+by Workers Build `34bb2c71` at 2026-09-26 09:55 UTC with F-012 reminders, the
+hourly cron, and the `tanbase-core-email` queue. Its post-deploy smoke passed
 on the first attempt.
+
+Placement next to the D1 primary
+([ADR-0011](decisions/0011-placement-near-d1.md)) shipped in version
+`cfb92e4c` from `8d2581d`.
 
 F-011 and version-aware smoke shipped in version `d97edb50` from `9712b8e`; the
 first F-011 deployment, `d7d9401f` from `eb0e127`, is recorded above.

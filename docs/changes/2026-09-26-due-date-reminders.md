@@ -68,17 +68,36 @@ Local:
   on retry, skipped messages, and date formatting. The task repository test
   covers clearing `reminder_sent_at` only for a changed due date.
 - `pnpm test:setup` — 23 tests, including queue personalization and removal.
+- `pnpm test:e2e` — both browser tests passed with the queue and cron in the
+  browser-test configuration; the second page saw a new task and a move 5 ms
+  after the first.
 - `vite dev` with a seeded verified user and a task due in three hours:
   `GET /cdn-cgi/handler/scheduled` logged `reminders.enqueued`, then
   `email.logged` and `reminders.sent` from the consumer, and D1 recorded
   `reminder_sent_at`.
 
+Production:
+
+- The operator created `tanbase-core-email` and `tanbase-core-email-dlq`
+  before the merge. Workers Build `34bb2c71` deployed merge `c685ee5` as
+  version `cb0ad7be` at 09:55:15 UTC with `schedule: 0 * * * *`; its
+  post-deploy smoke passed on the first attempt. The queue lists
+  `tanbase-core` as producer and consumer, with `max_retries: 3`,
+  `retry_delay: 120`, and the dead-letter queue attached.
+- At the 10:00 UTC run the scheduled handler logged `reminders.enqueued` with
+  `count: 1`, and eight seconds later the consumer logged `reminders.sent`.
+  D1 recorded `reminder_sent_at` for that one task, and no due task remained
+  unreminded. The log entries carry the event and task ID only.
+- The operator received "Reminder: asd is due Saturday, September 26" from
+  `TanBase Core <noreply@send.tanbase.dev>` at 11:00 local time, linking to
+  the task's board.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `bbcd2e5` | `http://localhost:3112`    | 2026-09-26 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `bbcd2e5` | `http://localhost:3112`    | 2026-09-26 | Passed |
+| Production | `c685ee5` / version `cb0ad7be`  | `https://core.tanbase.dev` | 2026-09-26 | Passed |
 
 ## Rollback notes
 
@@ -88,7 +107,5 @@ due times and can be deleted afterwards. `reminder_sent_at` values stay valid.
 
 ## Remaining work
 
-- Create the production queues, deploy, and confirm a first reminder arrives
-  from `noreply@send.tanbase.dev` after the top of an hour.
 - Reminders have no per-user opt-out; clearing a due date or finishing the
   task skips one.

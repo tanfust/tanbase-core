@@ -333,7 +333,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-012: Due-date reminders
 
-**Module:** jobs | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-004, F-007
+**Module:** jobs | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-004, F-007
 
 **Acceptance criteria**
 
@@ -342,7 +342,7 @@ non-production branch builds are optional and disabled by default.
 - [x] Changing a due date clears `reminder_sent_at`
 - [x] 3 retries, then the dead-letter queue
 - [x] A duplicate message never sends a duplicate email
-- [ ] A production reminder arrives from `noreply@send.tanbase.dev`
+- [x] A production reminder arrives from `noreply@send.tanbase.dev` (first delivered 2026-09-26 at the 10:00 UTC run)
 
 **Tests**
 
