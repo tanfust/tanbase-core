@@ -66,9 +66,10 @@ negotiates Markdown for the homepage, no longer answers non-HTML page requests
 with a 500, and serves the API catalog, AI Catalog, MCP server card, and agent
 skills index; pages register the task tools through WebMCP. On 2026-09-26 the
 isitagentready.com scan rose from level 2, Bot-Aware, to level 5,
-Agent-Native. DNS-AID waits on the operator enabling DNSSEC and adding its
-record; the root protected resource metadata and auth.md checks fail by
-design.
+Agent-Native. On 2026-09-26 the operator enabled DNSSEC on `tanbase.dev` and
+published the DNS-AID SVCB record, and the scan's DNS-AID check passes with
+DNSSEC validation. The root protected resource metadata, auth.md, and A2A
+agent card checks fail by design.
 
 The F-016 landing page and SEO layer are live. The homepage explains what
 TanBase Core is and shows the primitive map, the cost model, and the guided
@@ -101,6 +102,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 | Production    | `8d2581d` / Worker version `cfb92e4c` | `https://core.tanbase.dev`             | 2026-09-25 22:58 UTC | Placement next to D1: Workers Build `1984aacc` post-deploy smoke passed; `cf-placement: remote-MRS`; server functions through `GIG` 24–165 ms of wall time, down from 1.7–4.3 s; board Live                                                                                                                                 |
 | Production    | `9712b8e` / Worker version `d97edb50` | `https://core.tanbase.dev`             | 2026-09-25 22:23 UTC | F-011 and version-aware smoke: Workers Build `adb4430f` post-deploy smoke passed on the first attempt; operator synced two devices; room held two sockets for about 42 s with 402 ms of active time                                                                                                                         |
 | Production    | `eb0e127` / Worker version `d7d9401f` | `https://core.tanbase.dev`             | 2026-09-25 22:10 UTC | F-011: Workers Build `4bbe27e4` deployed `BoardRoom` but its smoke reached `SIN`, still serving older versions; independent smoke passed with `realtime: ok`                                                                                                                                                                |
+| DNS           | —                                     | `_mcp._agents.core.tanbase.dev`        | 2026-09-26 23:14 UTC | DNS-AID: DS for `tanbase.dev` at the `.dev` registry (key tag 2371); the SVCB record `1 core.tanbase.dev. alpn=mcp port=443 mandatory=alpn,port` answers from Cloudflare's authoritative server, with the `ad` flag from 1.1.1.1 and 8.8.8.8; isitagentready.com DNS-AID passes with `dnssecValidated: true`, level 5       |
 | Production D1 | `131393d`                             | `3736933e-6d18-4dbb-aba1-ccd046861b2b` | 2026-09-26           | `0000` through `0004` applied; Workers Build `becfb2d0` applied `0004`                                                                                                                                                                                                                                                      |
 | Production    | `dfe4f4b` / Worker version `27b14b56` | `https://core.tanbase.dev`             | 2026-09-25 21:50 UTC | F-010: Workers Build `6db0c3c8` applied migration `0002`, deployed `FILES`, and passed post-deploy smoke; health `files: ok`; unauthenticated upload `401`/`403` and download `401`; operator confirmed upload, download, and delete                                                                                        |
 | Production    | `fe633cf` / Worker version `1c3b3ddf` | `https://core.tanbase.dev`             | 2026-09-25 19:18 UTC | F-018 health and analytics: Workers Build `50df91c9` post-deploy smoke passed; CSP allows `https://*.posthog.com`; events sent to `eu.i.posthog.com` with no cookies or storage; operator confirmed PostHog receives events                                                                                                 |
@@ -125,9 +127,7 @@ the active production-only topology.
 
 ## Known blockers
 
-- DNS-AID needs DNSSEC on the `tanbase.dev` zone, which is off, and an SVCB
-  record under `_agents`; both are operator steps in
-  [Agent discovery](AGENT_DISCOVERY.md#dns-aid).
+None.
 
 ## Last known deployed commit
 

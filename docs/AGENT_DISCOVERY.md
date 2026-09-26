@@ -154,8 +154,10 @@ DNS for AI Discovery publishes agent endpoints as SVCB records under an
 `_agents` label. The current draft is
 [draft-mozleywilliams-dnsop-dnsaid-02](https://datatracker.ietf.org/doc/draft-mozleywilliams-dnsop-dnsaid/);
 scanners still read the draft-01 name `_mcp._agents.<host>`, and require
-answers that a validating resolver has authenticated. On 2026-09-26 the
-`tanbase.dev` zone had no DNSSEC: no DS record at the parent and no DNSKEY.
+answers that a validating resolver has authenticated. Production publishes it:
+on 2026-09-26 DNSSEC was enabled for `tanbase.dev` and the record below was
+added, and the isitagentready.com DNS-AID check passes with DNSSEC
+validation.
 
 The operator publishes it in the Cloudflare dashboard, since the records live
 in the zone rather than the repository:
@@ -172,7 +174,10 @@ in the zone rather than the repository:
    ```
 
 3. Check that a validating resolver authenticates it: the `ad` flag must be
-   set in `dig +dnssec SVCB _mcp._agents.core.tanbase.dev @1.1.1.1`.
+   set in `dig +dnssec SVCB _mcp._agents.core.tanbase.dev @1.1.1.1`. Older
+   `dig` builds, including the one macOS ships, do not know the `SVCB`
+   mnemonic and silently query A records instead; use `-t TYPE64`, which
+   prints the record in hex.
 
 The draft has no parameter for an endpoint path, so the record names the host
 and port; clients find `/mcp` through the server card. Do not add an `HTTPS`
