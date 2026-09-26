@@ -79,6 +79,8 @@ describe("homepage discovery headers", () => {
     expect(decorated).not.toBe(response)
     expect(decorated.headers.get("Content-Signal")).toBe(contentSignal)
     expect(decorated.headers.get("Link")).toBe(discoveryLinks.join(", "))
+    expect(decorated.headers.get("Link")).toContain('rel="api-catalog"')
+    expect(decorated.headers.get("Vary")).toBe("Accept")
     await expect(decorated.text()).resolves.toBe("<html>ready</html>")
   })
 

@@ -15,6 +15,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { homepage } from "@/modules/seo/homepage"
+
+const featureIcons = {
+  worker: CloudIcon,
+  database: DatabaseIcon,
+  auth: KeyRoundIcon,
+  board: LayoutDashboardIcon,
+} as const
 
 export const Route = createFileRoute("/")({ component: App })
 
@@ -29,13 +37,16 @@ function App() {
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
-              render={<Link to="/login" />}
+              render={<Link to={homepage.signIn.path} />}
               nativeButton={false}
             >
-              Sign in
+              {homepage.signIn.label}
             </Button>
-            <Button render={<Link to="/sign-up" />} nativeButton={false}>
-              Get started
+            <Button
+              render={<Link to={homepage.getStarted.path} />}
+              nativeButton={false}
+            >
+              {homepage.getStarted.label}
             </Button>
           </div>
         </nav>
@@ -43,64 +54,42 @@ function App() {
       <main>
         <section className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-24 text-center sm:py-32">
           <p className="rounded-full bg-muted px-4 py-1.5 text-sm font-medium text-muted-foreground">
-            TanStack Start on Cloudflare Workers
+            {homepage.eyebrow}
           </p>
           <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-7xl">
-            A task board that proves the whole stack works.
+            {homepage.title}
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-            Server rendering, sessions, relational data, and a responsive app
-            shell—running together in one open-source Worker.
+            {homepage.summary}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button
               size="lg"
-              render={<Link to="/sign-up" />}
+              render={<Link to={homepage.primaryAction.path} />}
               nativeButton={false}
             >
-              Create your board
+              {homepage.primaryAction.label}
               <ArrowRightIcon data-icon="inline-end" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              render={<Link to="/app" />}
+              render={<Link to={homepage.secondaryAction.path} />}
               nativeButton={false}
             >
-              Open the app
+              {homepage.secondaryAction.label}
             </Button>
           </div>
         </section>
         <section className="mx-auto grid max-w-6xl gap-4 px-6 pb-24 md:grid-cols-2 lg:grid-cols-4">
-          {[
-            [
-              CloudIcon,
-              "One Worker",
-              "TanStack Start SSR and static assets share one deploy.",
-            ],
-            [
-              DatabaseIcon,
-              "D1 ownership",
-              "Projects and tasks stay behind user-scoped repositories.",
-            ],
-            [
-              KeyRoundIcon,
-              "Better Auth",
-              "Verified email, revocable sessions, and password recovery.",
-            ],
-            [
-              LayoutDashboardIcon,
-              "Working product",
-              "A responsive project board instead of disconnected demos.",
-            ],
-          ].map(([Icon, title, description]) => {
-            const FeatureIcon = Icon as typeof CloudIcon
+          {homepage.features.map(({ key, title, description }) => {
+            const FeatureIcon = featureIcons[key]
             return (
-              <Card key={title as string} size="sm">
+              <Card key={key} size="sm">
                 <CardHeader>
                   <FeatureIcon />
-                  <CardTitle>{title as string}</CardTitle>
-                  <CardDescription>{description as string}</CardDescription>
+                  <CardTitle>{title}</CardTitle>
+                  <CardDescription>{description}</CardDescription>
                 </CardHeader>
               </Card>
             )

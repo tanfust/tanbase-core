@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -24,7 +25,6 @@ const environment = option("environment")
 // Production defaults to the canonical origin; local runs must name their URL.
 const baseUrl =
   option("url") ?? (environment === "production" ? canonicalOrigin : undefined)
-const expectMarkdown = args.includes("--expect-markdown")
 // Comma-separated Worker version IDs, one of which the target must serve.
 const expectedVersions = option("expect-version")?.split(",") ?? null
 // Exit status while the edge still serves another version, so the
@@ -34,7 +34,7 @@ const allowedEnvironments = new Set(["local", "production"])
 
 if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
   console.error(
-    "Usage: pnpm smoke -- [--url <url>] --environment <local|production> [--expect-markdown] [--expect-version <id,...>]\n--url is required for local and defaults to the canonical origin for production."
+    "Usage: pnpm smoke -- [--url <url>] --environment <local|production> [--expect-version <id,...>]\n--url is required for local and defaults to the canonical origin for production."
   )
   process.exit(1)
 }
@@ -299,6 +299,12 @@ assert.ok(
   ),
   "root must advertise sitemap.xml"
 )
+assert.ok(
+  rootLinks.includes(
+    `<${canonicalOrigin}/.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"`
+  ),
+  "root must advertise the API catalog"
+)
 
 const sitemapResponse = await fetchWithTimeout(new URL("/sitemap.xml", url))
 const sitemap = await sitemapResponse.text()
@@ -392,54 +398,173 @@ assert.ok(
   "llms.txt must name the canonical production origin"
 )
 assert.ok(
-  llms.includes("does not currently expose a public application API"),
+  llms.includes(`${canonicalOrigin}/mcp`),
+  "llms.txt must name the MCP endpoint"
+)
+assert.ok(
+  llms.includes("does not offer a public REST API"),
   "llms.txt must state the current capability boundary"
 )
 
-if (expectMarkdown) {
-  const markdownResponse = await fetchWithTimeout(new URL("/", url), {
-    headers: { Accept: "text/markdown" },
-  })
-  const markdown = await markdownResponse.text()
+// Markdown negotiation: agents that ask for Markdown get the homepage as
+// Markdown; everyone else keeps getting HTML.
+const markdownResponse = await fetchWithTimeout(new URL("/", url), {
+  headers: { Accept: "text/markdown" },
+})
+const markdown = await markdownResponse.text()
 
-  assert.equal(
-    markdownResponse.status,
-    200,
-    "Markdown negotiation must return HTTP 200"
-  )
-  assert.match(
-    markdownResponse.headers.get("content-type") ?? "",
-    /^text\/markdown\b/,
-    "Markdown negotiation must return Markdown"
-  )
-  assert.ok(
-    (markdownResponse.headers.get("vary") ?? "")
-      .split(",")
-      .some((value) => value.trim().toLowerCase() === "accept"),
-    "Markdown negotiation must vary caches by Accept"
-  )
-  assert.equal(
-    markdownResponse.headers.get("content-signal"),
-    contentSignal,
-    "Markdown negotiation must preserve the origin Content Signals policy"
-  )
+assert.equal(
+  markdownResponse.status,
+  200,
+  "Markdown negotiation must return HTTP 200"
+)
+assert.match(
+  markdownResponse.headers.get("content-type") ?? "",
+  /^text\/markdown\b/,
+  "Markdown negotiation must return Markdown"
+)
+assert.ok(
+  (markdownResponse.headers.get("vary") ?? "")
+    .split(",")
+    .some((value) => value.trim().toLowerCase() === "accept"),
+  "Markdown negotiation must vary caches by Accept"
+)
+assert.equal(
+  markdownResponse.headers.get("content-signal"),
+  contentSignal,
+  "Markdown negotiation must preserve the origin Content Signals policy"
+)
 
-  const markdownTokens = markdownResponse.headers.get("x-markdown-tokens")
-  assert.ok(
-    markdownTokens !== null &&
-      /^\d+$/.test(markdownTokens) &&
-      Number(markdownTokens) > 0,
-    "Markdown negotiation must report a positive x-markdown-tokens value"
-  )
+const markdownTokens = markdownResponse.headers.get("x-markdown-tokens")
+assert.ok(
+  markdownTokens !== null &&
+    /^\d+$/.test(markdownTokens) &&
+    Number(markdownTokens) > 0,
+  "Markdown negotiation must report a positive x-markdown-tokens value"
+)
+assert.match(
+  markdown,
+  /^# \S/m,
+  "negotiated Markdown must contain the page heading"
+)
+assert.doesNotMatch(
+  markdown,
+  /<html[\s>]/i,
+  "negotiated Markdown must not return the HTML document"
+)
+
+// A page request that rules HTML out must not fail: a missing page is 404.
+const jsonOnlyMissing = await fetchWithTimeout(
+  new URL("/.well-known/smoke-missing", url),
+  { headers: { Accept: "application/json" } }
+)
+assert.equal(
+  jsonOnlyMissing.status,
+  404,
+  `a missing page requested as JSON must return 404, got ${jsonOnlyMissing.status}`
+)
+
+// Agent discovery documents. Identifiers derive from the configured auth
+// origin; documents are fetched from the target under test.
+async function discoveryDocument(path, contentType, init) {
+  const response = await fetchWithTimeout(new URL(path, url), init)
+  assert.equal(response.status, 200, `${path} must return HTTP 200`)
   assert.match(
-    markdown,
-    /^# TanBase Core$/m,
-    "negotiated Markdown must contain the page heading"
+    response.headers.get("content-type") ?? "",
+    contentType,
+    `${path} must return ${contentType}`
   )
-  assert.doesNotMatch(
-    markdown,
-    /<html[\s>]/i,
-    "negotiated Markdown must not return the HTML document"
+  assert.equal(
+    response.headers.get("access-control-allow-origin"),
+    "*",
+    `${path} must be readable from any origin`
+  )
+  assert.equal(
+    response.headers.get("cache-control"),
+    cacheControl,
+    `${path} must use the discovery cache policy`
+  )
+  return response
+}
+
+const apiCatalog = await (
+  await discoveryDocument(
+    "/.well-known/api-catalog",
+    /^application\/linkset\+json\b/,
+    { headers: { Accept: "application/linkset+json" } }
+  )
+).json()
+assert.equal(
+  apiCatalog.linkset?.[0]?.anchor,
+  mcpResource,
+  "the API catalog must list the MCP endpoint"
+)
+const apiCatalogHead = await fetchWithTimeout(
+  new URL("/.well-known/api-catalog", url),
+  { method: "HEAD" }
+)
+assert.match(
+  apiCatalogHead.headers.get("link") ?? "",
+  /rel="api-catalog"/,
+  "HEAD /.well-known/api-catalog must return its api-catalog link"
+)
+
+const serverCard = await (
+  await discoveryDocument(
+    "/mcp/server-card",
+    /^application\/mcp-server-card\+json\b/
+  )
+).json()
+assert.equal(
+  serverCard.remotes?.[0]?.url,
+  mcpResource,
+  "the MCP server card must name the /mcp remote"
+)
+const legacyServerCard = await (
+  await discoveryDocument(
+    "/.well-known/mcp/server-card.json",
+    /^application\/json\b/
+  )
+).json()
+assert.equal(
+  legacyServerCard.transport?.endpoint,
+  mcpResource,
+  "the draft-path server card must name the /mcp endpoint"
+)
+
+const aiCatalog = await (
+  await discoveryDocument(
+    "/.well-known/ai-catalog.json",
+    /^application\/json\b/,
+    {
+      headers: { Accept: "application/json" },
+    }
+  )
+).json()
+assert.ok(aiCatalog.entries?.length > 0, "the AI catalog must list entries")
+for (const entry of aiCatalog.entries) {
+  const target = await fetchWithTimeout(
+    new URL(new URL(entry.url).pathname, url)
+  )
+  assert.equal(target.status, 200, `AI catalog entry ${entry.url} must resolve`)
+}
+
+const skillsIndex = await (
+  await discoveryDocument(
+    "/.well-known/agent-skills/index.json",
+    /^application\/json\b/
+  )
+).json()
+assert.ok(skillsIndex.skills?.length > 0, "the skills index must list skills")
+for (const skill of skillsIndex.skills) {
+  const artifact = await discoveryDocument(skill.url, /^text\/markdown\b/)
+  const digest = createHash("sha256")
+    .update(Buffer.from(await artifact.arrayBuffer()))
+    .digest("hex")
+  assert.equal(
+    skill.digest,
+    `sha256:${digest}`,
+    `${skill.url} must match its indexed digest`
   )
 }
 

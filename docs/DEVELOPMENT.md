@@ -29,7 +29,7 @@ lockfile or supply-chain validation in contributor or CI instructions.
 | `pnpm run setup --local-only`                      | Prepare only isolated local development                                                  |
 | `pnpm dev`                                         | Run TanStack Start inside the Workers runtime on port 3000                               |
 | `pnpm verify`                                      | Format, lint, docs, migration, type, test, boundary, and build gates                     |
-| `pnpm test:e2e`                                    | Run the isolated local-D1 authentication and board browser journey                       |
+| `pnpm test:e2e`                                    | Run the isolated local-D1 authentication, board, and WebMCP browser journeys             |
 | `pnpm test:dev-client`                             | Load the dev server's client module graph and fail on import-protection errors           |
 | `pnpm docs:check`                                  | Validate frontmatter, required sections, and internal links                              |
 | `pnpm db:generate`                                 | Generate a migration from the Drizzle schema                                             |
@@ -116,6 +116,13 @@ account, and select **Allow** on `/oauth/consent`. Local clients with
 loopback redirect URIs must register as `native` applications; web clients
 need HTTPS redirect URIs. Tests call the tools and the MCP handler directly,
 without tokens, and cover the `401` challenge and discovery documents.
+
+The agent discovery documents describe the local origin, for example
+`http://localhost:3000/mcp/server-card`, and
+`curl -H 'Accept: text/markdown' http://localhost:3000/` returns the homepage
+as Markdown. Browsers rarely expose WebMCP yet, so `e2e/web-mcp.spec.ts`
+installs a `navigator.modelContext` stand-in before the page loads and drives
+the registered tools signed out and signed in.
 
 ## Local email workflow
 

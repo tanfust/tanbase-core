@@ -7,6 +7,7 @@ export const discoveryCacheControl = "public, max-age=300" as const
 export const discoveryLinks = [
   `<${canonicalUrl("/llms.txt")}>; rel="describedby"; type="text/markdown"`,
   `<${canonicalUrl("/sitemap.xml")}>; rel="related"; type="application/xml"`,
+  `<${canonicalUrl("/.well-known/api-catalog")}>; rel="api-catalog"; type="application/linkset+json"`,
 ] as const
 
 const publicUrls = [canonicalUrl("/")] as const
@@ -70,5 +71,7 @@ export function addHomepageDiscoveryHeaders(
   }
 
   decoratedResponse.headers.set("Content-Signal", contentSignal)
+  // The homepage also has a Markdown representation for the same URL.
+  decoratedResponse.headers.append("Vary", "Accept")
   return decoratedResponse
 }

@@ -66,8 +66,10 @@ reminders on `EMAIL_QUEUE`, which the same Worker consumes at most once
 with Workers AI through AI Gateway, behind a daily quota in `ai_usage` and
 `AI_LIMITER`; the `AI` binding exists only in production (ADR-0013). `/mcp`
 serves `list_tasks`, `create_task`, and `complete_task` to MCP clients that
-authorize through Better Auth's OAuth 2.1 provider (ADR-0014). The public
-health endpoint includes
+authorize through Better Auth's OAuth 2.1 provider (ADR-0014). The Worker
+negotiates Markdown for `/`, serves agent discovery documents built from the
+MCP tool definitions, and pages offer the same tools through WebMCP
+(ADR-0015). The public health endpoint includes
 a D1 check cached for 30 seconds per location (ADR-0009). PostHog analytics is
 optional and loads only when the `POSTHOG_KEY` Worker secret is set (ADR-0010).
 Production runs next to its D1 primary through a placement hint that belongs to
