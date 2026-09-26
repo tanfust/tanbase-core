@@ -91,14 +91,32 @@ Local:
   registered all three tools with zero CSP violations, and validation errors
   read `Too small: expected number to be >=1`.
 
-Production: pending deployment.
+Production:
+
+- Workers Build `a5d3387f` deployed merge `9e695ab` as version `fd71435d` at
+  20:37 UTC with no migrations to apply; its post-deploy smoke, including
+  Markdown negotiation and every discovery document, passed on the first
+  attempt.
+- `pnpm smoke -- --environment production --expect-version fd71435d-e264-482d-96bd-51cbcbcc5cca`
+  — passed at 20:42 UTC.
+- `Accept: text/markdown` on `/` returned `200 text/markdown`; a missing
+  well-known path requested as JSON returned `404`; `/mcp` still answered an
+  unauthenticated call with `401`.
+- The isitagentready.com scan at 20:43 UTC moved from level 2, Bot-Aware, to
+  level 5, Agent-Native. Markdown negotiation, the API catalog, the MCP
+  server card, the agent skills index, WebMCP (three tools found through
+  `navigator.modelContext`), and the ARD manifest passed, the last with a note
+  that it prefers `application/ai-catalog+json`. DNS-AID, the root protected
+  resource metadata, auth.md, and the A2A agent card failed, as expected.
+- WebMCP tools acting as a signed-in production user were not exercised; the
+  local browser test covers them.
 
 ## Deployment state
 
-| Target     | Commit                          | URL                                              | Date       | Result  |
-| ---------- | ------------------------------- | ------------------------------------------------ | ---------- | ------- |
-| Local      | Working tree based on `65bd6c6` | `http://localhost:3000`, `http://localhost:4181` | 2026-09-26 | Passed  |
-| Production | —                               | `https://core.tanbase.dev`                       | —          | Pending |
+| Target     | Commit                          | URL                                              | Date       | Result |
+| ---------- | ------------------------------- | ------------------------------------------------ | ---------- | ------ |
+| Local      | Working tree based on `65bd6c6` | `http://localhost:3000`, `http://localhost:4181` | 2026-09-26 | Passed |
+| Production | `9e695ab` / version `fd71435d`  | `https://core.tanbase.dev`                       | 2026-09-26 | Passed |
 
 ## Rollback notes
 
@@ -108,7 +126,8 @@ whole zone.
 
 ## Remaining work
 
-- Deploy, pass production smoke, and rerun the readiness scan.
+- Serve the AI Catalog as `application/ai-catalog+json`, the type the scan
+  prefers.
 - Operator: enable DNSSEC on `tanbase.dev` and publish the DNS-AID record.
 - The root protected resource metadata keeps failing strict RFC 9728 checks by
   design, and auth.md stays unpublished; both are recorded in ADR-0015.
