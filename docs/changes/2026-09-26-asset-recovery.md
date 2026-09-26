@@ -45,12 +45,18 @@ Local:
   page errors, a cancelled `vite:preloadError`, and no reload without storage.
 - `pnpm verify` — passed.
 
+Production:
+
+- Workers Build `4dd5089a` deployed merge `087de51`; post-deploy smoke,
+  which now requires the recovery script, passed. The live page served by
+  version `217220f7` still carries it.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `180d15a` | —                          | 2026-09-26 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `180d15a` | —                          | 2026-09-26 | Passed |
+| Production | `087de51`                       | `https://core.tanbase.dev` | 2026-09-26 | Passed |
 
 ## Rollback notes
 

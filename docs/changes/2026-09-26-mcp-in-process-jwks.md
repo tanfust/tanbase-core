@@ -44,12 +44,24 @@ Local:
   with `Self-fetch: http://localhost:3000/api/auth/jwks`.
 - `pnpm verify` — passed.
 
+Production:
+
+- Workers Build `17dc0246` deployed merge `244e2ea` as version `217220f7`
+  at 19:31 UTC; there were no migrations to apply, and post-deploy smoke passed
+  on the first attempt.
+- The operator reconnected Claude. Since the deployment `/mcp` has answered
+  `200` eight times and `401` twice (the unauthenticated challenge), with no
+  `500`; the previous version returned `500` twelve times. Claude's requests
+  took 48 to 95 ms of Worker time.
+- A `list_tasks` call through the Claude connector from a separate session
+  succeeded.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `131393d` | —                          | 2026-09-26 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `131393d` | —                          | 2026-09-26 | Passed |
+| Production | `244e2ea` / version `217220f7`  | `https://core.tanbase.dev` | 2026-09-26 | Passed |
 
 ## Rollback notes
 
@@ -57,4 +69,4 @@ Revert this change; `/mcp` then fails for authenticated requests again.
 
 ## Remaining work
 
-- Connect Claude to `https://core.tanbase.dev/mcp` after deployment.
+- None for this fix.
