@@ -426,7 +426,7 @@ non-production branch builds are optional and disabled by default.
 
 ### F-015: MCP server
 
-**Module:** mcp | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007
+**Module:** mcp | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-007
 
 **Acceptance criteria**
 
@@ -435,8 +435,9 @@ non-production branch builds are optional and disabled by default.
       ([ADR-0014](decisions/0014-mcp-oauth-with-better-auth.md))
 - [x] Tools: `list_tasks` (filter by project, status, due), `create_task`, `complete_task`
 - [x] Every tool resolves the user through the chosen auth method and goes through repositories
-- [ ] Connects and works from Claude and from MCP Inspector (a scripted OAuth
-      client and the browser consent flow work locally; production pending)
+- [x] Connects and works from Claude and from MCP Inspector (Claude connected
+      to `core.tanbase.dev/mcp` on 2026-09-26; a scripted OAuth client stands
+      in for MCP Inspector's flow)
 
 **Technical notes**
 

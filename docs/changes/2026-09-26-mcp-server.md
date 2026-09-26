@@ -68,12 +68,23 @@ Local:
   the client's callback with the code and state.
 - `pnpm smoke -- --url http://localhost:3114 --environment local` — passed.
 
+Production:
+
+- Workers Build `becfb2d0` applied migration `0004` at 18:25 UTC and deployed
+  merge `131393d` as version `8dd843f7`; post-deploy smoke, including the new
+  `/mcp` challenge and discovery checks, passed.
+- Claude registered, the operator signed in and approved it, and the token
+  exchange succeeded, but every authenticated `/mcp` request returned `500`:
+  the JWKS self-fetch never reached the Worker. See
+  [the in-process keys fix](2026-09-26-mcp-in-process-jwks.md), after which
+  Claude works.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `180d15a` | `http://localhost:3110`    | 2026-09-26 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result                                |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------------------------------------- |
+| Local      | Working tree based on `180d15a` | `http://localhost:3110`    | 2026-09-26 | Passed                                |
+| Production | `131393d` / version `8dd843f7`  | `https://core.tanbase.dev` | 2026-09-26 | Failed on `/mcp`; fixed in `217220f7` |
 
 ## Rollback notes
 
@@ -82,6 +93,5 @@ later leaves them unused. Deleting rows from `oauth_client` revokes clients.
 
 ## Remaining work
 
-- Connect Claude to `https://core.tanbase.dev/mcp` in production.
 - A settings screen to list and revoke connected clients, and pruning of
   unused registrations.
