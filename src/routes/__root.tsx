@@ -14,8 +14,9 @@ import { ThemeProvider, themeScript } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toast"
 import { WebMcpTools } from "@/components/web-mcp"
 import { assetRecoveryScript } from "@/lib/asset-recovery"
-import { canonicalUrl, siteConfig } from "@/lib/site"
+import { siteConfig } from "@/lib/site"
 import { getAnalyticsConfig } from "@/modules/analytics/config"
+import { defaultRobots } from "@/modules/seo/head"
 
 import appCss from "../styles.css?url"
 
@@ -43,16 +44,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         name: "description",
         content: siteConfig.description,
       },
-      {
-        property: "og:url",
-        content: canonicalUrl(),
-      },
+      // Routes opt in to indexing, with a canonical URL, through seo().
+      defaultRobots,
     ],
     links: [
-      {
-        rel: "canonical",
-        href: canonicalUrl(),
-      },
       {
         rel: "stylesheet",
         href: appCss,

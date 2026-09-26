@@ -20,7 +20,7 @@ every document itself
 | -------------------------------------------------- | ------------------------------------------------------------------------ |
 | `/sitemap.xml`                                     | XML sitemap containing only the canonical public homepage                |
 | `/robots.txt`                                      | Production crawl policy, Content Signals, and canonical sitemap location |
-| `/llms.txt`                                        | Product summary, documentation links, agent entry points, and limits     |
+| `/llms.txt`                                        | llmstxt.org summary with linked docs, agent entry points, and limits     |
 | `/`                                                | HTML by default, Markdown on request, discovery links, Content Signals   |
 | `/.well-known/api-catalog`                         | RFC 9727 API catalog listing `/mcp`                                      |
 | `/.well-known/ai-catalog.json`                     | AI Catalog of the MCP server card, the skill, and the API catalog        |
@@ -47,6 +47,17 @@ Production `robots.txt` allows crawling. The local environment uses
 `Disallow: /` and does not advertise the production sitemap. Cloudflare may
 prepend zone-managed `robots.txt` groups for named AI training crawlers, so
 production validation checks the application's exact `User-agent: *` group.
+
+## Search engine metadata
+
+Indexing is opt-in. The root route sets `robots: noindex`, and a page becomes
+indexable only when its route calls `seo({ path })` from
+`src/modules/seo/head.ts`. That call adds `index, follow`, the page's only
+canonical link, and `og:url`. Only the homepage does this, matching the
+sitemap, and it also carries `SoftwareSourceCode` JSON-LD for the repository.
+Every other page calls `seo({ noindex: true })` for its title, description, and
+Open Graph text, with no canonical URL. Link previews have no image until
+F-017 renders one on the Worker.
 
 The homepage advertises these IANA-registered relations:
 
@@ -82,7 +93,8 @@ gets the homepage as Markdown:
 - `x-markdown-tokens`, estimated at four characters a token
 - The origin `Content-Signal` policy
 
-The page and the Markdown render from `src/modules/seo/homepage.ts`. Browsers
+The page and the Markdown render from `src/modules/seo/homepage.ts`,
+including the primitive map, cost model, and install commands. Browsers
 never name Markdown and keep getting HTML. Other pages have no Markdown
 representation and answer with HTML.
 

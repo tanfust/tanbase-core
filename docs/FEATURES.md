@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-25
+last_verified: 2026-09-26
 ---
 
 # TanBase Core: Features
@@ -454,15 +454,16 @@ non-production branch builds are optional and disabled by default.
 
 ### F-016: Landing page and SEO layer
 
-**Module:** seo | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-002
+**Module:** seo | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-002
 
 **Acceptance criteria**
 
-- [ ] Landing page for TanBase Core: what it is, primitive map, cost model, deploy button placeholder
-- [ ] `seo()` head helper: title, description, canonical, OG tags
+- [x] Landing page for TanBase Core: what it is, primitive map, cost model, deploy button placeholder
+- [x] `seo()` head helper: title, description, canonical, OG tags
 - [x] `sitemap.xml` and environment-aware `robots.txt` routes
-- [ ] App routes marked noindex
-- [ ] JSON-LD (`SoftwareSourceCode`) on the landing page
+- [x] App routes marked noindex: indexing is opt-in, so every route except `/`
+      is `noindex` without a canonical URL
+- [x] JSON-LD (`SoftwareSourceCode`) on the landing page
 - [x] Truthful `llms.txt` served as Markdown
 - [x] Homepage canonical URL, discovery `Link` headers, and Content Signals
 - [x] Markdown negotiation for the homepage, served by the Worker and
@@ -472,10 +473,13 @@ non-production branch builds are optional and disabled by default.
       WebMCP tools for the F-015 MCP server, smoke-tested on production
 - [ ] DNS-AID record published under DNSSEC by the operator
 
-**Current slice:** Public discovery is documented in
+**Current slice:** Public discovery and search metadata are documented in
 [Agent discovery](AGENT_DISCOVERY.md). Every document is built from the
 capability it describes. auth.md, A2A, and OpenAPI stay unpublished until
-those capabilities exist.
+those capabilities exist. The landing page copy lives in
+`src/modules/seo/homepage.ts`, which also renders the homepage Markdown; the
+deploy placeholder links to the guided installer until F-023 adds the
+one-click button. Only the operator's DNS-AID step remains.
 
 ---
 

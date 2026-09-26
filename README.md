@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-25
+last_verified: 2026-09-26
 ---
 
 # TanBase Core
@@ -14,8 +14,11 @@ Cloudflare-owned production deployments.
 The repository now includes D1 and Drizzle, ownership-scoped project and task
 repositories, Better Auth's D1 core with its authentication UI and task board,
 Turnstile and rate limits on auth, task attachments on R2, a live board on
-Durable Objects, typed React Email templates, and optional native Cloudflare
-Email Service delivery. Background work, AI, and MCP remain roadmap items.
+Durable Objects, due-date reminders on Cron Triggers and Queues, AI task
+breakdown on Workflows and Workers AI, an MCP server, typed React Email
+templates, and optional native Cloudflare Email Service delivery. The live
+site at [core.tanbase.dev](https://core.tanbase.dev) maps each Cloudflare
+primitive to the feature it powers and shows the cost model.
 
 ## Quick start
 
@@ -71,6 +74,8 @@ pnpm cf:dry-run:production
 - Typed transactional email templates with safe logging and optional Cloudflare delivery
 - Resumable guided setup for local development and essential production resources
 - Public `GET /api/health` endpoint with a live database check
+- A landing page with the primitive map, cost model, and install commands
+- Per-route SEO head tags with opt-in indexing, a canonical homepage, and `SoftwareSourceCode` JSON-LD
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
 - Homepage discovery links, Content Signals, and a Markdown representation for agents
 - Agent discovery: an API catalog, AI Catalog, MCP server card, agent skills index, and WebMCP tools

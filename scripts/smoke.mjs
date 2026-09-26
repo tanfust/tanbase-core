@@ -162,14 +162,37 @@ assert.match(
   "root must return HTML"
 )
 assert.match(html, /<html[\s>]/i, "root must contain a rendered document")
-assert.match(html, /<title>TanBase Core<\/title>/i, "head content must render")
 assert.match(
   html,
-  new RegExp(
-    `<link[^>]+rel="canonical"[^>]+href="${canonicalOrigin}/"[^>]*>`,
-    "i"
+  /<title>TanBase Core\b[^<]*<\/title>/i,
+  "head content must render"
+)
+assert.deepEqual(
+  [...html.matchAll(/<link[^>]+rel="canonical"[^>]*>/gi)].map(
+    ([tag]) => tag.match(/href="([^"]+)"/)?.[1]
   ),
-  "root must identify the canonical production URL"
+  [`${canonicalOrigin}/`],
+  "root must identify exactly one canonical production URL"
+)
+assert.match(
+  html,
+  /<meta[^>]+name="robots"[^>]+content="index, follow"[^>]*>/i,
+  "root must allow indexing"
+)
+const structuredData = [
+  ...html.matchAll(
+    /<script[^>]+type="application\/ld\+json"[^>]*>([^<]*)<\/script>/gi
+  ),
+].map(([, json]) => JSON.parse(json))
+assert.deepEqual(
+  structuredData.map((entry) => entry["@type"]),
+  ["SoftwareSourceCode"],
+  "root must describe the repository as SoftwareSourceCode JSON-LD"
+)
+assert.equal(
+  structuredData[0].url,
+  `${canonicalOrigin}/`,
+  "JSON-LD must name the canonical production URL"
 )
 assert.match(
   html,
@@ -258,6 +281,22 @@ assert.match(
   protectedResponse.headers.get("location") ?? "",
   /^\/login\?redirect=%2Fapp(?:&|$)/,
   "protected app must preserve the requested path in the login redirect"
+)
+
+// Only the homepage is indexable: other pages opt out and name no canonical URL.
+const loginResponse = await fetchWithTimeout(new URL("/login", url))
+const loginHtml = await loginResponse.text()
+
+assert.equal(loginResponse.status, 200, "login page must return HTTP 200")
+assert.match(
+  loginHtml,
+  /<meta[^>]+name="robots"[^>]+content="noindex"[^>]*>/i,
+  "login page must be marked noindex"
+)
+assert.doesNotMatch(
+  loginHtml,
+  /<link[^>]+rel="canonical"/i,
+  "noindex pages must not name a canonical URL"
 )
 
 // When the environment configures a Turnstile site key, a sign-in without a

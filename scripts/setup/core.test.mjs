@@ -388,10 +388,15 @@ test("canonical origin helpers reject paths and update both sources", () => {
   )
   assert.equal(
     updateLlmsOrigin(
-      "# Product\n- Production origin: https://old.example.com/\n",
-      "https://new.example.com"
+      "# Product\n- Production origin: https://old.example.com/\n" +
+        "- [MCP server](https://old.example.com/mcp): Tasks\n",
+      "https://new.example.com/"
     ),
-    "# Product\n- Production origin: https://new.example.com/\n"
+    "# Product\n- Production origin: https://new.example.com/\n" +
+      "- [MCP server](https://new.example.com/mcp): Tasks\n"
+  )
+  assert.throws(() =>
+    updateLlmsOrigin("# Product\n", "https://new.example.com")
   )
 })
 
