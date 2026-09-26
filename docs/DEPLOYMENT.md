@@ -79,6 +79,18 @@ pnpm db:migrate:production
 then deploys the generated Worker. Migrations must remain compatible with the
 currently active code; destructive changes require an expand/contract rollout.
 
+Workers Builds runs overlapping builds side by side. On 2026-09-26 two merges
+16 seconds apart let the older build deploy last and roll production back. So
+just before `wrangler deploy`, `scripts/deploy-if-current.mjs` compares the
+build's `WORKERS_CI_COMMIT_SHA` with the tip of `main` from `git ls-remote`. A
+superseded build skips the deploy and its smoke and still succeeds, since the
+newer commit's build deploys both commits. Its migrations still run, and the
+newer build includes them. Manual recovery runs outside Workers Builds are
+never skipped, and a tip that cannot be read deploys with a warning. To put an
+older version back, promote it with
+`wrangler versions deploy <version-id>@100% --name tanbase-core` instead of
+retrying its build.
+
 ### Worker placement
 
 The production Worker runs next to its D1 primary rather than in the edge
@@ -399,12 +411,14 @@ To enable it for this installation:
    ```
 
 The CSP adds `https://*.posthog.com`, or the proxy origin, to `connect-src` only
-while the key is set. The SDK and its exception-capture extension are bundled,
-so `script-src` does not change. Uncaught browser errors arrive in PostHog Error
-Tracking with query strings stripped from every URL they quote; upload source
-maps, as described under
-[Required Cloudflare configuration](#required-cloudflare-configuration), for readable stack
-traces. Delete the secret to turn analytics off.
+while the key is set. The SDK and its exception-capture and web-vitals
+extensions are bundled, so `script-src` does not change. Uncaught browser
+errors arrive in PostHog Error Tracking with query strings stripped from every
+URL they quote; upload source maps, as described under
+[Required Cloudflare configuration](#required-cloudflare-configuration), for
+readable stack traces. Core Web Vitals (LCP, INP, CLS, and FCP) arrive as
+`$web_vitals` events without attribution. Session replay stays off. Delete the
+secret to turn analytics off.
 
 ### Canonical production domain
 

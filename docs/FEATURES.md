@@ -522,8 +522,9 @@ those capabilities exist.
   `requestId`, which responses also return in `X-Request-Id`.
 - PostHog is bundled and dynamically imported only when the `POSTHOG_KEY`
   Worker secret exists. It runs cookieless, records page views, page leaves,
-  and uncaught exceptions, loads no remote scripts, and strips query strings
-  and fragments from URLs, including those inside exception messages. The
+  uncaught exceptions, and Core Web Vitals, loads no remote scripts, and
+  strips query strings and fragments from URLs, including those inside
+  exception messages and web vitals metrics. The
   deploying Workers Build can upload browser source maps for Error Tracking
   ([ADR-0010 amendment](decisions/0010-privacy-first-analytics.md#amendment-2026-09-26)).
 

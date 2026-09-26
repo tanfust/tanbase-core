@@ -15,6 +15,7 @@
     "test:ui": "vitest run --config vitest.ui.config.ts",
     "test:e2e": "pnpm db:migrate:e2e && node scripts/prepare-e2e-account.mjs && playwright test",
     "test:setup": "node --test scripts/setup/*.test.mjs",
+    "test:scripts": "node --test scripts/*.test.mjs",
     "test:boundaries": "node scripts/test-import-protection.mjs && node scripts/check-db-boundaries.mjs",
     "test:dev-client": "node scripts/check-dev-client.mjs",
     "lint": "eslint .",
@@ -23,7 +24,7 @@
     "check": "pnpm format:check && pnpm lint",
     "docs:check": "node scripts/check-docs.mjs",
     "typecheck": "tsc --noEmit",
-    "verify": "pnpm format:check && pnpm lint && pnpm docs:check && pnpm db:check && pnpm typecheck && pnpm test && pnpm test:ui && pnpm test:setup && pnpm test:boundaries && pnpm build",
+    "verify": "pnpm format:check && pnpm lint && pnpm docs:check && pnpm db:check && pnpm typecheck && pnpm test && pnpm test:ui && pnpm test:setup && pnpm test:scripts && pnpm test:boundaries && pnpm build",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
@@ -33,7 +34,7 @@
     "cf:typegen": "wrangler types src/worker-configuration.d.ts --env-file scripts/typegen.env",
     "cf:build:production": "cross-env CLOUDFLARE_ENV=production vite build",
     "cf:dry-run:production": "pnpm cf:build:production && wrangler deploy --dry-run",
-    "cf:deploy:production": "pnpm cf:build:production && pnpm db:migrate:production && wrangler deploy && node scripts/smoke-after-deploy.mjs",
+    "cf:deploy:production": "pnpm cf:build:production && pnpm db:migrate:production && node scripts/deploy-if-current.mjs",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {

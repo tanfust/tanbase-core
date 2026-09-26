@@ -69,3 +69,13 @@ Readable stack traces need source maps. The deploying Workers Build uploads the
 browser bundle's maps with a personal API key held only in Workers Builds, and
 deletes them before deployment, so they are never served. The rest of this
 decision stands.
+
+## Amendment (2026-09-26): web vitals
+
+Core Web Vitals are on: `capture_performance` enables web vitals with
+`web_vitals_attribution: false`, so `$web_vitals` events carry LCP, INP, CLS,
+and FCP values without the element selectors and resource URLs that
+attribution adds, and `network_timing: false`. The page bundles
+`posthog-js/dist/web-vitals`, as it does the exception extension. Each metric
+repeats the page URL in `$current_url` and `navigationURL`; `before_send`
+strips their query strings and fragments too. Session replay stays off.

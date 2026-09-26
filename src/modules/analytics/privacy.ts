@@ -49,6 +49,22 @@ function scrubExceptions(list: unknown) {
   }
 }
 
+// Each web vitals metric carries the page URL again.
+const metricUrlProperties = ["$current_url", "navigationURL"]
+const webVitalsMetric = /^\$web_vitals_[A-Z]+_event$/
+
+function scrubWebVitals(properties: Record<string, unknown>) {
+  for (const [key, metric] of Object.entries(properties)) {
+    if (!webVitalsMetric.test(key) || !metric || typeof metric !== "object") {
+      continue
+    }
+    const fields = metric as Record<string, unknown>
+    for (const field of metricUrlProperties) {
+      if (field in fields) fields[field] = stripQueryAndFragment(fields[field])
+    }
+  }
+}
+
 interface AnalyticsEvent {
   properties?: Record<string, unknown>
   $set?: Record<string, unknown>
@@ -63,6 +79,9 @@ export function scrubEventUrls<T extends AnalyticsEvent | null>(event: T): T {
       if (key in bag) bag[key] = stripQueryAndFragment(bag[key])
     }
   }
-  scrubExceptions(event.properties?.$exception_list)
+  if (event.properties) {
+    scrubExceptions(event.properties.$exception_list)
+    scrubWebVitals(event.properties)
+  }
   return event
 }
