@@ -68,6 +68,9 @@ Local:
   on retry, skipped messages, and date formatting. The task repository test
   covers clearing `reminder_sent_at` only for a changed due date.
 - `pnpm test:setup` — 23 tests, including queue personalization and removal.
+- `pnpm test:e2e` — both browser tests passed with the queue and cron in the
+  browser-test configuration; the second page saw a new task and a move 5 ms
+  after the first.
 - `vite dev` with a seeded verified user and a task due in three hours:
   `GET /cdn-cgi/handler/scheduled` logged `reminders.enqueued`, then
   `email.logged` and `reminders.sent` from the consumer, and D1 recorded
