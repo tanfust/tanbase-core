@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, operators, agents
-last_verified: 2026-09-25
+last_verified: 2026-09-26
 ---
 
 # Current status
@@ -70,6 +70,14 @@ Agent-Native. DNS-AID waits on the operator enabling DNSSEC and adding its
 record; the root protected resource metadata and auth.md checks fail by
 design.
 
+The F-016 landing page and SEO layer are live. The homepage explains what
+TanBase Core is and shows the primitive map, the cost model, and the guided
+installer commands. Indexing is opt-in: only `/` names a canonical URL and
+carries `SoftwareSourceCode` JSON-LD, and every other page is `noindex`. On
+2026-09-26 PageSpeed Insights on mobile scored 97 Performance, 100
+Accessibility, 100 Best Practices, 100 SEO, and 4/4 Agentic Browsing, up from
+95 Accessibility and 3/4 Agentic Browsing before the change.
+
 The production Worker runs next to its D1 primary in Marseille. Server
 functions for traffic entering Cloudflare far away, such as Rio de Janeiro,
 fell from seconds to about 100 ms of Worker time.
@@ -83,6 +91,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                    |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `9204d48` / Worker version `be3a85c9` | `https://core.tanbase.dev`             | 2026-09-26 22:59 UTC | F-016 landing page and SEO: Workers Build `8e1c71dc` deployed and passed its post-deploy smoke; pinned smoke passed; `/` has one canonical URL, `index, follow`, and `SoftwareSourceCode` JSON-LD, `/login` is `noindex` with no canonical; PageSpeed Insights mobile 97/100/100/100 and Agentic Browsing 4/4               |
 | Production    | `a2fe387` / Worker version `86a32108` | `https://core.tanbase.dev`             | 2026-09-26 21:57 UTC | Web vitals and deploy guard: Workers Build `9c9ca53f` ran the guard, which found its commit at the tip of `main` and deployed; post-deploy and pinned smoke passed; with PostHog requests aborted, the live page sent `$pageview` and a `$web_vitals` FCP event without attribution or query strings, and no CSP violations |
 | Production    | `023fb25` / Worker version `6db1bd46` | `https://core.tanbase.dev`             | 2026-09-26 21:28 UTC | AI Catalog media type and PostHog Error Tracking: Workers Build `779bec50` passed its smoke, but the `d169717` build finished later and deployed `619071df`; `6db1bd46` was promoted with `wrangler versions deploy` at 21:27 UTC and pinned smoke passed; the scan reported `correctMediaType: true`                       |
 | Production    | `9e695ab` / Worker version `fd71435d` | `https://core.tanbase.dev`             | 2026-09-26 20:43 UTC | Agent discovery: Workers Build `a5d3387f` post-deploy smoke, now covering Markdown and every discovery document, passed; independent smoke passed; the scan found Markdown, the API catalog, server card, skills index, three WebMCP tools, and the ARD manifest                                                            |
@@ -122,10 +131,13 @@ the active production-only topology.
 
 ## Last known deployed commit
 
-Production runs merge commit `a2fe387` as Worker version `86a32108`, deployed
-by Workers Build `9c9ca53f` at 2026-09-26 21:47 UTC with web vitals and the
-superseded-build deploy guard. Its post-deploy smoke passed on the first
-attempt.
+Production runs merge commit `9204d48` as Worker version `be3a85c9`, deployed
+by Workers Build `8e1c71dc` at 2026-09-26 22:46 UTC with the F-016 landing page
+and SEO layer. Its post-deploy smoke passed, and a pinned smoke passed at
+22:57 UTC.
+
+Web vitals and the superseded-build deploy guard shipped in version
+`86a32108` from `a2fe387`, deployed by Workers Build `9c9ca53f` at 21:47 UTC.
 
 Version `6db1bd46` from `023fb25` was promoted with `wrangler versions deploy`
 at 21:27 UTC after a build race: PRs #26 and #27 merged 16 seconds apart, and
