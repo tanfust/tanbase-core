@@ -1,30 +1,46 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-26
+last_verified: 2026-09-27
 ---
 
 # TanBase Core: Features
 
 <!-- PROJECT: tanbase-core | OVERVIEW: docs/OVERVIEW.md -->
-<!-- Build in file order. A feature starts only when every dependency is ✅ Done. -->
+<!-- Build in the order listed under "Remaining work". A feature starts only when every dependency is ✅ Done. -->
 
-**Status:** 🔲 Todo · 🟡 In Progress · ✅ Done
-**Priority:** P0 blocks launch · P1 part of v1 · P2 backlog
+**Status:** 🔲 Todo · 🟡 In Progress · ✅ Done · ⛔ Dropped
+**Priority:** P0 blocks launch · P1 part of v1
 
 ## Milestones
 
 | #   | Milestone      | Features       |
 | --- | -------------- | -------------- |
 | 1   | Skeleton       | F-001, F-002   |
-| 2   | Auth and tasks | F-003 to F-009 |
+| 2   | Auth and tasks | F-003 to F-007 |
 | 3   | Files          | F-010          |
 | 4   | Realtime       | F-011          |
 | 5   | Jobs           | F-012          |
 | 6   | AI             | F-013, F-014   |
 | 7   | MCP            | F-015          |
-| 8   | Launch         | F-016 to F-025 |
-|     | Backlog        | F-026          |
+| 8   | Launch         | F-016 to F-024 |
+| 9   | After launch   | F-022          |
+
+Dropped: F-008, F-009, F-025, and F-026. The task board exists to exercise
+each Cloudflare primitive a real app needs, not to become a complete product,
+so app-level features beyond that are left to forks.
+
+## Remaining work
+
+Build in this order:
+
+1. F-020: Agent layer
+2. F-021: Module removal
+3. F-023: One-click setup
+4. F-017: OG images on the Worker
+5. F-019: Performance budgets
+6. F-024: Public launch
+7. F-022: Demo guardrails, after launch
 
 ---
 
@@ -232,26 +248,19 @@ non-production branch builds are optional and disabled by default.
 
 ### F-008: Drag and drop ordering
 
-**Module:** tasks | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-007
+**Module:** tasks | **Status:** ⛔ Dropped (2026-09-27)
 
-**Acceptance criteria**
-
-- [ ] Drag within and across columns; order persists after reload
-- [ ] Fractional index `position` so a move writes one row
-- [ ] Keyboard alternative: move up, move down, move to column
+App polish rather than a Cloudflare primitive. The board keeps its explicit
+move controls; forks that want dragging add it.
 
 ---
 
 ### F-009: Magic link and Google sign-in
 
-**Module:** auth | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-006
+**Module:** auth | **Status:** ⛔ Dropped (2026-09-27)
 
-**Acceptance criteria**
-
-- [ ] Magic link sign-in through the email module
-- [ ] Google OAuth sign-in
-- [ ] Account linking when the Google email matches an existing verified account
-- [ ] Callback URLs documented for local and production
+Left to forks. Better Auth adds both through plugins, and the email module
+already renders a magic-link template.
 
 ---
 
@@ -485,7 +494,7 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-017: OG images on the Worker
 
-**Module:** seo | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-016
+**Module:** seo | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-016
 
 **Acceptance criteria**
 
@@ -536,7 +545,7 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-019: Performance budgets
 
-**Module:** platform | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-011, F-016
+**Module:** platform | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-011, F-016
 
 **Acceptance criteria**
 
@@ -550,7 +559,7 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-020: Agent layer
 
-**Module:** agent | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-015, F-018
+**Module:** agent | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-015, F-018
 
 **Acceptance criteria**
 
@@ -563,7 +572,7 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-021: Module removal
 
-**Module:** platform | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-010, F-012, F-014, F-015, F-020
+**Module:** platform | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-010, F-012, F-014, F-015, F-020
 
 **Acceptance criteria**
 
@@ -575,7 +584,11 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-022: Demo guardrails
 
-**Module:** launch | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-010, F-012, F-014
+**Module:** launch | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-024
+
+Built after launch. Turnstile and rate limits on auth, the per-user AI quota,
+and the upload cap already protect production; this adds the demo reset and
+billing alerts. The operator can set the billing notifications at any time.
 
 **Acceptance criteria**
 
@@ -589,7 +602,7 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-023: One-click setup
 
-**Module:** launch | **Priority:** P1 | **Status:** 🚧 In progress | **Depends on:** F-021
+**Module:** launch | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-021
 
 **Acceptance criteria**
 
@@ -603,42 +616,32 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-024: Public launch
 
-**Module:** launch | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-016, F-018, F-020, F-022, F-023
+**Module:** launch | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-016, F-017, F-018, F-019, F-020, F-023
 
 **Acceptance criteria**
 
-- [ ] MIT license
+- [x] MIT license
 - [ ] README: what it is, primitive map, quick start, cost model, removing a module
-- [ ] Repository public and demo live
+- [x] Repository public and demo live: `tanfust/tanbase-core` is public and
+      `https://core.tanbase.dev` is live
 - [ ] Launch video and posts ready
 
 ---
 
 ### F-025: 30-day cost report
 
-**Module:** launch | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-024
+**Module:** launch | **Status:** ⛔ Dropped (2026-09-27)
 
-**Acceptance criteria**
-
-- [ ] After 30 days of public demo, invoice and per-product usage published in the README
-- [ ] Any amount above $5 explained with the product and the cause
+No invoice report. The landing page and OVERVIEW state the $5 target, the
+allowances it relies on, and the guardrails that keep usage inside them.
 
 ---
 
-## Backlog
+## Dropped from the backlog
 
 ### F-026: Daily digest
 
-**Module:** jobs | **Priority:** P2 | **Status:** 🔲 Todo | **Depends on:** F-012
+**Module:** jobs | **Status:** ⛔ Dropped (2026-09-27)
 
-**Acceptance criteria**
-
-- [ ] Opt-in user setting, off by default
-- [ ] Daily cron enqueues one digest per opted-in user with tasks due today and overdue
-- [ ] No email when nothing is due
-
-**Technical notes**
-
-- Sent at a fixed UTC hour; per-user time zones are out of scope for v1
-
----
+An app feature beyond the demo's role. Due-date reminders already exercise
+Cron Triggers and Queues.

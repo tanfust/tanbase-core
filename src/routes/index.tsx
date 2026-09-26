@@ -6,7 +6,6 @@ import { AllowanceTable, CostLists } from "@/components/landing/cost-model"
 import { DeployPanel } from "@/components/landing/deploy-panel"
 import { GitHubMark } from "@/components/landing/github-mark"
 import { PrimitiveMap } from "@/components/landing/primitive-map"
-import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { seo, softwareSourceCode } from "@/modules/seo/head"
@@ -95,10 +94,6 @@ function App() {
                 {cost.heading}
               </h2>
               <p className={sectionIntro}>{cost.intro}</p>
-              <p className="mt-2 flex max-w-xl flex-col items-start gap-2 text-sm leading-6 text-muted-foreground">
-                <Badge variant="outline">{cost.proof.status}</Badge>
-                {cost.proof.text}
-              </p>
             </div>
             <div className="flex flex-col gap-12">
               <AllowanceTable />

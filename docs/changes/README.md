@@ -43,6 +43,7 @@ Records:
 - [2026-09-26: PostHog Error Tracking with bundled capture and source maps](2026-09-26-posthog-error-tracking.md)
 - [2026-09-26: Core Web Vitals in PostHog and a superseded-build deploy guard](2026-09-26-web-vitals-and-deploy-guard.md)
 - [2026-09-26: Landing page and SEO layer](2026-09-26-landing-page-and-seo.md)
+- [2026-09-27: Narrow the roadmap to the launch path](2026-09-27-roadmap-scope.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

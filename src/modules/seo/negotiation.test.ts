@@ -138,7 +138,7 @@ describe("Markdown pages", () => {
     expect(markdown).toContain(
       "| Workers AI | 10,000 Neurons a day (free tier on every plan) |"
     )
-    expect(markdown).toContain(`${cost.proof.status}: ${cost.proof.text}`)
+    expect(markdown).not.toMatch(/invoice/i)
     expect(markdown).toContain(`## ${deploy.heading}\n`)
     expect(markdown).toContain(
       `\`\`\`sh\n${deploy.commands.join("\n")}\n\`\`\``
