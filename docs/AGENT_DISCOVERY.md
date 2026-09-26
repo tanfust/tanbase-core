@@ -35,9 +35,11 @@ every document itself
 `src/modules/discovery/` builds the catalog, card, and skill documents. The
 card's server info and tools come from the definitions `/mcp` registers, and
 URLs and identifiers derive from `BETTER_AUTH_URL`, so a local run describes
-its own origin. The skill's digest is computed from the bytes served. The
-discovery documents answer `GET`, `HEAD`, and CORS preflights from any
-origin, send an `ETag`, and use `Cache-Control: public, max-age=300`. The
+its own origin. The skill's digest is computed from the bytes served. The AI
+Catalog is served as `application/ai-catalog+json`, which is not yet
+IANA-registered. The discovery documents answer `GET`, `HEAD`, and CORS
+preflights from any origin, send an `ETag`, and use
+`Cache-Control: public, max-age=300`. The
 root and path-inserted OAuth documents come from Better Auth
 ([ADR-0014](decisions/0014-mcp-oauth-with-better-auth.md)).
 

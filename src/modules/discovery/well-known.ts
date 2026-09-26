@@ -22,9 +22,9 @@ const json = (value: unknown) => JSON.stringify(value, null, 2)
 
 const aiCatalog: Document = {
   body: (origin) => json(createAiCatalog(origin)),
-  // AI Catalog names application/ai-catalog+json, which is not registered
-  // yet; consumers accept any JSON type and the ARD check expects this one.
-  contentType: "application/json",
+  // The AI Catalog media type. It is not IANA-registered yet, but consumers
+  // accept any JSON type and ARD checks flag plain application/json.
+  contentType: "application/ai-catalog+json",
 }
 
 const documents = new Map<string, Document>([

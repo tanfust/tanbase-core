@@ -39,6 +39,7 @@ Records:
 - [2026-09-26: MCP server with OAuth 2.1 through Better Auth](2026-09-26-mcp-server.md)
 - [2026-09-26: Verify MCP access tokens with in-process keys](2026-09-26-mcp-in-process-jwks.md)
 - [2026-09-26: Agent discovery for the MCP server](2026-09-26-agent-discovery.md)
+- [2026-09-26: Serve the AI Catalog with its own media type](2026-09-26-ai-catalog-media-type.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

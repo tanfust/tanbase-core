@@ -535,9 +535,9 @@ assert.equal(
 const aiCatalog = await (
   await discoveryDocument(
     "/.well-known/ai-catalog.json",
-    /^application\/json\b/,
+    /^application\/ai-catalog\+json\b/,
     {
-      headers: { Accept: "application/json" },
+      headers: { Accept: "application/ai-catalog+json" },
     }
   )
 ).json()
