@@ -89,12 +89,29 @@ Local:
   `mistral-small-3.1-24b-instruct`, 98 input and 77 output tokens, 2.6
   seconds, $0.000077, and the `task-breakdown` metadata.
 
+Production:
+
+- Workers Build `7c13a06c` applied migration `0003` at 12:20:43 UTC, created
+  the `tanbase-core-task-breakdown` Workflow, and deployed merge `05e926e` as
+  version `71ef181c`. The post-deploy smoke waited for the new version, then
+  its first attempt found the page's new fingerprinted script returning `404`
+  at the edge; the retry 17 seconds later passed. The Worker and its assets
+  briefly disagreed during propagation; see remaining work.
+- At 15:40:58 UTC the operator broke down "Create a report about industrial
+  design integration with ai" on `core.tanbase.dev`. The run completed in
+  eight seconds, seven subtasks appeared on the board with "Part of" labels,
+  and the parent showed "7 subtasks".
+- AI Gateway `default` logged the call: `mistral-small-3.1-24b-instruct`, 93
+  input and 97 output tokens, 3.0 seconds, $0.000086, `feature:
+task-breakdown`. `ai_usage` recorded one use for the day, and the Workflow
+  reports one complete instance and no errors.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `240d88d` | `http://localhost:3110`    | 2026-09-26 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `240d88d` | `http://localhost:3110`    | 2026-09-26 | Passed |
+| Production | `05e926e` / version `71ef181c`  | `https://core.tanbase.dev` | 2026-09-26 | Passed |
 
 ## Rollback notes
 
@@ -104,5 +121,7 @@ it. Subtasks created by breakdowns are ordinary tasks.
 
 ## Remaining work
 
-- Deploy and run a production breakdown on `core.tanbase.dev`.
+- For a few seconds after a deployment, a page rendered by the new version can
+  reference a script the edge does not serve yet. Reloading once when a
+  script chunk fails to load would hide that window from users.
 - Show the remaining daily quota in the UI.
