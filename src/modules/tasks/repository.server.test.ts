@@ -185,4 +185,34 @@ describe("project and task repositories", () => {
     await expect(deleteTask("stranger", task.id, env.DB)).resolves.toBe(false)
     await expect(deleteTask("owner", task.id, env.DB)).resolves.toBe(true)
   })
+
+  it("clears a sent reminder only when the due date changes", async () => {
+    const project = await createProject("owner", { name: "Dates" }, env.DB)
+    const dueAt = 1_800_000_000_000
+    const task = await createTask(
+      "owner",
+      { projectId: project.id, title: "Due", dueAt },
+      env.DB
+    )
+    const remind = () =>
+      env.DB.prepare("UPDATE task SET reminder_sent_at = 1 WHERE id = ?")
+        .bind(task.id)
+        .run()
+
+    await remind()
+    await expect(
+      updateTask("owner", task.id, { title: "Renamed", dueAt }, env.DB)
+    ).resolves.toMatchObject({ reminderSentAt: 1 })
+    await expect(
+      updateTask("owner", task.id, { status: "doing" }, env.DB)
+    ).resolves.toMatchObject({ reminderSentAt: 1 })
+    await expect(
+      updateTask("owner", task.id, { dueAt: dueAt + 86_400_000 }, env.DB)
+    ).resolves.toMatchObject({ reminderSentAt: null })
+
+    await remind()
+    await expect(
+      updateTask("owner", task.id, { dueAt: null }, env.DB)
+    ).resolves.toMatchObject({ dueAt: null, reminderSentAt: null })
+  })
 })

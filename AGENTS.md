@@ -60,8 +60,9 @@ Better Auth uses
 request-scoped D1 storage for users, accounts, sessions, and verification state;
 KV is intentionally not configured for auth. Turnstile and the `AUTH_LIMITER`
 rate-limit binding protect credential and email-sending auth endpoints. Task attachments use the `FILES` R2 bucket, and the `BOARD` Durable Object
-relays live board events without storing data. Queues, Workflows, AI, and MCP
-are not configured yet. The public health endpoint includes
+relays live board events without storing data. An hourly cron enqueues due-date
+reminders on `EMAIL_QUEUE`, which the same Worker consumes at most once
+(ADR-0012). Workflows, AI, and MCP are not configured yet. The public health endpoint includes
 a D1 check cached for 30 seconds per location (ADR-0009). PostHog analytics is
 optional and loads only when the `POSTHOG_KEY` Worker secret is set (ADR-0010).
 Production runs next to its D1 primary through a placement hint that belongs to

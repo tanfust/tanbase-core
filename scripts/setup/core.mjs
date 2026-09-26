@@ -95,6 +95,7 @@ export function setupPlan({ localOnly }) {
     "Authorize and select a Cloudflare account",
     "Create or safely reuse the production Worker and D1 database",
     "Create or safely reuse the production R2 bucket, or turn attachments off when R2 is not enabled",
+    "Create or safely reuse the reminder queue and its dead-letter queue, or turn reminders off",
     "Personalize Wrangler, canonical URLs, and local configuration",
     ...localSteps,
     "Regenerate Worker types, verify, and run the production dry run",
@@ -138,6 +139,10 @@ export function readWranglerInstallation(source) {
       production?.r2_buckets?.find((bucket) => bucket.binding === "FILES")
         ?.bucket_name ?? null,
     productionUrl: production?.vars?.BETTER_AUTH_URL ?? null,
+    reminderQueueName:
+      production?.queues?.producers?.find(
+        (producer) => producer.binding === "EMAIL_QUEUE"
+      )?.queue ?? null,
     turnstileSiteKey: production?.vars?.TURNSTILE_SITE_KEY ?? null,
     workerName: production?.name ?? config.name ?? null,
   }
@@ -151,10 +156,12 @@ export function updateWranglerInstallation(
     databaseName,
     disableEmail = false,
     disableFiles = false,
+    disableReminders = false,
     filesBucketName,
     localDatabaseName,
     localFilesBucketName,
     productionUrl,
+    reminderQueueName,
     turnstileSiteKey,
     workerName,
   }
@@ -201,6 +208,35 @@ export function updateWranglerInstallation(
     updates.push([["env", "production", "send_email"], undefined])
     updates.push([["env", "production", "vars", "EMAIL_FROM"], ""])
   }
+  const productionQueues = config.env?.production?.queues
+  const reminderProducer = (productionQueues?.producers ?? []).findIndex(
+    (producer) => producer.binding === "EMAIL_QUEUE"
+  )
+  const reminderConsumer = (productionQueues?.consumers ?? []).findIndex(
+    (consumer) =>
+      consumer.queue === productionQueues?.producers?.[reminderProducer]?.queue
+  )
+  if (disableReminders) {
+    // Without the queue the hourly cron has nothing to do, so it goes too.
+    updates.push([["env", "production", "queues"], undefined])
+    updates.push([["env", "production", "triggers"], { crons: [] }])
+  } else if (reminderQueueName !== undefined && reminderProducer >= 0) {
+    updates.push([
+      ["env", "production", "queues", "producers", reminderProducer, "queue"],
+      reminderQueueName,
+    ])
+    if (reminderConsumer >= 0) {
+      const consumer = ["env", "production", "queues", "consumers"]
+      updates.push([
+        [...consumer, reminderConsumer, "queue"],
+        reminderQueueName,
+      ])
+      updates.push([
+        [...consumer, reminderConsumer, "dead_letter_queue"],
+        deadLetterQueueName(reminderQueueName),
+      ])
+    }
+  }
   // A placement hint describes where one database's primary lives, so it
   // cannot follow production to a different database.
   if (
@@ -214,6 +250,11 @@ export function updateWranglerInstallation(
     (updated, [path, value]) => updateJsonc(updated, path, value),
     source
   )
+}
+
+/** Messages that exhaust their retries move to this queue. */
+export function deadLetterQueueName(queueName) {
+  return `${queueName}-dlq`
 }
 
 export function selectDatabase(databases, databaseName, configuredId) {

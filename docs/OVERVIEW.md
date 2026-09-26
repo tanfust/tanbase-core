@@ -278,8 +278,9 @@ CLAUDE.md
 
 ### Jobs and email
 
-- Hourly cron finds tasks due within the reminder window with no `reminder_sent_at` and enqueues one message per task.
-- The queue consumer renders a React Email template, sends through the email adapter, then sets `reminder_sent_at`. After 3 failed retries a message goes to the dead-letter queue.
+- Hourly cron finds open tasks of verified users due within the next 24 hours with no `reminder_sent_at` and enqueues one `{ taskId, dueAt }` message per task.
+- The queue consumer claims the reminder by setting `reminder_sent_at` in one conditional update, then sends the `taskReminder` template through the email adapter. A failed send releases the claim and retries; after 3 retries a message goes to the dead-letter queue. Duplicate and stale messages are skipped ([ADR-0012](decisions/0012-at-most-once-reminders.md)).
+- Changing a task's due date clears `reminder_sent_at`.
 - In the demo environment a nightly cron wipes demo data.
 - `sendEmail()` renders React Email templates and sends through the native
   Cloudflare `EMAIL` binding.

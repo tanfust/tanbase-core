@@ -65,6 +65,7 @@ pnpm cf:dry-run:production
 - Cloudflare Turnstile and per-IP rate limits on sign-up, sign-in, and email-sending auth requests
 - Task attachments streamed into R2, with ownership checks, a 10 MB cap, a type allowlist, and cleanup on delete
 - A live board: one hibernating Durable Object per project relays task changes to every open device over WebSockets
+- Due-date reminders: an hourly cron enqueues due tasks and a queue consumer emails each reminder at most once
 - Typed transactional email templates with safe logging and optional Cloudflare delivery
 - Resumable guided setup for local development and essential production resources
 - Public `GET /api/health` endpoint with a live database check

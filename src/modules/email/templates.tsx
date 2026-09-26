@@ -97,6 +97,7 @@ interface EmailShellProps {
   actionLabel: string
   actionUrl: string
   children: ReactNode
+  footer?: string
   preview: string
   title: string
 }
@@ -109,6 +110,7 @@ function EmailShell({
   actionLabel,
   actionUrl,
   children,
+  footer = "If you did not request this email, you can safely ignore it.",
   preview,
   title,
 }: EmailShellProps) {
@@ -132,9 +134,7 @@ function EmailShell({
           </Text>
           <Link href={actionUrl}>{actionUrl}</Link>
           <Hr style={styles.hr} />
-          <Text style={styles.footer}>
-            If you did not request this email, you can safely ignore it.
-          </Text>
+          <Text style={styles.footer}>{footer}</Text>
         </Container>
       </Body>
     </Html>
@@ -216,6 +216,7 @@ export function TaskReminder({
     <EmailShell
       actionLabel="View task"
       actionUrl={taskUrl}
+      footer="TanBase sends one reminder when a task is due within a day. Mark the task done or clear its due date to skip it."
       preview={`Reminder: ${taskTitle}`}
       title="Task reminder"
     >

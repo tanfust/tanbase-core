@@ -23,6 +23,20 @@
     "bindings": [{ "name": "BOARD", "class_name": "BoardRoom" }],
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BoardRoom"] }],
+  "queues": {
+    "producers": [
+      { "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email-e2e" },
+    ],
+    "consumers": [
+      {
+        "queue": "tanbase-core-email-e2e",
+        "max_retries": 3,
+        "retry_delay": 120,
+        "dead_letter_queue": "tanbase-core-email-dlq-e2e",
+      },
+    ],
+  },
+  "triggers": { "crons": ["0 * * * *"] },
   "r2_buckets": [
     {
       "binding": "FILES",

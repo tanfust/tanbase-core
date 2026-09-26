@@ -43,6 +43,11 @@ hibernated between events. The first F-011 Workers Build failed only because
 its post-deploy smoke reached a location still serving the previous version;
 smoke now waits until `/api/health` reports the deployed version.
 
+F-012 due-date reminders are implemented and verified locally: the hourly cron
+enqueued a due task, the consumer claimed it and logged the email, and
+duplicate messages send nothing. The production queues and a first
+production reminder are pending.
+
 The production Worker runs next to its D1 primary in Marseille. Server
 functions for traffic entering Cloudflare far away, such as Rio de Janeiro,
 fell from seconds to about 100 ms of Worker time.
@@ -56,6 +61,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                             |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Local         | Working tree based on `bbcd2e5`       | Isolated local D1 and Queues           | 2026-09-26           | F-012 reminders: verify, installer tests, and a cron-to-email run on `vite dev` through `/cdn-cgi/handler/scheduled` passed                                                                                                          |
 | Production    | `8d2581d` / Worker version `cfb92e4c` | `https://core.tanbase.dev`             | 2026-09-25 22:58 UTC | Placement next to D1: Workers Build `1984aacc` post-deploy smoke passed; `cf-placement: remote-MRS`; server functions through `GIG` 24–165 ms of wall time, down from 1.7–4.3 s; board Live                                          |
 | Production    | `9712b8e` / Worker version `d97edb50` | `https://core.tanbase.dev`             | 2026-09-25 22:23 UTC | F-011 and version-aware smoke: Workers Build `adb4430f` post-deploy smoke passed on the first attempt; operator synced two devices; room held two sockets for about 42 s with 402 ms of active time                                  |
 | Production    | `eb0e127` / Worker version `d7d9401f` | `https://core.tanbase.dev`             | 2026-09-25 22:10 UTC | F-011: Workers Build `4bbe27e4` deployed `BoardRoom` but its smoke reached `SIN`, still serving older versions; independent smoke passed with `realtime: ok`                                                                         |

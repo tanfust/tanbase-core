@@ -38,6 +38,23 @@
     "bindings": [{ "name": "BOARD", "class_name": "BoardRoom" }],
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BoardRoom"] }],
+  // Due-date reminders: the hourly cron enqueues one message per due task,
+  // this Worker consumes them, and a message that fails three retries
+  // moves to the dead-letter queue.
+  "queues": {
+    "producers": [
+      { "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email-local" },
+    ],
+    "consumers": [
+      {
+        "queue": "tanbase-core-email-local",
+        "max_retries": 3,
+        "retry_delay": 120,
+        "dead_letter_queue": "tanbase-core-email-dlq-local",
+      },
+    ],
+  },
+  "triggers": { "crons": ["0 * * * *"] },
   // Task attachments. Local development uses Wrangler's simulated bucket.
   "r2_buckets": [
     {
@@ -93,6 +110,22 @@
         "bindings": [{ "name": "BOARD", "class_name": "BoardRoom" }],
       },
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BoardRoom"] }],
+      // Both queues must exist before deployment; the guided installer
+      // creates them.
+      "queues": {
+        "producers": [
+          { "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" },
+        ],
+        "consumers": [
+          {
+            "queue": "tanbase-core-email",
+            "max_retries": 3,
+            "retry_delay": 120,
+            "dead_letter_queue": "tanbase-core-email-dlq",
+          },
+        ],
+      },
+      "triggers": { "crons": ["0 * * * *"] },
       // Requires R2 to be enabled on the account and the bucket to exist
       // before deployment. The guided installer creates it or removes this.
       "r2_buckets": [

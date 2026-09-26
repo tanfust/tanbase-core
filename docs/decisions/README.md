@@ -23,6 +23,7 @@ Accepted decisions:
 - [ADR-0009: Public health endpoint with a cached database check](0009-public-health-endpoint.md)
 - [ADR-0010: Optional, privacy-first PostHog analytics](0010-privacy-first-analytics.md)
 - [ADR-0011: Place the production Worker next to its D1 primary](0011-placement-near-d1.md)
+- [ADR-0012: At-most-once due-date reminders](0012-at-most-once-reminders.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.
