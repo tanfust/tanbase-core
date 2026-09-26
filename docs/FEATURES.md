@@ -333,19 +333,32 @@ non-production branch builds are optional and disabled by default.
 
 ### F-012: Due-date reminders
 
-**Module:** jobs | **Priority:** P1 | **Status:** 🔲 Todo | **Depends on:** F-004, F-007
+**Module:** jobs | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-004, F-007
 
 **Acceptance criteria**
 
-- [ ] Hourly cron enqueues one message per task due in the reminder window with no `reminder_sent_at`
-- [ ] Queue consumer sends the reminder and sets `reminder_sent_at`
-- [ ] Changing a due date clears `reminder_sent_at`
-- [ ] 3 retries, then the dead-letter queue
-- [ ] A duplicate message never sends a duplicate email
+- [x] Hourly cron enqueues one message per task due in the reminder window with no `reminder_sent_at`
+- [x] Queue consumer sends the reminder and sets `reminder_sent_at`
+- [x] Changing a due date clears `reminder_sent_at`
+- [x] 3 retries, then the dead-letter queue
+- [x] A duplicate message never sends a duplicate email
+- [ ] A production reminder arrives from `noreply@send.tanbase.dev`
 
 **Tests**
 
-- Consumer idempotency test
+- Consumer idempotency test: duplicate messages send once, a failed send
+  releases its claim and retries, and stale, finished, unverified, missing, and
+  invalid messages are skipped
+
+**Technical notes**
+
+- The window is the next 24 hours. Due dates are calendar dates stored as
+  noon in the browser's time zone, so a reminder normally arrives around noon
+  the day before, and the email names the date without a time.
+- Only open tasks of users with a verified email are reminded. Each cron run
+  enqueues at most 1,000 reminders in batches of 100; the rest wait an hour.
+- The consumer claims before sending, so delivery is at most once
+  ([ADR-0012](decisions/0012-at-most-once-reminders.md)).
 
 ---
 

@@ -45,10 +45,16 @@ The full setup:
 2. Creates or safely reuses `<worker-name>-production` in D1 and the
    `<worker-name>-files` R2 bucket. When R2 is not enabled for the account, it
    removes the production `FILES` binding so the deployment succeeds with
-   attachments off; enable R2 and run setup again to add them. The live
-   board's Durable Object needs no setup: deployment creates it.
+   attachments off; enable R2 and run setup again to add them. It also creates
+   or reuses the `<worker-name>-email` reminder queue and its
+   `<worker-name>-email-dlq` dead-letter queue. If Cloudflare cannot create
+   them, setup asks whether to continue without due-date reminders, which
+   removes the production queue binding and the hourly cron. The live board's
+   Durable Object needs no setup: deployment creates it.
 3. Personalizes the Worker name, account ID, D1 IDs, Better Auth URL, and
-   canonical discovery origin. It keeps the production Turnstile site key only
+   canonical discovery origin, and removes the production placement hint when
+   production points at a different database. It keeps the production
+   Turnstile site key only
    when the Worker already has `TURNSTILE_SECRET_KEY`; otherwise it clears the
    key, which disables the auth challenge instead of failing closed. It keeps
    the production `EMAIL` binding and sender only when the sender's Email

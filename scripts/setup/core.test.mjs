@@ -51,6 +51,17 @@ const config = `{
       "r2_buckets": [
         { "binding": "FILES", "bucket_name": "tanbase-core-files" },
       ],
+      "queues": {
+        "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" }],
+        "consumers": [
+          {
+            "queue": "tanbase-core-email",
+            "max_retries": 3,
+            "dead_letter_queue": "tanbase-core-email-dlq",
+          },
+        ],
+      },
+      "triggers": { "crons": ["0 * * * *"] },
     },
   },
 }
@@ -140,6 +151,7 @@ test("updates only the intended local and production Wrangler fields", () => {
     emailFrom: "sender@example.com",
     filesBucketName: "tanbase-core-files",
     productionUrl: "https://customer-app.owner.workers.dev",
+    reminderQueueName: "tanbase-core-email",
     turnstileSiteKey: "0x-template-site-key",
     workerName: "customer-app",
   })
@@ -236,6 +248,37 @@ test("placement stays with its database and is dropped for another", () => {
   })
   assert.doesNotMatch(otherDatabase, /placement/)
   assert.equal(readWranglerInstallation(otherDatabase).databaseId, "database-1")
+})
+
+test("reminder queues are personalized or removed with the cron", () => {
+  const options = {
+    accountId: "account-1",
+    databaseId: "database-1",
+    databaseName: "customer-app-production",
+    localDatabaseName: "customer-app-local",
+    productionUrl: "https://customer-app.owner.workers.dev",
+    workerName: "customer-app",
+  }
+
+  const personalized = updateWranglerInstallation(config, {
+    ...options,
+    reminderQueueName: "customer-app-email",
+  })
+  assert.equal(
+    readWranglerInstallation(personalized).reminderQueueName,
+    "customer-app-email"
+  )
+  assert.equal(personalized.match(/"customer-app-email"/g)?.length, 2)
+  assert.match(personalized, /"dead_letter_queue": "customer-app-email-dlq"/)
+  assert.match(personalized, /"crons": \["0 \* \* \* \*"\]/)
+
+  const disabled = updateWranglerInstallation(config, {
+    ...options,
+    disableReminders: true,
+  })
+  assert.equal(readWranglerInstallation(disabled).reminderQueueName, null)
+  assert.doesNotMatch(disabled, /EMAIL_QUEUE/)
+  assert.match(disabled, /"crons": \[\]/)
 })
 
 test("R2 availability errors are recognized", () => {

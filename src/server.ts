@@ -2,6 +2,8 @@ import { env } from "cloudflare:workers"
 import handler from "@tanstack/react-start/server-entry"
 
 import { getSessionFromHeaders } from "@/modules/auth/session.server"
+import { enqueueDueReminders } from "@/modules/jobs/cron.server"
+import { processReminderBatch } from "@/modules/jobs/queue.server"
 import {
   getBoardNamespace,
   handleRealtimeUpgrade,
@@ -86,5 +88,15 @@ export default {
         }
       )
     })
+  },
+
+  // Hourly Cron Trigger: enqueue due-date reminders.
+  async scheduled(controller) {
+    await enqueueDueReminders(controller.scheduledTime)
+  },
+
+  // EMAIL_QUEUE consumer: deliver each reminder at most once.
+  async queue(batch) {
+    await processReminderBatch(batch)
   },
 } satisfies ExportedHandler<Env>

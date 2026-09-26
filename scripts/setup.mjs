@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url"
 
 import {
   deriveWorkerName,
+  deadLetterQueueName,
   emailDomain,
   findDeploymentUrl,
   hasSecret,
@@ -313,6 +314,61 @@ async function ensureFilesBucket({
   throw new Error(`Cloudflare did not create the R2 bucket ${bucketName}.`)
 }
 
+// Returns the reminder queue name once it and its dead-letter queue exist, or
+// null when the operator continues without reminders after a failed create.
+async function ensureReminderQueues({
+  accountEnv,
+  manager,
+  nonInteractive,
+  queueName,
+  recorded,
+  reuseExisting,
+}) {
+  for (const name of [queueName, deadLetterQueueName(queueName)]) {
+    const info = await runWrangler(manager, ["queues", "info", name], {
+      allowFailure: true,
+      capture: true,
+      cwd: root,
+      echo: false,
+      env: accountEnv,
+    })
+    if (info.code === 0) {
+      if (!recorded && !reuseExisting) {
+        const approved = await confirm(
+          `A queue named ${name} already exists. Reuse it?`,
+          false,
+          nonInteractive
+        )
+        if (!approved) {
+          throw new Error(
+            "Setup stopped before touching the existing queue. Use --name for a separate installation or --reuse-existing to reuse it."
+          )
+        }
+      }
+      continue
+    }
+
+    heading(`Creating the ${name} queue`)
+    const created = await runWrangler(manager, ["queues", "create", name], {
+      allowFailure: true,
+      capture: true,
+      cwd: root,
+      env: accountEnv,
+    })
+    if (created.code === 0) continue
+
+    process.stderr.write(`${created.errorOutput || created.output}\n`)
+    const withoutReminders = await confirm(
+      "Cloudflare did not create the queue. Continue without due-date reminders?",
+      false,
+      nonInteractive
+    )
+    if (withoutReminders) return null
+    throw new Error(`Cloudflare did not create the queue ${name}.`)
+  }
+  return queueName
+}
+
 // Lists production secret names (never values). A missing Worker has none.
 async function remoteSecretList(manager, accountEnv) {
   const result = await runWrangler(
@@ -513,6 +569,16 @@ async function main() {
     reuseExisting: options.reuseExisting,
   })
 
+  const desiredQueueName = `${workerName}-email`
+  const reminderQueue = await ensureReminderQueues({
+    accountEnv,
+    manager,
+    nonInteractive: options.yes,
+    queueName: desiredQueueName,
+    recorded: sameInstallation && state.reminderQueue === desiredQueueName,
+    reuseExisting: options.reuseExisting,
+  })
+
   let currentState = mergeSetupState(state, {
     accountId: account.id,
     accountName: account.name,
@@ -520,6 +586,7 @@ async function main() {
     databaseName,
     emailSetup: "skipped",
     filesBucket: filesBucket ?? "unavailable",
+    reminderQueue: reminderQueue ?? "unavailable",
     optionalModules: "skipped",
     workerName,
   })
@@ -540,10 +607,12 @@ async function main() {
     databaseId: database.uuid,
     databaseName,
     disableFiles: filesBucket === null,
+    disableReminders: reminderQueue === null,
     filesBucketName: filesBucket ?? undefined,
     localDatabaseName,
     localFilesBucketName: `${workerName}-files-local`,
     productionUrl: provisionalOrigin,
+    reminderQueueName: reminderQueue ?? undefined,
     workerName,
   })
   await writeAtomic(configPath, configuredSource)
@@ -721,6 +790,11 @@ async function main() {
     filesBucket
       ? `Attachments: stored in the R2 bucket ${filesBucket}.\n`
       : "Attachments: off. Enable R2 in the Cloudflare dashboard, then run setup again to create the bucket (docs/DEPLOYMENT.md).\n"
+  )
+  process.stdout.write(
+    reminderQueue
+      ? `Reminders: hourly, through the ${reminderQueue} queue.\n`
+      : "Reminders: off. Create the queues, then run setup again to restore them (docs/DEPLOYMENT.md).\n"
   )
   process.stdout.write(
     emailSender

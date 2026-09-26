@@ -123,6 +123,36 @@ hibernate between events; Durable Object duration should stay near zero while
 sockets are idle. `GET /api/health` reports `checks.realtime` through an RPC to
 a dedicated `health` room.
 
+### Due-date reminders
+
+An hourly Cron Trigger (`0 * * * *`) enqueues one `EMAIL_QUEUE` message per
+open task of a verified user that is due within 24 hours and has no
+`reminder_sent_at`. The same Worker consumes the `tanbase-core-email` queue:
+it claims each reminder in D1, sends the `taskReminder` email, and retries a
+failed delivery after 120 seconds. A message that fails three retries moves to
+`tanbase-core-email-dlq`, which has no consumer. Delivery is at most once
+([ADR-0012](decisions/0012-at-most-once-reminders.md)).
+
+Both queues must exist before the first deployment that binds them, or
+`wrangler deploy` fails. The guided installer creates them; for this
+installation they were created once with:
+
+```sh
+pnpm exec wrangler queues create tanbase-core-email
+pnpm exec wrangler queues create tanbase-core-email-dlq
+```
+
+Inspect dead-lettered reminders with
+`pnpm exec wrangler queues info tanbase-core-email-dlq`; each message holds
+only a task ID and due time. Workers Logs record `reminders.enqueued`,
+`reminders.sent`, `reminders.skipped`, and `reminders.failed` events with task
+IDs, never recipients. Without `EMAIL_FROM`, reminders are logged instead of
+sent and still marked as sent.
+
+Placement does not apply to cron or queue handlers. To turn reminders off,
+remove the production `queues` block and set `"triggers": { "crons": [] }`;
+an empty list removes the schedule on the next deployment.
+
 ### Better Auth
 
 The production URL is committed as `BETTER_AUTH_URL`; the secret is not. Create

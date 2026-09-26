@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, sql } from "drizzle-orm"
 
 import { getDb } from "@/db"
 import { projects, tasks } from "@/db/schema"
@@ -185,7 +185,14 @@ export async function updateTask(
   const task = (
     await db
       .update(tasks)
-      .set({ ...input, updatedAt: Date.now() })
+      .set({
+        ...input,
+        // A new due date deserves a new reminder; saving the same date does not.
+        ...(input.dueAt !== undefined && {
+          reminderSentAt: sql`case when ${tasks.dueAt} is ${input.dueAt} then ${tasks.reminderSentAt} else null end`,
+        }),
+        updatedAt: Date.now(),
+      })
       .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
       .returning()
   ).at(0)
