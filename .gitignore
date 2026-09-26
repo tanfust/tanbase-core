@@ -16,3 +16,6 @@ todos.json
 
 # typescript
 *.tsbuildinfo
+
+# local build secrets; Workers Builds holds the real values
+.env
