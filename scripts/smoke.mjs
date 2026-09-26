@@ -188,6 +188,11 @@ if (environment === "production") {
       "every inline script must carry the CSP nonce"
     )
   }
+  assert.match(
+    html,
+    /tanbase:asset-reload/,
+    "production pages must reload once when a fresh deployment's assets are not served yet"
+  )
 
   const asset = html.match(/<script[^>]+src="(\/assets\/[^"]+\.js)"/)?.[1]
   assert.ok(asset, "root must load a fingerprinted module script")
