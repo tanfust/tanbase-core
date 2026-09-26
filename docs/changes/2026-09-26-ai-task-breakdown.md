@@ -122,6 +122,6 @@ it. Subtasks created by breakdowns are ordinary tasks.
 ## Remaining work
 
 - For a few seconds after a deployment, a page rendered by the new version can
-  reference a script the edge does not serve yet. Reloading once when a
-  script chunk fails to load would hide that window from users.
+  reference a script the edge does not serve yet. Addressed by
+  [the asset recovery change](2026-09-26-asset-recovery.md).
 - Show the remaining daily quota in the UI.

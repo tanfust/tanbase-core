@@ -12,6 +12,7 @@ import { Analytics } from "@/components/analytics"
 import { ErrorPage, NotFoundPage } from "@/components/status-page"
 import { ThemeProvider, themeScript } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toast"
+import { assetRecoveryScript } from "@/lib/asset-recovery"
 import { canonicalUrl, siteConfig } from "@/lib/site"
 import { getAnalyticsConfig } from "@/modules/analytics/config"
 
@@ -71,6 +72,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
         {/* Runs before paint to avoid a theme flash; carries the CSP nonce. */}
         <ScriptOnce>{themeScript}</ScriptOnce>
+        {/* Reloads once if a fresh deployment's assets are not served yet. */}
+        {!import.meta.env.DEV && <ScriptOnce>{assetRecoveryScript}</ScriptOnce>}
       </head>
       <body>
         <ThemeProvider>

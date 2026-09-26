@@ -312,7 +312,11 @@ It is cookieless and runs alongside the optional PostHog integration.
 
 Production smoke fails when the document lacks the CSP or HSTS, when any
 inline script lacks the CSP nonce, or when a fingerprinted asset lacks
-`immutable` caching or `nosniff`. If a CSP change blocks resources in
+`immutable` caching or `nosniff`. It also requires the inline asset-recovery
+script: for a few seconds after a deployment, a page from the new version can
+reference a fingerprinted script or stylesheet the edge does not serve yet, and
+the page then reloads once (at most every 30 seconds, and never without
+session storage). If a CSP change blocks resources in
 production, roll back the Worker version first.
 
 ### Health endpoint
