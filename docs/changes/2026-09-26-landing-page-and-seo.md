@@ -110,12 +110,33 @@ Local:
   skill folder in this checkout is not part of the change.
 - `pnpm cf:dry-run:production` — passed.
 
+Production:
+
+- Workers Build `8e1c71dc` deployed merge `9204d48` as version `be3a85c9` at
+  22:46 UTC, two minutes after PR #30 merged, and its post-deploy smoke
+  passed. The four GitHub checks passed on the merge commit.
+- `pnpm smoke -- --environment production --expect-version be3a85c9-325e-4cd4-ae3a-5f9e9b728795`
+  — passed at 22:57 UTC.
+- The live `/` has the title `TanBase Core: TanStack Start on Cloudflare
+Workers`, one canonical link and `og:url` for `https://core.tanbase.dev/`,
+  `index, follow`, and `SoftwareSourceCode` JSON-LD. `/login` and `/sign-up`
+  are `noindex` with no canonical link. No link carries `role="button"`.
+  `llms.txt` has 16 Markdown links, the Markdown homepage has the primitive
+  map, cost model, and deploy sections, and `/manifest.json` returns 404.
+- PageSpeed Insights, mobile, captured 22:59 UTC: 97 Performance, 100
+  Accessibility, 100 Best Practices, 100 SEO, and 4/4 Agentic Browsing.
+  FCP and LCP 2.1 s, TBT 20 ms, and CLS 0.021. The remaining insights are the
+  render-blocking stylesheet and unused JavaScript, which belong to F-019.
+- Lighthouse 13 mobile from a local Chrome against production: 100 in
+  Accessibility, Best Practices, SEO, and Agentic Browsing, with no failed
+  audits.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `b4c50bb` | `http://localhost:4391`    | 2026-09-26 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `b4c50bb` | `http://localhost:4391`    | 2026-09-26 | Passed |
+| Production | `9204d48` / version `be3a85c9`  | `https://core.tanbase.dev` | 2026-09-26 | Passed |
 
 ## Rollback notes
 
@@ -124,7 +145,6 @@ nothing persistent depends on them.
 
 ## Remaining work
 
-- Record production smoke and a fresh PageSpeed Insights run after deploy.
 - DNS-AID, the last F-016 item, waits on the operator enabling DNSSEC.
 - F-017 adds the `og:image` preview; F-023 replaces the deploy placeholder
   with a Deploy to Cloudflare button.
