@@ -39,14 +39,23 @@ Local:
   against a dev server from the same worktree; both catalog paths answered
   `application/ai-catalog+json`.
 
-Production: pending deployment.
+Production:
+
+- Workers Build `779bec50` deployed merge `023fb25` as version `6db1bd46` and
+  its smoke passed, but the build for the older `d169717` finished 26 seconds
+  later and replaced it. `wrangler versions deploy` promoted `6db1bd46` back at
+  21:27 UTC.
+- `pnpm smoke -- --environment production --expect-version 6db1bd46-cbae-48d1-859d-acb56e8b4861`
+  — passed at 21:28 UTC.
+- The readiness scan at 21:28 UTC stayed at level 5 and reported the ARD
+  manifest as `application/ai-catalog+json` with `correctMediaType: true`.
 
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result  |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------- |
-| Local      | Working tree based on `9e695ab` | `http://localhost:3000`    | 2026-09-26 | Passed  |
-| Production | —                               | `https://core.tanbase.dev` | —          | Pending |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `9e695ab` | `http://localhost:3000`    | 2026-09-26 | Passed |
+| Production | `023fb25` / version `6db1bd46`  | `https://core.tanbase.dev` | 2026-09-26 | Passed |
 
 ## Rollback notes
 
@@ -54,5 +63,4 @@ Revert the change; consumers accept either JSON type.
 
 ## Remaining work
 
-- Deploy, pass production smoke, and confirm the scan reports the correct
-  media type.
+- None.

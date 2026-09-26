@@ -59,14 +59,22 @@ Local:
   `?token=abc123`.
 - `pnpm verify` and the production dry run — see the pull request.
 
-Production: pending deployment and the Workers Builds variables.
+Production:
+
+- Version `6db1bd46` from `023fb25` is live (see
+  [the media type record](2026-09-26-ai-catalog-media-type.md) for how it was
+  restored after a build race). Its main chunk references the bundled
+  `exception-autocapture` chunk, which is served and registers the capture
+  extension; no source maps are served.
+- No source maps were uploaded: the Workers Builds upload variables are not set
+  yet.
 
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result  |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------- |
-| Local      | Working tree based on `9e695ab` | `http://localhost:3000`    | 2026-09-26 | Passed  |
-| Production | —                               | `https://core.tanbase.dev` | —          | Pending |
+| Target     | Commit                          | URL                        | Date       | Result                        |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ----------------------------- |
+| Local      | Working tree based on `9e695ab` | `http://localhost:3000`    | 2026-09-26 | Passed                        |
+| Production | `023fb25` / version `6db1bd46`  | `https://core.tanbase.dev` | 2026-09-26 | Capture live; uploads pending |
 
 ## Rollback notes
 
