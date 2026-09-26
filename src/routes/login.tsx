@@ -31,6 +31,7 @@ import {
   oauthContinuation,
   safeRedirect,
 } from "@/modules/auth/redirects"
+import { seo } from "@/modules/seo/head"
 
 interface LoginSearch {
   redirect?: string
@@ -46,6 +47,12 @@ export const Route = createFileRoute("/login")({
     error: typeof search.error === "string" ? search.error : undefined,
   }),
   loader: () => getAuthChallengeConfig(),
+  head: () =>
+    seo({
+      title: "Sign in",
+      description: "Sign in to your TanBase Core task board.",
+      noindex: true,
+    }),
   component: LoginPage,
 })
 

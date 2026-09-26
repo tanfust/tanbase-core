@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-25
+last_verified: 2026-09-26
 ---
 
 # TanBase Core
@@ -85,8 +85,8 @@ Subtasks are tasks with a `parent_id`.
 5. Update the display name and password, or choose light, dark, or system appearance.
 
 Turnstile and per-IP rate limits guard sign-up, sign-in, and email-sending auth
-requests. Google and magic-link sign-in, drag ordering, realtime, files,
-reminders, AI breakdown, and MCP access remain later feature slices.
+requests. Google and magic-link sign-in and drag ordering remain later feature
+slices.
 
 ---
 
@@ -107,7 +107,7 @@ reminders, AI breakdown, and MCP access remain later feature slices.
 | AI inference                               | Workers AI through AI Gateway                     | `AI`                            |
 | Reminders                                  | Cron Triggers -> Queues -> email                  | `EMAIL_QUEUE`                   |
 | Email                                      | Cloudflare Email Service                          | `EMAIL`                         |
-| Agent access                               | MCP server (Cloudflare Agents SDK)                | `MCP_OBJECT`                    |
+| Agent access                               | MCP server (MCP TypeScript SDK, OAuth 2.1)        | none; the `/mcp` route          |
 | Logs                                       | Workers Logs                                      | `observability`                 |
 
 ### Worker entry
@@ -297,7 +297,7 @@ CLAUDE.md
 
 ### Production layer
 
-- **SEO:** per-route head (title, description, canonical, OG), `sitemap.xml`, `robots.txt`, JSON-LD on marketing pages, OG images generated on the Worker, `llms.txt`, and the homepage as Markdown for `Accept: text/markdown`.
+- **SEO:** a `seo()` head helper per route (title, description, Open Graph, robots, and a canonical URL on indexable pages), with indexing opt-in so only the homepage is indexed; `sitemap.xml`, `robots.txt`, `SoftwareSourceCode` JSON-LD on the homepage, `llms.txt`, and the homepage as Markdown for `Accept: text/markdown`. OG images generated on the Worker follow in F-017.
 - **Security:** per-response nonce CSP on documents, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Frame-Options and `frame-ancestors 'none'`, and Cross-Origin-Opener-Policy. Static assets receive theirs from `public/_headers`.
 - **Errors:** root error boundary, 404 page, and structured logs carrying the Cloudflare Ray ID as the request id, which responses return in `X-Request-Id`.
 - **Analytics:** optional, cookieless PostHog page views, loaded only when the `POSTHOG_KEY` Worker secret is set ([ADR-0010](decisions/0010-privacy-first-analytics.md)).
@@ -342,19 +342,21 @@ Exact versions are pinned in F-001.
 
 Target: the public demo runs on the Workers Paid plan at $5 a month, with usage inside included allowances.
 
-Included in Workers Paid (checked September 2026, re-check before publishing):
+Included in Workers Paid (checked against Cloudflare's pricing pages on
+2026-09-26; the landing page publishes the same table from
+`src/modules/seo/homepage.ts`):
 
-| Product              | Included per month                            |
-| -------------------- | --------------------------------------------- |
-| Workers              | 10M requests, 30M CPU milliseconds            |
-| D1                   | 25B rows read, 50M rows written, 5 GB storage |
-| Durable Objects      | 1M requests, 400K GB-seconds                  |
-| Workers AI           | Free daily allocation, then per-model pricing |
-| Email Service (beta) | 3,000 emails, then $0.35 per 1,000            |
+| Product              | Included per month                                   |
+| -------------------- | ---------------------------------------------------- |
+| Workers              | 10M requests, 30M CPU milliseconds                   |
+| D1                   | 25B rows read, 50M rows written, 5 GB storage        |
+| Durable Objects      | 1M requests, 400K GB-seconds                         |
+| R2                   | 10 GB storage, 1M Class A and 10M Class B operations |
+| Queues               | 1M operations                                        |
+| Workers AI           | 10,000 Neurons a day, then $0.011 per 1,000 Neurons  |
+| Email Service (beta) | 3,000 emails, then $0.35 per 1,000                   |
 
-R2 has no egress fees. Check KV, R2 and Queues allowances on the pricing page at
-F-001. Cloudflare Email Service includes 3,000 outbound messages on Workers Paid
-before usage-based charges.
+Static asset requests are free, and no product charges for egress.
 
 What can push the bill past $5:
 

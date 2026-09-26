@@ -322,15 +322,18 @@ export function updateSiteOrigin(source, origin) {
   return source.replace(pattern, `$1${normalizeOrigin(origin)}$2`)
 }
 
+/**
+ * llms.txt links to the MCP server and discovery documents on the production
+ * origin, so every occurrence of the current origin moves to the new one.
+ */
 export function updateLlmsOrigin(source, origin) {
-  const pattern = /^- Production origin: https?:\/\/\S+$/m
-  if (!pattern.test(source)) {
+  const current = /^- Production origin: (https?:\/\/[^\s/]+)\/?$/m.exec(
+    source
+  )?.[1]
+  if (!current) {
     throw new Error("Could not find the production origin in llms.txt.")
   }
-  return source.replace(
-    pattern,
-    `- Production origin: ${normalizeOrigin(origin)}/`
-  )
+  return source.replaceAll(current, normalizeOrigin(origin))
 }
 
 /**

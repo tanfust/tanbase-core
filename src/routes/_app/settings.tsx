@@ -25,14 +25,15 @@ import { Spinner } from "@/components/ui/spinner"
 import { toast } from "@/components/ui/toast"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { authClient } from "@/modules/auth/client"
+import { seo } from "@/modules/seo/head"
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({
-    meta: [
-      { title: "Settings | TanBase Core" },
-      { name: "description", content: "Manage your TanBase Core account." },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: "Settings",
+      description: "Manage your TanBase Core account.",
+      noindex: true,
+    }),
   component: SettingsPage,
 })
 

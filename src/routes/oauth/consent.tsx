@@ -17,6 +17,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/modules/auth/client"
 import { oauthContinuation } from "@/modules/auth/redirects"
+import { seo } from "@/modules/seo/head"
 
 interface ConsentSearch {
   client_id?: string
@@ -55,12 +56,12 @@ export const Route = createFileRoute("/oauth/consent")({
     redirect_uri:
       typeof search.redirect_uri === "string" ? search.redirect_uri : undefined,
   }),
-  head: () => ({
-    meta: [
-      { title: "Allow access · TanBase Core" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: "Allow access",
+      description: "Approve an MCP client's access to your TanBase Core tasks.",
+      noindex: true,
+    }),
   component: ConsentPage,
 })
 

@@ -5,6 +5,7 @@ import { BoardPage } from "@/components/board/board-page"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { seo } from "@/modules/seo/head"
 import { boardQueryOptions } from "@/modules/tasks/queries"
 
 export const Route = createFileRoute("/_app/app")({
@@ -17,6 +18,12 @@ export const Route = createFileRoute("/_app/app")({
   loaderDeps: ({ search }) => ({ projectId: search.project }),
   loader: ({ context, deps }) =>
     context.queryClient.ensureQueryData(boardQueryOptions(deps.projectId)),
+  head: () =>
+    seo({
+      title: "Board",
+      description: "Your TanBase Core task board.",
+      noindex: true,
+    }),
   pendingComponent: BoardPending,
   errorComponent: BoardError,
   component: AppHome,

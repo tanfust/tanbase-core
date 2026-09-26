@@ -26,6 +26,7 @@ import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
 import { authHref, safeRedirect } from "@/modules/auth/redirects"
+import { seo } from "@/modules/seo/head"
 
 interface SignUpSearch {
   redirect?: string
@@ -36,6 +37,12 @@ export const Route = createFileRoute("/sign-up")({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   loader: () => getAuthChallengeConfig(),
+  head: () =>
+    seo({
+      title: "Create your account",
+      description: "Create a TanBase Core account and a private task board.",
+      noindex: true,
+    }),
   component: SignUpPage,
 })
 

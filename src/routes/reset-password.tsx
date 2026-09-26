@@ -21,12 +21,19 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
+import { seo } from "@/modules/seo/head"
 
 export const Route = createFileRoute("/reset-password")({
   validateSearch: (search): { token?: string; error?: string } => ({
     token: typeof search.token === "string" ? search.token : undefined,
     error: typeof search.error === "string" ? search.error : undefined,
   }),
+  head: () =>
+    seo({
+      title: "Choose a new password",
+      description: "Set a new password for your TanBase Core account.",
+      noindex: true,
+    }),
   component: ResetPasswordPage,
 })
 

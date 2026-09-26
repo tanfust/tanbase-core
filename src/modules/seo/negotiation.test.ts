@@ -113,13 +113,36 @@ describe("Markdown pages", () => {
     expect(markdown).toContain(`# ${homepage.title}\n`)
     expect(markdown).toContain(homepage.summary)
     expect(markdown).toContain(
-      `[${homepage.primaryAction.label}](${canonicalUrl(homepage.primaryAction.path)})`
+      `[${homepage.source.label}](${homepage.source.href})`
     )
-    for (const feature of homepage.features) {
+    expect(markdown).toContain(
+      `[${homepage.demo.label}](${canonicalUrl(homepage.demo.path)})`
+    )
+    expect(markdown).not.toMatch(/<[a-z]/i)
+  })
+
+  it("carries the primitive map, cost model, and deploy steps", () => {
+    const markdown = createHomepageMarkdown()
+    const { primitives, cost, deploy } = homepage
+
+    expect(markdown).toContain(`## ${primitives.heading}\n`)
+    for (const { feature, product, bindings } of primitives.items) {
       expect(markdown).toContain(
-        `## ${feature.title}\n\n${feature.description}`
+        `| ${feature} | ${product} | ${bindings.map((name) => `\`${name}\``).join(", ")} |`
       )
     }
-    expect(markdown).not.toMatch(/<[a-z]/i)
+    expect(markdown).toContain(`## ${cost.heading}\n`)
+    for (const { product, included } of cost.allowances) {
+      expect(markdown).toContain(`| ${product} | ${included}`)
+    }
+    expect(markdown).toContain(
+      "| Workers AI | 10,000 Neurons a day (free tier on every plan) |"
+    )
+    expect(markdown).toContain(`${cost.proof.status}: ${cost.proof.text}`)
+    expect(markdown).toContain(`## ${deploy.heading}\n`)
+    expect(markdown).toContain(
+      `\`\`\`sh\n${deploy.commands.join("\n")}\n\`\`\``
+    )
+    expect(markdown).toContain(`[${deploy.guide.label}](${deploy.guide.href})`)
   })
 })

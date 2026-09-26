@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-25
+last_verified: 2026-09-26
 ---
 
 # Development
@@ -203,6 +203,15 @@ Log with `log.info`, `log.warn`, or `log.error` from `src/platform/log.ts`.
 Entries are structured objects that include the request ID from
 `src/platform/request-context.ts`; never log credentials, tokens, message
 bodies, or recipient addresses.
+
+## Page metadata
+
+Give every page route a `head` that calls `seo()` from
+`src/modules/seo/head.ts`. Pages stay out of search results by default; pass
+`path` only for a public page, and add the same path to the sitemap in
+`src/modules/seo/discovery.ts`. Homepage copy lives in
+`src/modules/seo/homepage.ts`, which renders both the page and its Markdown
+representation, so edit claims there and keep them true of production.
 
 ## Server-only boundaries
 

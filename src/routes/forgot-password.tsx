@@ -23,12 +23,20 @@ import { Spinner } from "@/components/ui/spinner"
 import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
+import { seo } from "@/modules/seo/head"
 
 export const Route = createFileRoute("/forgot-password")({
   validateSearch: (search): { redirect?: string } => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   loader: () => getAuthChallengeConfig(),
+  head: () =>
+    seo({
+      title: "Reset your password",
+      description:
+        "Request a password reset link for your TanBase Core account.",
+      noindex: true,
+    }),
   component: ForgotPasswordPage,
 })
 
