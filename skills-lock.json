@@ -17,7 +17,7 @@
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/cloudflare/SKILL.md",
-      "computedHash": "c9b25ff6c3be26e74162e7df183990f8ee76ad6d1ee37d9ca50b4dd23cb06ad1"
+      "computedHash": "163d684e39202f0073a15b84181d6bc1c825092d66947193daefd153102e2839"
     },
     "cloudflare-email-service": {
       "source": "cloudflare/skills",
@@ -41,7 +41,7 @@
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/durable-objects/SKILL.md",
-      "computedHash": "39266b1d6b680c584cc7f75459a2b7eb428a06f6b5f4e95d45a8aa7454fbf53e"
+      "computedHash": "f4ce39a555f70e78c394cad5451a7d26c81874afb2fc2d16e20c909c5c3794ec"
     },
     "improve": {
       "source": "shadcn/improve",
@@ -185,7 +185,7 @@
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/wrangler/SKILL.md",
-      "computedHash": "4d247a243fec7e23f1247976e0e491520cb0feb397c5477022551e7b4f5cdd93"
+      "computedHash": "f0147a3ee20d56a89c735d6c9efd45d61a21e2fc5f2ebb53ca1250006b79c8ad"
     }
   }
 }
