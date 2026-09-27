@@ -215,6 +215,16 @@ assert.match(
   ),
   "root must expose the canonical Open Graph URL"
 )
+assert.equal(
+  /<meta[^>]+property="og:image"[^>]+content="([^"]+)"[^>]*>/i.exec(html)?.[1],
+  `${publicOrigin}/og/home.png`,
+  "root must name its preview image on the public origin"
+)
+assert.match(
+  html,
+  /<meta[^>]+name="twitter:card"[^>]+content="summary_large_image"[^>]*>/i,
+  "root must ask for a large preview card"
+)
 assert.match(html, /<script[\s>]/i, "hydration scripts must render")
 assert.doesNotMatch(html, /Internal Server Error/i)
 assert.equal(
@@ -294,6 +304,38 @@ assert.match(
   protectedResponse.headers.get("location") ?? "",
   /^\/login\?redirect=%2Fapp(?:&|$)/,
   "protected app must preserve the requested path in the login redirect"
+)
+
+// The Worker draws the preview image; after a deploy this request fills the
+// cache. Unknown cards are never drawn.
+const imageResponse = await fetchWithTimeout(new URL("/og/home.png", url))
+const image = new DataView(await imageResponse.arrayBuffer())
+
+assert.equal(imageResponse.status, 200, "preview image must return HTTP 200")
+assert.equal(
+  imageResponse.headers.get("content-type"),
+  "image/png",
+  "preview image must be a PNG"
+)
+assert.equal(
+  imageResponse.headers.get("cache-control"),
+  "public, max-age=86400",
+  "preview image must use its cache policy"
+)
+assert.deepEqual(
+  [image.getUint32(0), image.getUint32(4)],
+  [0x89504e47, 0x0d0a1a0a],
+  "preview image must carry the PNG signature"
+)
+assert.deepEqual(
+  [image.getUint32(16), image.getUint32(20)],
+  [1200, 630],
+  "preview image must be 1200 by 630"
+)
+assert.equal(
+  (await fetchWithTimeout(new URL("/og/missing.png", url))).status,
+  404,
+  "unknown preview images must return HTTP 404"
 )
 
 // Only the homepage is indexable: other pages opt out and name no canonical URL.

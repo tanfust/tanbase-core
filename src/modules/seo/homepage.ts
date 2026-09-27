@@ -137,6 +137,11 @@ export const homepage = {
         bindings: ["/mcp"],
       },
       {
+        feature: "Link preview images drawn on the Worker",
+        product: "Workers Caching",
+        bindings: ["exports.OgImage"],
+      },
+      {
         feature: "Structured request logs",
         product: "Workers Logs",
         bindings: ["observability"],

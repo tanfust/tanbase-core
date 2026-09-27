@@ -9,6 +9,7 @@ import { PrimitiveMap } from "@/components/landing/primitive-map"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/lib/site"
+import { ogImage } from "@/modules/og/cards"
 import { getSiteOrigin } from "@/modules/seo/functions"
 import { seo, softwareSourceCode } from "@/modules/seo/head"
 import { homepage } from "@/modules/seo/homepage"
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/")({
     return seo({
       path: "/",
       origin,
+      image: ogImage("home"),
       structuredData: softwareSourceCode(origin),
     })
   },

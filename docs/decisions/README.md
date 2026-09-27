@@ -29,6 +29,7 @@ Accepted decisions:
 - [ADR-0015: The Worker serves agent discovery and Markdown](0015-worker-served-agent-discovery.md)
 - [ADR-0016: A deployment works without personalization](0016-deploy-without-personalization.md)
 - [ADR-0017: A generic top-level Wrangler configuration](0017-wrangler-configuration-layout.md)
+- [ADR-0018: Preview images drawn on the Worker and kept in Workers Caching](0018-preview-images-on-the-worker.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

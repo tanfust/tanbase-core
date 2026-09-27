@@ -97,6 +97,7 @@ pnpm cf:dry-run:production
 - Public `GET /api/health` endpoint with a live database check
 - A landing page with the primitive map, cost model, and install commands
 - Per-route SEO head tags with opt-in indexing, a canonical homepage, and `SoftwareSourceCode` JSON-LD
+- Link preview images drawn on the Worker from fixed cards and kept in Workers Caching until the next deploy
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
 - Homepage discovery links, Content Signals, and a Markdown representation for agents
 - Agent discovery: an API catalog, AI Catalog, MCP server card, agent skills index, and WebMCP tools

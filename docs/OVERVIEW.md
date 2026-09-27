@@ -109,6 +109,7 @@ beyond exercising each primitive are left to forks.
 | Reminders                                  | Cron Triggers -> Queues -> email                  | `EMAIL_QUEUE`                   |
 | Email                                      | Cloudflare Email Service                          | `EMAIL`                         |
 | Agent access                               | MCP server (MCP TypeScript SDK, OAuth 2.1)        | none; the `/mcp` route          |
+| Link preview images                        | Workers Caching on a named entrypoint             | `exports.OgImage`               |
 | Logs                                       | Workers Logs                                      | `observability`                 |
 
 ### Worker entry
@@ -218,7 +219,8 @@ src/
     ai/                  gateway client, quota, breakdown workflow
     mcp/                 MCP server, tools, and WebMCP browser tools
     discovery/           API catalog, AI Catalog, server card, skills
-    seo/                 head helper, sitemap, robots, Markdown, OG images
+    seo/                 head helper, sitemap, robots, Markdown
+    og/                  preview image cards and the cached OgImage entrypoint
   db/
     schema/              one schema file per module
     index.ts             getDb()
@@ -301,7 +303,8 @@ CLAUDE.md
 
 ### Production layer
 
-- **SEO:** a `seo()` head helper per route (title, description, Open Graph, robots, and a canonical URL on indexable pages), with indexing opt-in so only the homepage is indexed; `sitemap.xml`, `robots.txt`, `SoftwareSourceCode` JSON-LD on the homepage, `llms.txt`, and the homepage as Markdown for `Accept: text/markdown`. OG images generated on the Worker follow in F-017.
+- **SEO:** a `seo()` head helper per route (title, description, Open Graph, robots, and a canonical URL on indexable pages), with indexing opt-in so only the homepage is indexed; `sitemap.xml`, `robots.txt`, `SoftwareSourceCode` JSON-LD on the homepage, `llms.txt`, and the homepage as Markdown for `Accept: text/markdown`.
+- **Preview images:** indexable pages name a 1200×630 Open Graph image that Takumi draws on the Worker from a fixed set of cards. Workers Caching keeps each image until the next deploy, for the `OgImage` entrypoint only ([ADR-0018](decisions/0018-preview-images-on-the-worker.md)).
 - **Security:** per-response nonce CSP on documents, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Frame-Options and `frame-ancestors 'none'`, and Cross-Origin-Opener-Policy. Static assets receive theirs from `public/_headers`.
 - **Errors:** root error boundary, 404 page, and structured logs carrying the Cloudflare Ray ID as the request id, which responses return in `X-Request-Id`.
 - **Analytics:** optional, cookieless PostHog page views, loaded only when the `POSTHOG_KEY` Worker secret is set ([ADR-0010](decisions/0010-privacy-first-analytics.md)).
