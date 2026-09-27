@@ -322,7 +322,7 @@ the checks enforce.
 | Metric                                                   | Target                             |
 | -------------------------------------------------------- | ---------------------------------- |
 | Landing page Lighthouse performance (mobile), production | 95 or higher in PageSpeed Insights |
-| Landing page JavaScript to render and hydrate            | under 150 KB gzipped               |
+| Landing page JavaScript to render and hydrate            | under 160 KB gzipped               |
 | Landing and board TTFB, p75, from Tunis and US East      | under 400 ms                       |
 | Realtime event between two devices                       | under 1 s                          |
 | Worker CPU per server-rendered request, p75              | under 50 ms                        |

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { Suspense, lazy, useEffect, useState } from "react"
 import {
   useMutation,
   useQuery,
@@ -9,6 +9,7 @@ import { useNavigate, useRouter } from "@tanstack/react-router"
 import { format } from "date-fns"
 import {
   CalendarIcon,
+  ChartColumnIcon,
   ColumnsIcon,
   CornerDownRightIcon,
   EllipsisIcon,
@@ -69,6 +70,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { FieldError, FieldGroup } from "@/components/ui/field"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/toast"
@@ -138,7 +140,11 @@ const viewLabels: Record<BoardView, { label: string; icon: typeof ListIcon }> =
   {
     board: { label: "Board", icon: ColumnsIcon },
     list: { label: "List", icon: ListIcon },
+    stats: { label: "Stats", icon: ChartColumnIcon },
   }
+
+// The charts load only when someone opens the Stats view.
+const ProjectStats = lazy(() => import("@/components/board/project-stats"))
 
 export function BoardPage({
   search,
@@ -666,6 +672,21 @@ export function BoardPage({
             onSearchChange={onSearchChange}
             renderActions={taskMenu}
           />
+        </TabsContent>
+        <TabsContent value="stats" className="pt-2">
+          <Suspense
+            fallback={
+              <div className="grid gap-4 lg:grid-cols-5" aria-busy="true">
+                <Skeleton className="h-80 lg:col-span-3" />
+                <Skeleton className="h-80 lg:col-span-2" />
+              </div>
+            }
+          >
+            <ProjectStats
+              tasks={snapshot.tasks}
+              projectName={snapshot.activeProject.name}
+            />
+          </Suspense>
         </TabsContent>
       </Tabs>
 

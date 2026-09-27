@@ -62,14 +62,8 @@ import type {
   HideableTaskColumn,
   SortableTaskColumn,
 } from "@/modules/tasks/board-search"
-import { taskStatuses } from "@/modules/tasks/contracts"
+import { taskStatusLabels, taskStatuses } from "@/modules/tasks/contracts"
 import type { TaskStatus, TaskView } from "@/modules/tasks/contracts"
-
-export const statusLabels: Record<TaskStatus, string> = {
-  todo: "Todo",
-  doing: "Doing",
-  done: "Done",
-}
 
 const columnLabels: Record<HideableTaskColumn | "title", string> = {
   title: "Title",
@@ -129,7 +123,7 @@ const columns = helper.columns([
     enableGlobalFilter: false,
     cell: ({ row }) => (
       <Badge variant={row.original.status === "done" ? "secondary" : "outline"}>
-        {statusLabels[row.original.status]}
+        {taskStatusLabels[row.original.status]}
       </Badge>
     ),
   }),
@@ -347,7 +341,7 @@ export function TaskTable({
                   checked={search.status.includes(status)}
                   onCheckedChange={(checked) => toggleStatus(status, checked)}
                 >
-                  {statusLabels[status]}
+                  {taskStatusLabels[status]}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuGroup>

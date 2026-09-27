@@ -44,7 +44,7 @@ function rowTitles(page: Page) {
     .allTextContents()
 }
 
-test("forms validate with the shared schemas, and the list view lives in the URL", async ({
+test("forms validate with the shared schemas; the list and stats views live in the URL", async ({
   page,
   context,
 }) => {
@@ -158,6 +158,28 @@ test("forms validate with the shared schemas, and the list view lives in the URL
   await expect.poll(() => rowTitles(peer)).toEqual(["Beta docs"])
   await peer.screenshot({ path: "output/playwright/list-view.png" })
   await peer.close()
+
+  console.log("e2e: stats view")
+  await page.getByRole("tab", { name: "Stats" }).click()
+  await expect(page).toHaveURL(/view=stats/)
+  await expect(
+    page.getByRole("img", {
+      name: /^Tasks created and completed per week in My project/i,
+    })
+  ).toBeVisible()
+  await expect(
+    page.getByRole("img", { name: /^Tasks by status in My project/i })
+  ).toBeVisible()
+  // Three tasks were created this week, and one of them is done.
+  await expect(
+    page.getByText("3 created and 1 completed in the last 8 weeks", {
+      exact: false,
+    })
+  ).toBeVisible()
+  // The Worker renders the charts' SVG into the page it sends.
+  const html = await (await page.request.get("/app?view=stats")).text()
+  expect(html).toMatch(/<svg[^>]*aria-label="Tasks by status in/)
+  await page.screenshot({ path: "output/playwright/stats-view.png" })
 
   // A malformed link still opens, on the default view.
   await page.goto("/app?view=grid&status=oops&sort=nope")

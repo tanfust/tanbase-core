@@ -1,6 +1,12 @@
 export const taskStatuses = ["todo", "doing", "done"] as const
 export type TaskStatus = (typeof taskStatuses)[number]
 
+export const taskStatusLabels: Record<TaskStatus, string> = {
+  todo: "Todo",
+  doing: "Doing",
+  done: "Done",
+}
+
 export interface ProjectView {
   id: string
   name: string

@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import "@/lib/zod-config"
+
 // Better Auth's own limits: 8 to 128 characters.
 const minPasswordLength = 8
 const maxPasswordLength = 128

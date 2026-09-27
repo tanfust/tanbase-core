@@ -35,6 +35,19 @@ function postHogSourceMaps(): PluginOption[] {
   ]
 }
 
+// Route components import these on first use, which the dev server's scan
+// cannot see. Pre-bundling them at startup stops Vite from re-optimizing in
+// the middle of a session, which reloads the page and can load React twice.
+const routeDependencies = [
+  "@tanstack/charts",
+  "@tanstack/charts/react",
+  "@tanstack/charts/scales/band",
+  "@tanstack/charts/scales/linear",
+  "@tanstack/charts/tooltip",
+  "@tanstack/react-form",
+  "@tanstack/react-table",
+]
+
 const config = defineConfig(({ command, isPreview, mode }) => {
   // The dev server always runs the local environment, however it is started.
   // Builds keep the top level unless CLOUDFLARE_ENV names another, and the
@@ -45,6 +58,10 @@ const config = defineConfig(({ command, isPreview, mode }) => {
 
   return {
     resolve: { tsconfigPaths: true },
+    optimizeDeps: { include: routeDependencies },
+    environments: {
+      ssr: { optimizeDeps: { include: routeDependencies } },
+    },
     plugins: [
       devtools(),
       ...(mode === "test"

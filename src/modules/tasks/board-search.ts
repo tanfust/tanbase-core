@@ -1,9 +1,13 @@
-import { z } from "zod"
+// The router loads every route's options with the first page, so this
+// schema ships with the landing page. Zod Mini keeps its share small.
+import * as z from "zod/mini"
+
+import "@/lib/zod-config"
 
 import { taskStatuses } from "./contracts"
 
 /** The ways `/app` shows a project's tasks. */
-export const boardViews = ["board", "list"] as const
+export const boardViews = ["board", "list", "stats"] as const
 export type BoardView = (typeof boardViews)[number]
 
 /** The list view's columns that sort. */
@@ -44,13 +48,13 @@ export const boardSearchDefaults = {
  * its default instead of failing the page, so an edited link still opens.
  */
 export const boardSearchSchema = z.object({
-  project: z.string().min(1).optional().catch(undefined),
-  view: z.enum(boardViews).default("board").catch("board"),
-  q: z.string().max(100).default("").catch(""),
-  status: z.array(z.enum(taskStatuses)).default([]).catch([]),
-  sort: z.enum(sortableTaskColumns).optional().catch(undefined),
-  desc: z.boolean().default(false).catch(false),
-  hide: z.array(z.enum(hideableTaskColumns)).default([]).catch([]),
+  project: z.catch(z.optional(z.string().check(z.minLength(1))), undefined),
+  view: z.catch(z._default(z.enum(boardViews), "board"), "board"),
+  q: z.catch(z._default(z.string().check(z.maxLength(100)), ""), ""),
+  status: z.catch(z._default(z.array(z.enum(taskStatuses)), []), []),
+  sort: z.catch(z.optional(z.enum(sortableTaskColumns)), undefined),
+  desc: z.catch(z._default(z.boolean(), false), false),
+  hide: z.catch(z._default(z.array(z.enum(hideableTaskColumns)), []), []),
 })
 
 export type BoardSearch = z.output<typeof boardSearchSchema>
