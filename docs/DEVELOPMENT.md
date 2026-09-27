@@ -232,6 +232,17 @@ Give every page route a `head` that calls `seo()` from
 `src/modules/seo/homepage.ts`, which renders both the page and its Markdown
 representation, so edit claims there and keep them true of production.
 
+An indexable page can also name a link preview image:
+`seo({ image: ogImage("home") })`, as the homepage does. Cards live in
+`src/modules/og/cards.ts`; add one there to give a page its own. A page that
+names no image keeps a text-only card. `/og/<slug>.png` draws a registered card
+with Takumi and answers `404` for any other slug
+([ADR-0018](decisions/0018-preview-images-on-the-worker.md)). Open
+`http://localhost:3000/og/home.png` under `pnpm dev` to see a card. The first
+image drawn in a fresh isolate takes about half a second there, while Vite
+loads the renderer. Workers Caching runs only on Cloudflare, so locally every
+request draws the image again.
+
 ## Server-only boundaries
 
 TanStack import protection runs with error behavior in development and builds.

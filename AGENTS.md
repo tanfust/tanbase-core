@@ -88,10 +88,11 @@ change note as current truth. A superseded ADR must link to its replacement.
 | `mcp`       | `/mcp` server, OAuth discovery, WebMCP tools                                          | none; uses Better Auth                       |
 | `discovery` | API catalog, AI Catalog, MCP server card, skills index                                | none                                         |
 | `seo`       | `seo()` head helper, homepage copy, sitemap, robots, `llms.txt`, Markdown negotiation | none                                         |
+| `og`        | Preview images: fixed cards drawn by the cached `OgImage` entrypoint                  | `exports.OgImage` Workers Caching            |
 | `analytics` | Optional PostHog configuration and URL scrubbing                                      | `POSTHOG_KEY` secret                         |
 
-`files`, `realtime`, `jobs`, `ai`, and `mcp` are optional modules that a fork
-can remove; [module removal](docs/MODULE_REMOVAL.md) lists what each takes
+`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are optional modules that
+a fork can remove; [module removal](docs/MODULE_REMOVAL.md) lists what each takes
 with it. Inside a module, files follow one convention:
 
 | File                   | Role                                                                                                 |
@@ -127,8 +128,8 @@ first user's rows.
 - Read it from `env` in a `.server.ts` getter that returns `null` when the
   binding is absent, so an installation without it degrades instead of
   failing.
-- Export Durable Object and Workflow classes from both `src/server.ts` and
-  `test/worker.ts`.
+- Export Durable Object, Workflow, and entrypoint classes from both
+  `src/server.ts` and `test/worker.ts`.
 - Run `pnpm cf:typegen` and commit `src/worker-configuration.d.ts`.
 - Add a cached check to `/api/health` when the feature cannot work without the
   binding, and teach `pnpm run setup` to provision or defer it.

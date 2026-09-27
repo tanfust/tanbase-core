@@ -12,6 +12,7 @@ import {
   withCors,
 } from "@/modules/mcp/discovery.server"
 import { handleMcpRequest } from "@/modules/mcp/server.server"
+import { imageRequest } from "@/modules/og/entrypoint.server"
 import {
   getBoardNamespace,
   handleRealtimeUpgrade,
@@ -29,6 +30,7 @@ import { runWithRequestContext } from "@/platform/request-context"
 import { applySecurityHeaders, createNonce } from "@/platform/security-headers"
 
 export { TaskBreakdownWorkflow } from "@/modules/ai/breakdown-workflow.server"
+export { OgImage } from "@/modules/og/entrypoint.server"
 export { BoardRoom } from "@/modules/realtime/board-room.server"
 
 const realtimePath = /^\/api\/realtime\/([^/]+)$/
@@ -50,13 +52,21 @@ function socketOrigin(request: Request) {
   return `${url.protocol === "https:" ? "wss:" : "ws:"}//${url.host}`
 }
 
-// MCP, OAuth and agent discovery, Markdown pages, and realtime upgrades are
-// served before TanStack Start.
-async function route(request: Request, pathname: string): Promise<Response> {
+// MCP, OAuth and agent discovery, Markdown pages, realtime upgrades, and
+// preview images are served before TanStack Start. Preview images go through
+// the cached OgImage entrypoint.
+async function route(
+  request: Request,
+  pathname: string,
+  ctx: ExecutionContext
+): Promise<Response> {
   if (isCorsPath(pathname) && request.method === "OPTIONS") {
     return corsPreflight()
   }
   if (pathname === "/mcp") return handleMcpRequest(request)
+  if (pathname.startsWith("/og/")) {
+    return ctx.exports.OgImage.fetch(imageRequest(request))
+  }
   const realtime = realtimePath.exec(pathname)
   if (realtime) return realtimeResponse(request, realtime[1])
   return (
@@ -78,7 +88,7 @@ function failedResponse() {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, _env, ctx) {
     const requestId = request.headers.get("cf-ray") ?? crypto.randomUUID()
     const nonce = createNonce()
 
@@ -89,7 +99,7 @@ export default {
       const cors = isCorsPath(pathname)
       let response: Response
       try {
-        response = await route(request, pathname)
+        response = await route(request, pathname, ctx)
       } catch (error) {
         log.error("Unhandled request error", {
           event: "request.failed",

@@ -86,13 +86,20 @@ Per primitive:
   of truth.
 - **Workflow:** export the class from both files as well. Workflow names are
   unique per account, so the installer renames production workflows per fork.
+- **Cached responses:** put the cacheable work behind a named
+  `WorkerEntrypoint`, export it from both files, and dispatch to it with
+  `ctx.exports.<Name>.fetch()`. An `exports` entry with
+  `"cache": { "enabled": true }` in every section turns Workers Caching on for
+  that entrypoint alone, as `OgImage` does in `src/modules/og/`. Never enable
+  `cache` for the whole Worker: pages and auth responses must run every time.
 - **Queue or cron:** handle them in the `queue` and `scheduled` handlers of
   `src/server.ts`; keep the logic in the module. Declare the consumer and
   dead-letter queue in both environments.
 - **Secret:** production values go through `wrangler secret put <NAME> --env
 production`, run by the operator. Local values go in ignored `.dev.vars`,
   with a safe placeholder documented. Never commit a value.
-- **Workers AI:** the `AI` binding exists only in production. Pass the `Ai`
+- **Workers AI:** the `AI` binding exists only in the production sections,
+  the top level and `env.production`, never in `env.local`. Pass the `Ai`
   binding into the code that calls it, as `generateSubtasks()` in
   `src/modules/ai/model.server.ts` takes it, so tests supply a fake and never
   reach Cloudflare.

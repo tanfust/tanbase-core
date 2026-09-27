@@ -1,4 +1,6 @@
 import { canonicalUrl, siteConfig } from "@/lib/site"
+// Type only: the card list stays out of routes that name no image.
+import type { PageImage } from "@/modules/og/cards"
 
 type LdJsonObject = { [key: string]: LdJsonValue }
 type LdJsonValue =
@@ -16,6 +18,8 @@ interface IndexablePage extends SeoCommon {
   /** The deployment's public origin, from `getSiteOrigin()`. */
   origin: string
   noindex?: false
+  /** The link preview image, from `ogImage()` in `src/modules/og/cards.ts`. */
+  image?: PageImage
   /** A schema.org object, rendered as JSON-LD. */
   structuredData?: LdJsonObject
 }
@@ -25,6 +29,7 @@ interface NoindexPage extends SeoCommon {
   noindex: true
   path?: never
   origin?: never
+  image?: never
   structuredData?: never
 }
 
@@ -44,9 +49,9 @@ export function documentTitle(title?: string): string {
 
 /**
  * A route's head tags: title, description, robots, Open Graph, and, for
- * indexable pages, the canonical URL and optional JSON-LD. Child routes
- * override their parents' meta by name, but links are not deduplicated, so
- * only the page itself may emit a canonical link.
+ * indexable pages, the canonical URL, a preview image, and optional JSON-LD.
+ * Child routes override their parents' meta by name, but links are not
+ * deduplicated, so only the page itself may emit a canonical link.
  */
 export function seo(options: SeoOptions) {
   const title = documentTitle(options.title)
@@ -58,20 +63,41 @@ export function seo(options: SeoOptions) {
     { property: "og:site_name", content: siteConfig.name },
     { property: "og:title", content: title },
     { property: "og:description", content: description },
-    // No preview image until F-017 renders one on the Worker.
-    { name: "twitter:card", content: "summary" },
   ]
 
+  // Pages kept out of search results get no preview image.
   if (options.noindex) {
-    return { meta: [...meta, defaultRobots], links: [], scripts: [] }
+    return {
+      meta: [
+        ...meta,
+        { name: "twitter:card", content: "summary" },
+        defaultRobots,
+      ],
+      links: [],
+      scripts: [],
+    }
   }
 
   const url = canonicalUrl(options.path, options.origin)
+  const image = options.image
   return {
     meta: [
       ...meta,
       { name: "robots", content: "index, follow" },
       { property: "og:url", content: url },
+      ...(image
+        ? [
+            {
+              property: "og:image",
+              content: canonicalUrl(image.path, options.origin),
+            },
+            { property: "og:image:type", content: "image/png" },
+            { property: "og:image:width", content: String(image.width) },
+            { property: "og:image:height", content: String(image.height) },
+            { property: "og:image:alt", content: image.alt },
+            { name: "twitter:card", content: "summary_large_image" },
+          ]
+        : [{ name: "twitter:card", content: "summary" }]),
     ],
     links: [{ rel: "canonical", href: url }],
     scripts: options.structuredData

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { siteConfig } from "@/lib/site"
+import { ogCards, ogImage } from "@/modules/og/cards"
 
 import {
   defaultRobots,
@@ -38,6 +39,7 @@ describe("seo() for indexable pages", () => {
     path: "/",
     origin,
     description: "A description.",
+    image: ogImage("home"),
     structuredData: softwareSourceCode(origin),
   })
 
@@ -62,8 +64,26 @@ describe("seo() for indexable pages", () => {
     expect(metaContent(head.meta, "property", "og:description")?.content).toBe(
       "A description."
     )
+  })
+
+  it("names its preview image on the page's origin", () => {
+    expect(metaContent(head.meta, "property", "og:image")?.content).toBe(
+      `${origin}/og/home.png`
+    )
+    expect(metaContent(head.meta, "property", "og:image:type")?.content).toBe(
+      "image/png"
+    )
+    expect(metaContent(head.meta, "property", "og:image:width")?.content).toBe(
+      "1200"
+    )
+    expect(metaContent(head.meta, "property", "og:image:height")?.content).toBe(
+      "630"
+    )
+    expect(metaContent(head.meta, "property", "og:image:alt")?.content).toBe(
+      ogCards.home.alt
+    )
     expect(metaContent(head.meta, "name", "twitter:card")?.content).toBe(
-      "summary"
+      "summary_large_image"
     )
   })
 
@@ -82,6 +102,12 @@ describe("seo() for indexable pages", () => {
       siteConfig.description
     )
   })
+
+  it("keeps a text-only card when the page names no image", () => {
+    const { meta } = seo({ path: "/", origin })
+    expect(metaContent(meta, "property", "og:image")).toBeUndefined()
+    expect(metaContent(meta, "name", "twitter:card")?.content).toBe("summary")
+  })
 })
 
 describe("seo() for noindex pages", () => {
@@ -92,6 +118,13 @@ describe("seo() for noindex pages", () => {
     expect(head.links).toEqual([])
     expect(head.scripts).toEqual([])
     expect(metaContent(head.meta, "property", "og:url")).toBeUndefined()
+  })
+
+  it("has no preview image", () => {
+    expect(metaContent(head.meta, "property", "og:image")).toBeUndefined()
+    expect(metaContent(head.meta, "name", "twitter:card")?.content).toBe(
+      "summary"
+    )
   })
 
   it("still titles the page for tabs and link previews", () => {

@@ -53,11 +53,12 @@ production validation checks the application's exact `User-agent: *` group.
 Indexing is opt-in. The root route sets `robots: noindex`, and a page becomes
 indexable only when its route calls `seo({ path })` from
 `src/modules/seo/head.ts`. That call adds `index, follow`, the page's only
-canonical link, and `og:url`. Only the homepage does this, matching the
-sitemap, and it also carries `SoftwareSourceCode` JSON-LD for the repository.
-Every other page calls `seo({ noindex: true })` for its title, description, and
-Open Graph text, with no canonical URL. Link previews have no image until
-F-017 renders one on the Worker.
+canonical link, `og:url`, and a preview image drawn on the Worker
+([ADR-0018](decisions/0018-preview-images-on-the-worker.md)). Only the
+homepage does this, matching the sitemap, and it also carries
+`SoftwareSourceCode` JSON-LD for the repository. Every other page calls
+`seo({ noindex: true })` for its title, description, and Open Graph text, with
+no canonical URL and a text-only link preview.
 
 The homepage advertises these IANA-registered relations:
 

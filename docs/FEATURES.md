@@ -494,16 +494,25 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-017: OG images on the Worker
 
-**Module:** seo | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-016
+**Module:** og | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-016
 
 **Acceptance criteria**
 
-- [ ] `/og/:slug.png` generated on the Worker and cached
+- [x] `/og/:slug.png` generated on the Worker and cached: Takumi draws a
+      fixed card, and Workers Caching on the `OgImage` entrypoint keeps it
+      until the next deploy
+      ([ADR-0018](decisions/0018-preview-images-on-the-worker.md))
 - [ ] Runs in production within Worker size and CPU limits
 
 **Technical notes**
 
-- Satori with a WASM renderer is the usual route; record the bundle size impact
+- Takumi replaced Satori and resvg: one WebAssembly module that reads the
+  site's WOFF2 font.
+- **Bundle:** the upload grows from 5.8 to 9.5 MiB (3.0 MiB gzipped); the
+  limit is 64 MiB.
+- **Measured locally:** startup active time was 47.5 to 52.5 ms without the
+  renderer and 47.7 to 55.3 ms with it, within the runs' spread. The first
+  render in an isolate takes about 56 ms, and later renders about 10 ms.
 
 ---
 

@@ -6,9 +6,10 @@ last_verified: 2026-09-27
 
 # Removing optional modules
 
-`files`, `realtime`, `jobs`, `ai`, and `mcp` are optional. Each removal below
-was performed once, from `main` at `1e385f6`, on a throwaway branch whose CI
-passed; see [Evidence](#evidence). The
+`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are optional. The first
+five removals were each performed once, from `main` at `1e385f6`, on a
+throwaway branch whose CI passed. `og` came later and was removed in a local
+worktree; see [Evidence](#evidence). The
 [`remove-module` skill](../.claude/skills/remove-module/SKILL.md) follows
 these lists. The [README](../README.md#removing-a-module) summarizes them.
 
@@ -181,13 +182,13 @@ Due dates stay as plain task data.
 AI task breakdown: the `TaskBreakdownWorkflow` Workflow, Workers AI through AI
 Gateway, the `AI_LIMITER` burst limit, and the `ai_usage` daily quota.
 
-| What              | Remove                                                                                                                                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Folders and files | `src/modules/ai/`, `src/db/schema/ai-usage.ts`                                                                                                                                                                           |
-| Bindings          | The `AI_MODEL`, `AI_GATEWAY_ID`, and `AI_DAILY_LIMIT` variables, the `AI_LIMITER` rate limit, and `workflows` with `BREAKDOWN`, in all three configurations; `"ai": { "binding": "AI" }` exists only in `env.production` |
-| Exports           | `TaskBreakdownWorkflow` from `src/server.ts` and `test/worker.ts`                                                                                                                                                        |
-| Migration         | Drops the `ai_usage` table                                                                                                                                                                                               |
-| Packages          | None                                                                                                                                                                                                                     |
+| What              | Remove                                                                                                                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Folders and files | `src/modules/ai/`, `src/db/schema/ai-usage.ts`                                                                                                                                                                                             |
+| Bindings          | The `AI_MODEL`, `AI_GATEWAY_ID`, and `AI_DAILY_LIMIT` variables, the `AI_LIMITER` rate limit, and `workflows` with `BREAKDOWN`, in all three configurations; `"ai": { "binding": "AI" }` exists only in the top level and `env.production` |
+| Exports           | `TaskBreakdownWorkflow` from `src/server.ts` and `test/worker.ts`                                                                                                                                                                          |
+| Migration         | Drops the `ai_usage` table                                                                                                                                                                                                                 |
+| Packages          | None                                                                                                                                                                                                                                       |
 
 Edit:
 
@@ -268,6 +269,37 @@ connectors people added. There are no Cloudflare resources.
 WebMCP needs no OAuth and could become its own module if a fork wants
 in-browser tools without `/mcp`.
 
+## og
+
+Link preview images: the fixed cards, the Takumi renderer, and the
+`OgImage` entrypoint that Workers Caching keeps
+([ADR-0018](decisions/0018-preview-images-on-the-worker.md)).
+
+| What              | Remove                                                                                                                                   |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Folders and files | `src/modules/og/`                                                                                                                        |
+| Bindings          | None. The `exports` block with `OgImage`, which turns on Workers Caching, goes from all three configurations and `wrangler.e2e.jsonc`    |
+| Exports           | `OgImage` from `src/server.ts` and `test/worker.ts`. `src/server.ts` also loses its `/og/` dispatch and the `ctx` it passed to `route()` |
+| Migration         | None                                                                                                                                     |
+| Packages          | `@takumi-rs/wasm`, with `pnpm remove`                                                                                                    |
+
+Edit:
+
+- `src/modules/seo/head.ts` and its test: the `image` option, its type
+  import, and the `og:image` and `summary_large_image` tags. Every page keeps
+  a text-only `summary` card.
+- `src/routes/index.tsx`: `image: ogImage("home")`.
+- `scripts/smoke.mjs`: the `og:image`, `twitter:card`, and `/og/home.png`
+  checks.
+- Public copy in `src/modules/seo/homepage.ts`: the link preview images row.
+- Docs: `README.md`, `AGENTS.md`, `docs/OVERVIEW.md`, `docs/DEVELOPMENT.md`,
+  `docs/AGENT_DISCOVERY.md`, `docs/FEATURES.md`, and an ADR superseding
+  [ADR-0018](decisions/0018-preview-images-on-the-worker.md).
+
+There are no Cloudflare resources to delete. Cached images expire with the
+next deploy, because the Worker version is part of the cache key. Sites that
+already fetched a preview keep their own copy.
+
 ## Evidence
 
 Each branch was cut from `1e385f6`, pushed, and never merged or deployed.
@@ -281,3 +313,9 @@ types and dry run.
 | `jobs`     | `throwaway/remove-jobs`     | `01877b2` | [36318052946](https://github.com/tanfust/tanbase-core/actions/runs/36318052946) |
 | `ai`       | `throwaway/remove-ai`       | `d8507ae` | [36318206655](https://github.com/tanfust/tanbase-core/actions/runs/36318206655) |
 | `mcp`      | `throwaway/remove-mcp`      | `e0143c3` | [36318180110](https://github.com/tanfust/tanbase-core/actions/runs/36318180110) |
+
+`og` was removed from `0d47e61`, the F-017 commit, in a local worktree on
+`throwaway/remove-og`, which was never pushed. The code came back to `main`'s
+except for one stale comment. `pnpm verify` without `.dev.vars` passed with
+182 Worker tests. `pnpm cf:dry-run:production` and `pnpm cf:dry-run:default`
+passed, and the upload shrank to 5.8 MiB. `pnpm test:e2e` passed 3 tests.
