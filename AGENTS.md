@@ -88,7 +88,8 @@ change note as current truth. A superseded ADR must link to its replacement.
 | `analytics` | Optional PostHog configuration and URL scrubbing                                      | `POSTHOG_KEY` secret                         |
 
 `files`, `realtime`, `jobs`, `ai`, and `mcp` are optional modules that a fork
-can remove. Inside a module, files follow one convention:
+can remove; [module removal](docs/MODULE_REMOVAL.md) lists what each takes
+with it. Inside a module, files follow one convention:
 
 | File                   | Role                                                                                                 |
 | ---------------------- | ---------------------------------------------------------------------------------------------------- |

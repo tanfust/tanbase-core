@@ -583,13 +583,19 @@ work was not merged.
 
 ### F-021: Module removal
 
-**Module:** platform | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-010, F-012, F-014, F-015, F-020
+**Module:** platform | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-010, F-012, F-014, F-015, F-020
 
 **Acceptance criteria**
 
-- [ ] README section per optional module (files, realtime, jobs, ai, mcp) listing the folders, bindings, exports and migrations to remove
-- [ ] Each removal performed once on a throwaway branch with CI green
-- [ ] The `remove-module` skill follows the same steps
+- [x] README section per optional module (files, realtime, jobs, ai, mcp) listing the folders, bindings, exports and migrations to remove
+- [x] Each removal performed once on a throwaway branch with CI green
+- [x] The `remove-module` skill follows the same steps
+
+**Result (2026-09-27):** each module was removed from `main` at `1e385f6` on
+its own `throwaway/remove-<module>` branch, and all four CI jobs passed on the
+first push for every one. `pnpm verify`, the production dry run, and the
+browser journeys also passed locally. The full lists and CI runs are in
+[Module removal](MODULE_REMOVAL.md#evidence).
 
 ---
 

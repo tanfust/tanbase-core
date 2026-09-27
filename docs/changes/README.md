@@ -45,6 +45,7 @@ Records:
 - [2026-09-26: Landing page and SEO layer](2026-09-26-landing-page-and-seo.md)
 - [2026-09-27: Narrow the roadmap to the launch path](2026-09-27-roadmap-scope.md)
 - [2026-09-27: Agent layer: module map, rules, and task skills](2026-09-27-agent-layer.md)
+- [2026-09-27: Module removal, proven for every optional module](2026-09-27-module-removal.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current
