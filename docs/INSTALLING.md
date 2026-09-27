@@ -21,7 +21,8 @@ Prerequisites:
 
 - Node.js `^22.13.0` or `>=24.0.0`
 - pnpm `10.11.1`
-- A Cloudflare account for production setup
+- A Cloudflare account on Workers Paid for production setup
+  ([why](DEPLOYMENT.md#workers-paid-is-required))
 
 Run:
 

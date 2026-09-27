@@ -31,6 +31,22 @@ There are two ways to deploy a fork:
 
 The manual sections below remain the recovery contract.
 
+## Workers Paid is required
+
+Every deployment, whether from the button, the guided installer, or Workers
+Builds, needs an account on Workers Paid, $5 a month. Workers Free allows
+10 ms of CPU per request, and the Worker needs more than that in production:
+
+| Request                         | CPU in production (2026-09-27) |
+| ------------------------------- | ------------------------------ |
+| Sign-in with a password         | 109 and 153 ms                 |
+| First draw of `/og/home.png`    | 312 ms                         |
+| Sign-in rejected before hashing | 6 to 10 ms                     |
+
+On Workers Free, sign-up and sign-in are expected to fail with Cloudflare's
+error 1102. Workers Paid allows 30 seconds of CPU per request by default. The
+[cost model](OVERVIEW.md#cost-model) covers what the plan includes.
+
 ## Deploy to Cloudflare button
 
 The README's button deploys the top level. Cloudflare reads `wrangler.jsonc`,
@@ -61,9 +77,8 @@ page shows the descriptions from the `cloudflare.bindings` field in
    pnpm smoke -- --url https://<worker>.<subdomain>.workers.dev --environment production --config default
    ```
 
-   On Workers Free, expect the `/og/home.png` check to fail. Drawing a
-   preview image takes more than the plan's 10 ms of CPU, so preview images
-   need Workers Paid ([ADR-0018](decisions/0018-preview-images-on-the-worker.md)).
+   On an account still on Workers Free, the `/og/home.png` check fails;
+   [upgrade to Workers Paid](#workers-paid-is-required).
 
 2. Add a custom domain if you want one, then set `BETTER_AUTH_URL` to it so
    canonical URLs, cookies, and tokens use one origin.

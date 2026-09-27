@@ -646,8 +646,11 @@ resolves at runtime, and sign-up needs verification only when email delivery
 is configured ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
 The top level of `wrangler.jsonc` is now a generic production configuration,
 and the README has the button
-([ADR-0017](decisions/0017-wrangler-configuration-layout.md)). Next, the first
-real button run confirms what it provisions, then an outside tester runs the
+([ADR-0017](decisions/0017-wrangler-configuration-layout.md)). Deploying needs
+Workers Paid: password sign-in and a preview image render each use over
+100 ms of CPU in production, past Workers Free's 10 ms
+([Deploying](DEPLOYMENT.md#workers-paid-is-required)). Next, the first real
+button run confirms what it provisions, then an outside tester runs the
 [fresh-account test](FRESH_ACCOUNT_TEST.md).
 
 ---
