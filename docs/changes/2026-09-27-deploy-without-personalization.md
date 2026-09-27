@@ -70,12 +70,25 @@ Local:
   `vite build` plus `vite preview` — passed. The canonical link, JSON-LD,
   sitemap, and `llms.txt` name the configured `http://localhost:3000`.
 
+Production:
+
+- Workers Build `b8a6a35f` deployed merge `af8a708` as version `8f17bbc6` at
+  13:26 UTC, two minutes after PR #38 merged, and its post-deploy smoke
+  passed. The four GitHub checks passed on the merge commit.
+- `pnpm smoke -- --environment production --expect-version 8f17bbc6-9a1c-4260-8ccd-bd99a9620fee`
+  — passed at 13:54 UTC.
+- Production pins `BETTER_AUTH_URL` and has email delivery, so it behaves as
+  before: the canonical link, JSON-LD, and sitemap name
+  `https://core.tanbase.dev/`, login asks for a verified email, and the reset
+  page shows no notice. The request-origin fallback does not apply here; it is
+  exercised by the tests and by the button deploy in part 2.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `6d65e33` | `http://localhost:4391`    | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `6d65e33` | `http://localhost:4391`    | 2026-09-27 | Passed |
+| Production | `af8a708` / version `8f17bbc6`  | `https://core.tanbase.dev` | 2026-09-27 | Passed |
 
 ## Rollback notes
 
