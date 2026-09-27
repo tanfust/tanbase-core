@@ -169,8 +169,9 @@ Put your logo and icons in `public/`:
   `web-app-manifest-192x192.png` and `web-app-manifest-512x512.png`.
 
 The rest is yours to rewrite: the landing page copy in
-`src/modules/seo/homepage.ts` and the product summary in
-`src/modules/seo/llms.txt`. The colors are the tokens in `src/styles.css`.
+`src/modules/seo/homepage.ts`, the product summary in
+`src/modules/seo/llms.txt`, and the blog's posts in `content/blog`, which
+describe this template. The colors are the tokens in `src/styles.css`.
 Cloudflare resource names belong to `wrangler.jsonc`, which the Deploy to
 Cloudflare button's setup page and `pnpm run setup` rename.
 
@@ -201,6 +202,9 @@ include the name, with `pnpm exec vitest run src/modules/email -u`.
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
 - Homepage discovery links, Content Signals, and a Markdown representation for agents
 - Agent discovery: an API catalog, AI Catalog, MCP server card, agent skills index, and WebMCP tools
+- Forms on TanStack Form, validated in the browser with the same Zod schemas the server applies
+- A list view on TanStack Table whose sort, filters, search, and columns live in the URL, and project stats drawn with TanStack Charts
+- A public blog: Markdown posts in `content/blog`, rendered on the Worker with TanStack Markdown, with an RSS feed, sitemap entries, and a preview image per post
 - CI verification, generated binding-type drift detection, and deploy dry run
 - Automatic production deployment from `main`; branch previews are optional
 - Maintained human and AI documentation, with an agent contract in
@@ -211,8 +215,9 @@ Local and production use separate D1 databases.
 
 ## Removing a module
 
-`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are optional. Each was
-removed once on a throwaway branch with its checks green. The
+`files`, `realtime`, `jobs`, `ai`, `mcp`, `og`, and `blog` are optional. Each
+was removed once, on a throwaway branch or in a local worktree, with its
+checks green. The
 [module removal guide](docs/MODULE_REMOVAL.md) lists every file to edit, the
 cloud resources left behind, and the evidence. The `remove-module` skill in
 `.claude/skills/` follows it. If the fork is already in production, deploy the
@@ -266,6 +271,15 @@ code removal before the migration that drops its data.
   Caching, and `@takumi-rs/wasm` goes with it
 - Exports: `OgImage` from `src/server.ts` and `test/worker.ts`, and the `/og/`
   dispatch
+- Migrations: none
+
+### blog: the public blog
+
+- Folders: `content/blog/`, `src/modules/blog/`, `src/routes/blog.tsx`,
+  `src/routes/blog/`
+- Bindings: none; `@tanstack/markdown` goes with it
+- Exports: none; the sitemap, the og module, and the footer drop their blog
+  entries
 - Migrations: none
 
 ## Documentation

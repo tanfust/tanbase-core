@@ -1,11 +1,12 @@
 ---
 name: remove-module
-description: Remove an optional TanBase Core module (files, realtime, jobs, ai, mcp, or og) with its bindings, Worker exports, routes, UI, tables, installer steps, and docs, leaving CI green. Use when a fork does not need a feature, such as "remove attachments", "drop the live board", "delete the AI breakdown", "I don't need MCP", or "drop the preview images".
+description: Remove an optional TanBase Core module (files, realtime, jobs, ai, mcp, og, or blog) with its bindings, Worker exports, routes, UI, tables, content, installer steps, and docs, leaving CI green. Use when a fork does not need a feature, such as "remove attachments", "drop the live board", "delete the AI breakdown", "I don't need MCP", "drop the preview images", or "remove the blog".
 ---
 
 # Remove an optional module
 
-`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are designed to be removable.
+`files`, `realtime`, `jobs`, `ai`, `mcp`, `og`, and `blog` are designed to be
+removable.
 `auth`, `tasks`, `email`, `seo`, and `discovery` are the core; do not remove
 them with this skill.
 
@@ -48,6 +49,8 @@ Check every place below. The guide says which ones each module touches.
 | `src/routes/`, `src/components/`                             | Routes, API routes, UI, and component tests that use it                                                                                                                                                                                                                                 |
 | Other modules                                                | Calls into it, and helpers that only it called                                                                                                                                                                                                                                          |
 | `src/db/schema/`, `drizzle/`, `scripts/seed.sql`             | Tables and columns only this module uses                                                                                                                                                                                                                                                |
+| `content/`, `src/styles.css`, `vite.config.ts`               | Content bundled at build time, such as `content/blog/`; styles for its pages; entries in `routeDependencies`                                                                                                                                                                            |
+| `.github/workflows/`                                         | CI steps that check the module's pages, such as `perf:bundle --path /blog`                                                                                                                                                                                                              |
 | `src/lib/health.ts` and its test, `src/routes/api/health.ts` | Its health check                                                                                                                                                                                                                                                                        |
 | `scripts/smoke.mjs`, `scripts/prepare-e2e-account.mjs`       | Its smoke assertions and test accounts                                                                                                                                                                                                                                                  |
 | `scripts/setup.mjs`, `scripts/setup/`                        | Installer steps, state keys, and their tests                                                                                                                                                                                                                                            |
@@ -124,6 +127,9 @@ Primitive-specific steps:
   `src/server.ts`.
 - **Packages:** remove packages only the module used with `pnpm remove`, so
   `pnpm install --frozen-lockfile` still passes.
+- **Content at build time:** delete the content folder, such as
+  `content/blog/`. Nothing in Cloudflare holds it; it leaves with the next
+  deploy.
 
 Tell the person which cloud resources remain, so they can delete them on
 purpose.

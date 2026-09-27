@@ -6,10 +6,10 @@ last_verified: 2026-09-27
 
 # Removing optional modules
 
-`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are optional. The first
-five removals were each performed once, from `main` at `1e385f6`, on a
-throwaway branch whose CI passed. `og` came later and was removed in a local
-worktree; see [Evidence](#evidence). The
+`files`, `realtime`, `jobs`, `ai`, `mcp`, `og`, and `blog` are optional. The
+first five removals were each performed once, from `main` at `1e385f6`, on a
+throwaway branch whose CI passed. `og` and `blog` came later and were removed
+in local worktrees; see [Evidence](#evidence). The
 [`remove-module` skill](../.claude/skills/remove-module/SKILL.md) follows
 these lists. The [README](../README.md#removing-a-module) summarizes them.
 
@@ -292,6 +292,9 @@ Edit:
 - `scripts/smoke.mjs`: the `og:image`, `twitter:card`, and `/og/home.png`
   checks.
 - Public copy in `src/modules/seo/homepage.ts`: the link preview images row.
+- `blog`, if it stays: `postImage()` in `src/modules/blog/contracts.ts` and
+  the `image` options in `src/modules/blog/pages.server.ts`. The og module's
+  `postCards()` fallback goes with it.
 - Docs: `README.md`, `AGENTS.md`, `docs/OVERVIEW.md`, `docs/DEVELOPMENT.md`,
   `docs/AGENT_DISCOVERY.md`, `docs/FEATURES.md`, and an ADR superseding
   [ADR-0018](decisions/0018-preview-images-on-the-worker.md).
@@ -299,6 +302,46 @@ Edit:
 There are no Cloudflare resources to delete. Cached images expire with the
 next deploy, because the Worker version is part of the cache key. Sites that
 already fetched a preview keep their own copy.
+
+## blog
+
+The public blog: posts from `content/blog`, their pages, head tags, RSS feed,
+sitemap entries, and preview cards
+([ADR-0019](decisions/0019-blog-from-repository-markdown.md)).
+
+| What              | Remove                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------- |
+| Folders and files | `content/blog/`, `src/modules/blog/`, `src/routes/blog.tsx`, `src/routes/blog/`, `e2e/blog.spec.ts` |
+| Bindings          | None                                                                                                |
+| Exports           | None                                                                                                |
+| Migration         | None                                                                                                |
+| Packages          | `@tanstack/markdown`, with `pnpm remove`                                                            |
+
+Edit:
+
+- `src/modules/og/content.server.ts`: the `postCards()` import and fallback in
+  `ogCardForPath()`, the `blog` card, and the comment about posts.
+  `src/modules/og/cards.ts`: the `blog` card and the comment about post cards.
+  Skip both if `og` is already gone.
+- `src/routes/sitemap[.]xml.ts`: the `blogUrls()` import and entries; the
+  comment on `publicUrls()` in `src/modules/seo/discovery.ts`.
+- Public copy: the Blog footer link in `src/modules/seo/homepage.ts`, and the
+  blog sentence, Blog link, and sitemap line in `src/modules/seo/llms.txt`.
+- `src/styles.css`: the `.blog-prose` block.
+- `vite.config.ts`: the `@tanstack/markdown` entries in `routeDependencies`.
+- `.github/workflows/ci.yml`: the `perf:bundle --path /blog` step.
+- `scripts/smoke.mjs`: the blog block, and the sitemap check back to the
+  homepage alone. The smoke checks came after the removal trial below.
+- `src/routeTree.gen.ts`: regenerate it with `pnpm build`.
+- Docs: `README.md`, `AGENTS.md` (stack, module map, optional list, foundation
+  paragraph), `docs/OVERVIEW.md`, `docs/DEVELOPMENT.md`,
+  `docs/PERFORMANCE.md`, `docs/AGENT_DISCOVERY.md`, `docs/FEATURES.md`, and an
+  ADR superseding
+  [ADR-0019](decisions/0019-blog-from-repository-markdown.md).
+
+The `article` option of `seo()` in `src/modules/seo/head.ts` can stay; it is
+generic. There are no Cloudflare resources to delete. Search engines drop the
+posts' URLs once they return 404.
 
 ## Evidence
 
@@ -320,3 +363,10 @@ linked below.
 except for one stale comment. `pnpm verify` without `.dev.vars` passed with
 182 Worker tests. `pnpm cf:dry-run:production` and `pnpm cf:dry-run:default`
 passed, and the upload shrank to 5.8 MiB. `pnpm test:e2e` passed 3 tests.
+
+`blog` was removed from `18cb00a`, the F-031 commit, in a local worktree on
+`throwaway/remove-blog`, which was never pushed: 27 files changed, 1,245 lines
+removed. `pnpm verify` without `.dev.vars` passed with 214 Worker tests and 36
+UI tests. `pnpm test:e2e` passed its 4 remaining tests, and
+`pnpm cf:dry-run:production` passed with a 10,407 KiB upload, 3,157 KiB
+gzipped.

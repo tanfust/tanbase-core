@@ -59,12 +59,22 @@ change note as current truth. A superseded ADR must link to its replacement.
   meaningful implementation PR. Historical change records are immutable except
   for factual corrections.
 - Use the repository scripts in automation so local and CI behavior stay equal.
+- Import `@/lib/zod-config` in any module that builds a Zod schema the browser
+  loads. It turns off Zod's JIT, whose eval probe the CSP reports as a
+  violation.
+- Keep route options small. `validateSearch`, `loader`, `beforeLoad`, and
+  `head` load with every page, the landing page included; only components
+  are split per route. Build heavy head data in a server function, as the
+  blog does, and check `pnpm perf:bundle`.
 
 ## Stack
 
 | Layer      | Choice                                                                   |
 | ---------- | ------------------------------------------------------------------------ |
 | Framework  | TanStack Start (React 19), TanStack Router and Query                     |
+| Forms      | TanStack Form through `useAppForm()` in `src/components/form.tsx`        |
+| Views      | TanStack Table for the list view, TanStack Charts for project stats      |
+| Blog       | Markdown in `content/blog`, rendered on the Worker by TanStack Markdown  |
 | Runtime    | One Cloudflare Worker, built with `@cloudflare/vite-plugin` and Wrangler |
 | Data       | D1 through Drizzle ORM; migrations are generated SQL in `drizzle/`       |
 | Auth       | Better Auth on D1, with its OAuth 2.1 provider for MCP clients           |
@@ -97,10 +107,11 @@ change note as current truth. A superseded ADR must link to its replacement.
 | `discovery` | API catalog, AI Catalog, MCP server card, skills index                                              | none                                         |
 | `seo`       | `seo()` head helper, homepage copy, sitemap, robots, `llms.txt`, web manifest, Markdown negotiation | none                                         |
 | `og`        | Preview images: fixed cards drawn by the cached `OgImage` entrypoint                                | `exports.OgImage` Workers Caching            |
+| `blog`      | Public blog: posts from `content/blog`, head tags, RSS feed, sitemap entries, post preview cards    | none                                         |
 | `analytics` | Optional PostHog configuration and URL scrubbing                                                    | `POSTHOG_KEY` secret                         |
 
-`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are optional modules that
-a fork can remove; [module removal](docs/MODULE_REMOVAL.md) lists what each takes
+`files`, `realtime`, `jobs`, `ai`, `mcp`, `og`, and `blog` are optional
+modules that a fork can remove; [module removal](docs/MODULE_REMOVAL.md) lists what each takes
 with it. Inside a module, files follow one convention:
 
 | File                   | Role                                                                                                 |
@@ -190,7 +201,8 @@ serves `list_tasks`, `create_task`, and `complete_task` to MCP clients that
 authorize through Better Auth's OAuth 2.1 provider (ADR-0014). The Worker
 negotiates Markdown for `/`, serves agent discovery documents built from the
 MCP tool definitions, and pages offer the same tools through WebMCP
-(ADR-0015). The public health endpoint includes
+(ADR-0015). A public blog serves Markdown posts from `content/blog`, bundled
+at build time and rendered on the Worker (ADR-0019). The public health endpoint includes
 a D1 check cached for 30 seconds per location (ADR-0009). PostHog analytics is
 optional and loads only when the `POSTHOG_KEY` Worker secret is set (ADR-0010).
 Production runs next to its D1 primary through a placement hint that belongs to

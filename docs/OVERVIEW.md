@@ -84,6 +84,11 @@ Subtasks are tasks with a `parent_id`.
 3. Create, edit, delete, and move tasks through explicit controls. Set notes and due dates.
 4. Create, rename, switch, and delete projects from a responsive desktop or mobile shell.
 5. Update the display name and password, or choose light, dark, or system appearance.
+6. Switch a project between the board, a list, and its stats. The list sorts,
+   filters, searches, and hides columns, and every choice lives in the URL, so
+   a view can be shared as a link.
+7. Read the public blog at `/blog`, which lists posts written in Markdown in
+   the repository, with an RSS feed.
 
 Turnstile and per-IP rate limits guard sign-up, sign-in, and email-sending auth
 requests. Google and magic-link sign-in, drag ordering, and other app features
@@ -110,6 +115,7 @@ beyond exercising each primitive are left to forks.
 | Email                                      | Cloudflare Email Service                          | `EMAIL`                         |
 | Agent access                               | MCP server (MCP TypeScript SDK, OAuth 2.1)        | none; the `/mcp` route          |
 | Link preview images                        | Workers Caching on a named entrypoint             | `exports.OgImage`               |
+| Blog                                       | Workers + TanStack Start, posts bundled at build  | none; `content/blog`            |
 | Logs                                       | Workers Logs                                      | `observability`                 |
 
 ### Worker entry
@@ -221,10 +227,12 @@ src/
     discovery/           API catalog, AI Catalog, server card, skills
     seo/                 head helper, sitemap, robots, Markdown
     og/                  preview image cards and the cached OgImage entrypoint
+    blog/                posts from content/blog, feed, head tags
   db/
     schema/              one schema file per module
     index.ts             getDb()
   components/ui/         shadcn/ui
+content/blog/            blog posts, Markdown with frontmatter
 drizzle/                 migrations
 .claude/skills/          add-module, add-table, remove-module, deploy
 AGENTS.md
@@ -303,7 +311,7 @@ CLAUDE.md
 
 ### Production layer
 
-- **SEO:** a `seo()` head helper per route (title, description, Open Graph, robots, and a canonical URL on indexable pages), with indexing opt-in so only the homepage is indexed; `sitemap.xml`, `robots.txt`, `SoftwareSourceCode` JSON-LD on the homepage, `llms.txt`, and the homepage as Markdown for `Accept: text/markdown`.
+- **SEO:** a `seo()` head helper per route (title, description, Open Graph, robots, and a canonical URL on indexable pages), with indexing opt-in so only the homepage and the blog are indexed; `sitemap.xml`, `robots.txt`, `SoftwareSourceCode` JSON-LD on the homepage, `llms.txt`, and the homepage as Markdown for `Accept: text/markdown`.
 - **Preview images:** indexable pages name a 1200×630 Open Graph image that Takumi draws on the Worker from a fixed set of cards. Workers Caching keeps each image until the next deploy, for the `OgImage` entrypoint only ([ADR-0018](decisions/0018-preview-images-on-the-worker.md)).
 - **Security:** per-response nonce CSP on documents, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Frame-Options and `frame-ancestors 'none'`, and Cross-Origin-Opener-Policy. Static assets receive theirs from `public/_headers`.
 - **Errors:** root error boundary, 404 page, and structured logs carrying the Cloudflare Ray ID as the request id, which responses return in `X-Request-Id`.
@@ -331,6 +339,11 @@ The JavaScript budget started at 100 KB, which this stack cannot reach: React
 DOM alone is about 65 KB gzipped, and TanStack Router and Query add about
 25 KB more. F-019 moved the toast system out of public pages, which took the
 landing page from 159 KB to 145 KB, and set the budget just above it.
+The budget rose to 160 KB when Zod began validating `/app`'s search params
+(F-029): the router loads every route's options with the first page, so
+Zod's core ships with the landing page. It shares that core with the
+browser's WebMCP tools, which need full Zod for the MCP SDK, so the page
+carries about 13 KB more ([Performance](PERFORMANCE.md#2026-09-27-tanstack-libraries)).
 PostHog, when an installation sets its key, loads after hydration and is not
 counted; on `core.tanbase.dev` it adds about 100 KB.
 
@@ -341,6 +354,9 @@ counted; on `core.tanbase.dev` it adds about 100 KB.
 | Layer           | Choice                                                             |
 | --------------- | ------------------------------------------------------------------ |
 | Framework       | TanStack Start (React), TanStack Router, TanStack Query            |
+| Forms           | TanStack Form, validated with the server's Zod schemas             |
+| Tables, charts  | TanStack Table, TanStack Charts                                    |
+| Blog            | TanStack Markdown, rendered on the Worker                          |
 | Runtime         | Cloudflare Workers, `@cloudflare/vite-plugin`, Wrangler            |
 | UI              | Tailwind CSS v4, shadcn/ui                                         |
 | Validation      | Zod                                                                |

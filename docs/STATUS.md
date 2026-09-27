@@ -109,6 +109,12 @@ and a deployment works with no origin or email configured
 run the button yet; the first run and the
 [fresh-account test](FRESH_ACCOUNT_TEST.md) are pending.
 
+F-028 to F-031 are not deployed yet: forms on TanStack Form, the board's
+list and stats views on TanStack Table and TanStack Charts, and the public
+blog on TanStack Markdown
+([change record](changes/2026-09-27-tanstack-libraries.md)). Until they are,
+production has no `/blog`, and its sitemap lists only the homepage.
+
 ## Verification snapshot
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
