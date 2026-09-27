@@ -8,7 +8,10 @@ import {
 } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { boardSearchDefaults } from "@/modules/tasks/board-search"
+import {
+  boardSearchDefaults,
+  maxTaskSearchLength,
+} from "@/modules/tasks/board-search"
 import type { BoardSearch } from "@/modules/tasks/board-search"
 import type { TaskView } from "@/modules/tasks/contracts"
 
@@ -120,6 +123,14 @@ describe("TaskTable", () => {
     expect(onSearchChange).not.toHaveBeenCalled()
     act(() => vi.advanceTimersByTime(300))
     expect(onSearchChange).toHaveBeenCalledWith({ q: "guide" })
+  })
+
+  it("stops the search at the length the URL keeps", () => {
+    renderTable()
+    const box = screen.getByRole<HTMLInputElement>("searchbox", {
+      name: "Search tasks",
+    })
+    expect(box.maxLength).toBe(maxTaskSearchLength)
   })
 
   it("says when nothing matches", () => {

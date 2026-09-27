@@ -57,7 +57,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { hideableTaskColumns } from "@/modules/tasks/board-search"
+import {
+  hideableTaskColumns,
+  maxTaskSearchLength,
+} from "@/modules/tasks/board-search"
 import type {
   BoardSearch,
   HideableTaskColumn,
@@ -334,6 +337,7 @@ export function TaskTable({
             type="search"
             aria-label="Search tasks"
             placeholder="Search titles and notes"
+            maxLength={maxTaskSearchLength}
             value={text}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
           />

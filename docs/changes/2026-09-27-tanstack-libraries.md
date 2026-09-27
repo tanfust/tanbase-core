@@ -64,7 +64,7 @@ no demo-only code.
     `sort`, `desc`, and `hide` with Zod Mini. A malformed param falls back to
     its default, and `stripSearchParams` keeps defaults out of links. Search
     text reaches the URL after a 250 ms pause; the table filters as someone
-    types.
+    types. The box stops at 100 characters, the longest search the URL keeps.
   - The table reads `boardQueryOptions()`; only a project change reloads.
 - **Stats (F-030):**
   - `src/components/board/project-stats.tsx`, on `@tanstack/charts` 0.18.0,
@@ -146,7 +146,7 @@ Form's `validatorAdapter` and Table v8, and were not followed.
 
 Local, on this branch:
 
-- `pnpm verify` without `.dev.vars`: 226 Worker tests, 36 UI tests, 24 setup
+- `pnpm verify` without `.dev.vars`: 227 Worker tests, 37 UI tests, 24 setup
   tests, and 13 script tests passed, with format, lint, docs, schema, types,
   boundaries, and build. New tests cover the auth schemas and the Better Auth
   hook, the task and board-search schemas, the weekly stats, every blog post,

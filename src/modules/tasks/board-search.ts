@@ -6,6 +6,9 @@ import "@/lib/zod-config"
 
 import { taskStatuses } from "./contracts"
 
+/** The longest list search the URL keeps; the search box stops there too. */
+export const maxTaskSearchLength = 100
+
 /** The ways `/app` shows a project's tasks. */
 export const boardViews = ["board", "list", "stats"] as const
 export type BoardView = (typeof boardViews)[number]
@@ -50,7 +53,10 @@ export const boardSearchDefaults = {
 export const boardSearchSchema = z.object({
   project: z.catch(z.optional(z.string().check(z.minLength(1))), undefined),
   view: z.catch(z._default(z.enum(boardViews), "board"), "board"),
-  q: z.catch(z._default(z.string().check(z.maxLength(100)), ""), ""),
+  q: z.catch(
+    z._default(z.string().check(z.maxLength(maxTaskSearchLength)), ""),
+    ""
+  ),
   status: z.catch(z._default(z.array(z.enum(taskStatuses)), []), []),
   sort: z.catch(z.optional(z.enum(sortableTaskColumns)), undefined),
   desc: z.catch(z._default(z.boolean(), false), false),

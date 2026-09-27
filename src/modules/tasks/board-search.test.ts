@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { boardSearchDefaults, boardSearchSchema } from "./board-search"
+import {
+  boardSearchDefaults,
+  boardSearchSchema,
+  maxTaskSearchLength,
+} from "./board-search"
 
 describe("board search params", () => {
   it("fills every default when the URL names none", () => {
@@ -31,6 +35,12 @@ describe("board search params", () => {
       desc: true,
       hide: ["notes"],
     })
+  })
+
+  it("keeps a search up to the search box's limit", () => {
+    const longest = "x".repeat(maxTaskSearchLength)
+    expect(boardSearchSchema.parse({ q: longest }).q).toBe(longest)
+    expect(boardSearchSchema.parse({ q: `${longest}x` }).q).toBe("")
   })
 
   it("falls back per param instead of failing on a malformed link", () => {
