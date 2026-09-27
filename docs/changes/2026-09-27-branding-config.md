@@ -98,12 +98,32 @@ Local:
   only the name, short name, description, and `id` values, not the type
   declarations or the author.
 
+Production, 2026-09-27, merge commit `4ccfb71`:
+
+- Workers Build `73cc108f` deployed version `bd9b1421` at 20:17 UTC and passed
+  its post-deploy smoke. The pinned smoke passed at 20:22 UTC.
+- `/logo.svg`, `/favicon.ico`, `/icon.png`, `/apple-icon.png`, both manifest
+  icons, and `/manifest.webmanifest` returned `200` with their media types.
+- **Live pages:**
+  - the header masks `/logo.svg` at 24 pixels
+  - the page links the icons and the manifest and sets `theme-color`
+    `#1447e6`, with no console errors
+  - the preview image, a cache `HIT`, shows the mark white on the blue tile
+- **Agent documents:**
+  - the skill is served at
+    `/.well-known/agent-skills/tanbase-core-tasks/SKILL.md` and names
+    `core.tanbase.dev`
+  - the old `tanbase-tasks` path returns `404`
+  - `llms.txt` has no unfilled placeholders
+- **Production performance run:** 145.2 KB of landing JavaScript, and a
+  Lighthouse median of 94 on GitHub's runner.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `3c524b9` | `http://localhost:4391`    | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                                | URL                        | Date       | Result |
+| ---------- | ------------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `3c524b9`       | `http://localhost:4391`    | 2026-09-27 | Passed |
+| Production | `4ccfb71` / Worker version `bd9b1421` | `https://core.tanbase.dev` | 2026-09-27 | Passed |
 
 ## Rollback notes
 
