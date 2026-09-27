@@ -50,6 +50,7 @@ Records:
 - [2026-09-27: A Deploy to Cloudflare button and a generic top level](2026-09-27-deploy-button.md)
 - [2026-09-27: Preview images drawn on the Worker](2026-09-27-preview-images.md)
 - [2026-09-27: Performance budgets measured and checked](2026-09-27-performance-budgets.md)
+- [2026-09-27: One Better Auth instance per isolate, one session lookup per request](2026-09-27-board-server-time.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

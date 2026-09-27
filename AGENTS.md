@@ -44,6 +44,9 @@ change note as current truth. A superseded ADR must link to its replacement.
 - Read the deployment's public origin through `publicOrigin()` in
   `src/platform/origin.ts`, or `getSiteOrigin()` in route heads. Never compile
   an origin into links, feeds, or auth ([ADR-0016](docs/decisions/0016-deploy-without-personalization.md)).
+- Get the session from `getSessionFromHeaders()` and Better Auth from
+  `getAuth()`. Both are cached, per request and per isolate; a new Better Auth
+  instance per call costs D1 reads.
 - Log through `src/platform/log.ts` so entries carry the request ID. Add any new
   external script, frame, or connection origin to the CSP in
   `src/platform/security-headers.ts`, and verify it with a production build.

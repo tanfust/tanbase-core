@@ -21,10 +21,7 @@ const canonicalOrigin = siteSource.match(/\borigin:\s*"([^"]+)"/)?.[1]
 const target = new URL("/", option(args, "url") ?? canonicalOrigin)
 const runs = Number(option(args, "runs") ?? 3)
 const compress = args.includes("--compress")
-const minimum = Number(
-  option(args, "min-score") ??
-    (compress ? budgets.lighthouseLocalBuild : budgets.lighthouseProduction)
-)
+const minimum = Number(option(args, "min-score") ?? budgets.lighthouseAlarm)
 const outputDir = join(root, "output/lighthouse")
 
 /** A local proxy that compresses text responses the way Cloudflare does. */
