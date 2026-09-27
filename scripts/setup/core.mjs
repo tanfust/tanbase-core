@@ -171,7 +171,7 @@ export function updateWranglerInstallation(
   const updates = [
     [["name"], workerName],
     [["account_id"], accountId],
-    [["d1_databases", 0, "database_name"], localDatabaseName],
+    [["env", "local", "d1_databases", 0, "database_name"], localDatabaseName],
     [["env", "production", "name"], workerName],
     [["env", "production", "vars", "BETTER_AUTH_URL"], productionUrl],
     [["env", "production", "d1_databases", 0, "database_name"], databaseName],
@@ -183,7 +183,7 @@ export function updateWranglerInstallation(
       turnstileSiteKey,
     ])
   }
-  const localFiles = (config.r2_buckets ?? []).findIndex(
+  const localFiles = (config.env?.local?.r2_buckets ?? []).findIndex(
     (bucket) => bucket.binding === "FILES"
   )
   const productionFiles = (config.env?.production?.r2_buckets ?? []).findIndex(
@@ -191,7 +191,7 @@ export function updateWranglerInstallation(
   )
   if (localFilesBucketName !== undefined && localFiles >= 0) {
     updates.push([
-      ["r2_buckets", localFiles, "bucket_name"],
+      ["env", "local", "r2_buckets", localFiles, "bucket_name"],
       localFilesBucketName,
     ])
   }

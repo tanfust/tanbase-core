@@ -9,19 +9,67 @@ last_verified: 2026-09-27
 Cloudflare Workers Builds owns production deployment. GitHub Actions verifies
 the repository but never receives Cloudflare credentials and never deploys.
 
-The base Wrangler configuration is local-only. Production builds select the
-`production` Cloudflare environment during `vite build`, because the Vite plugin
-emits flattened environment-specific configuration at build time.
+`wrangler.jsonc` has three sections
+([ADR-0017](decisions/0017-wrangler-configuration-layout.md)):
 
-For a fresh clone, prefer the resumable [guided installer](INSTALLING.md):
+- **The top level** is a production configuration any account can deploy as
+  committed. The Deploy to Cloudflare button and `pnpm run deploy` use it. The
+  public origin comes from each request, and email, Turnstile, and analytics
+  stay off until configured ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
+- **`env.local`** is local development.
+- **`env.production`** is a pinned installation: the TanBase demo, or yours
+  after the guided installer rewrites it. Its builds select the `production`
+  environment during `vite build`, because the Vite plugin emits flattened
+  environment-specific configuration at build time.
 
-```sh
-pnpm run setup
-```
+There are two ways to deploy a fork:
 
-It resolves the account, provisions D1, applies migrations before code,
-configures the Better Auth secret without persisting it, deploys, and runs the
-production smoke suite. The manual sections below remain the recovery contract.
+| Path                        | What it does                                                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy to Cloudflare button | Clones the repository into your GitHub or GitLab account, creates the resources, and deploys the top level with Workers Builds                       |
+| `pnpm run setup`            | The resumable [guided installer](INSTALLING.md): pins `env.production` to your account, provisions resources, sets secrets, deploys, and smoke-tests |
+
+The manual sections below remain the recovery contract.
+
+## Deploy to Cloudflare button
+
+The README's button deploys the top level. Cloudflare reads `wrangler.jsonc`,
+creates the resources it names, and configures Workers Builds with the
+repository's `build` and `deploy` scripts. `pnpm run deploy` applies D1
+migrations, then runs `wrangler deploy`.
+
+| Resource                      | Created by                                                       |
+| ----------------------------- | ---------------------------------------------------------------- |
+| D1 database `DB`              | The button, which records the new database ID in your copy       |
+| R2 bucket `FILES`             | The button; R2 must be enabled on the account first              |
+| Queue `EMAIL_QUEUE`           | The button                                                       |
+| Dead-letter queue             | `wrangler deploy`, which creates a missing dead-letter queue     |
+| Durable Object `BOARD`        | Deploy, from its `v1` migration                                  |
+| Workflow `BREAKDOWN`          | Deploy                                                           |
+| Workers AI `AI`               | Needs no resource; AI Gateway `default` is created on first use  |
+| Rate limits, version metadata | Need no resource                                                 |
+| `BETTER_AUTH_SECRET`          | You, when the button asks for the secrets in `.dev.vars.example` |
+
+This table follows Cloudflare's documentation; the F-023 record in
+[FEATURES](FEATURES.md) notes what the first real run did. The button's setup
+page shows the descriptions from the `cloudflare.bindings` field in
+`package.json`. After the first deploy:
+
+1. Smoke-test the deployment with its own URL and the top-level configuration:
+
+   ```sh
+   pnpm smoke -- --url https://<worker>.<subdomain>.workers.dev --environment production --config default
+   ```
+
+2. Add a custom domain if you want one, then set `BETTER_AUTH_URL` to it so
+   canonical URLs, cookies, and tokens use one origin.
+3. Before a public launch, set up email (below) and Turnstile, so sign-up
+   requires a verified address and a challenge.
+
+`pnpm run deploy` refuses to run in the upstream `tanfust/tanbase-core`
+checkout, where the top level would replace the TanBase demo's production
+Worker. CI dry-runs the top level on every push with
+`pnpm cf:dry-run:default`.
 
 ## Required Cloudflare configuration
 

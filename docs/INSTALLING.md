@@ -8,7 +8,12 @@ last_verified: 2026-09-27
 
 TanBase includes a resumable installer for a fresh clone. It prepares isolated
 local development and, by default, creates the essential production resources
-in the selected Cloudflare account.
+in the selected Cloudflare account. It pins `env.production` in
+`wrangler.jsonc` to that account and personalizes `env.local`.
+
+To deploy without a local checkout, use the Deploy to Cloudflare button in
+the README instead; it deploys the top-level configuration
+([Deploying](DEPLOYMENT.md#deploy-to-cloudflare-button)).
 
 ## Fast path
 

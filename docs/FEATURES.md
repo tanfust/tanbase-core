@@ -632,8 +632,11 @@ billing alerts. The operator can set the billing notifications at any time.
 **Progress:** a deployment no longer needs personalization. The public origin
 resolves at runtime, and sign-up needs verification only when email delivery
 is configured ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
-Next, the top-level Wrangler configuration becomes a generic production
-configuration the button can deploy.
+The top level of `wrangler.jsonc` is now a generic production configuration,
+and the README has the button
+([ADR-0017](decisions/0017-wrangler-configuration-layout.md)). Next, the first
+real button run confirms what it provisions, then an outside tester runs the
+[fresh-account test](FRESH_ACCOUNT_TEST.md).
 
 ---
 

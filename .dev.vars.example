@@ -1,0 +1,7 @@
+# Secrets a deployment needs. The Deploy to Cloudflare button asks for each
+# one; for local development, `pnpm run setup --local-only` writes .dev.vars.
+#
+# BETTER_AUTH_SECRET signs sessions and tokens. Replace the placeholder with a
+# random value of at least 32 characters, such as `openssl rand -base64 32`.
+# The placeholder is deliberately too short, so auth refuses to start with it.
+BETTER_AUTH_SECRET=paste-a-random-secret

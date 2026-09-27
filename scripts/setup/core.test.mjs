@@ -23,15 +23,22 @@ import {
 import { run } from "./runner.mjs"
 
 const config = `{
-  // Local development stays isolated.
+  // The generic top level, which the Deploy to Cloudflare button deploys.
   "name": "tanbase-core",
-  "vars": { "APP_ENV": "local" },
-  "d1_databases": [
-    { "binding": "DB", "database_name": "tanbase-core-local" },
-  ],
-  "send_email": [{ "name": "EMAIL" }],
-  "r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files-local" }],
+  "vars": { "APP_ENV": "production", "BETTER_AUTH_URL": "" },
+  "d1_databases": [{ "binding": "DB", "database_name": "tanbase-core" }],
   "env": {
+    // Local development stays isolated.
+    "local": {
+      "vars": { "APP_ENV": "local" },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "tanbase-core-local" },
+      ],
+      "send_email": [{ "name": "EMAIL" }],
+      "r2_buckets": [
+        { "binding": "FILES", "bucket_name": "tanbase-core-files-local" },
+      ],
+    },
     "production": {
       "name": "tanbase-core",
       "vars": {
@@ -198,7 +205,8 @@ test("disabling email removes the production binding and sender only", () => {
   assert.equal(readWranglerInstallation(disabled).emailFrom, "")
   assert.equal(disabled.match(/send_email/g)?.length, 1)
   // The local binding stays; only the production one is removed.
-  assert.match(disabled, /^  "send_email": \[\{ "name": "EMAIL" \}\],$/m)
+  // The local environment's binding is untouched.
+  assert.match(disabled, /^      "send_email": \[\{ "name": "EMAIL" \}\],$/m)
 })
 
 test("files bucket is personalized or removed only in production", () => {

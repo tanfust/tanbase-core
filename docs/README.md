@@ -8,16 +8,17 @@ last_verified: 2026-09-20
 
 ## Start here
 
-| Audience             | Read first                          | Purpose                                           |
-| -------------------- | ----------------------------------- | ------------------------------------------------- |
-| Evaluators and users | [README](../README.md)              | Product scope and shortest successful start       |
-| New installations    | [Installing](INSTALLING.md)         | Guided local and Cloudflare setup                 |
-| Forks                | [Module removal](MODULE_REMOVAL.md) | Removing optional modules and their data          |
-| Contributors         | [Development](DEVELOPMENT.md)       | Setup, commands, tests, and contribution workflow |
-| Operators            | [Deployment](DEPLOYMENT.md)         | Production deployment, smoke checks, and rollback |
-| Maintainers          | [Overview](OVERVIEW.md)             | Stable product and architecture truth             |
-| Product planning     | [Features](FEATURES.md)             | Roadmap, dependencies, and acceptance criteria    |
-| Agents               | [AGENTS](../AGENTS.md)              | Required reading order and operating contract     |
+| Audience             | Read first                                  | Purpose                                           |
+| -------------------- | ------------------------------------------- | ------------------------------------------------- |
+| Evaluators and users | [README](../README.md)                      | Product scope and shortest successful start       |
+| New installations    | [Installing](INSTALLING.md)                 | Guided local and Cloudflare setup                 |
+| Forks                | [Module removal](MODULE_REMOVAL.md)         | Removing optional modules and their data          |
+| Testers              | [Fresh-account test](FRESH_ACCOUNT_TEST.md) | The timed install test for F-023                  |
+| Contributors         | [Development](DEVELOPMENT.md)               | Setup, commands, tests, and contribution workflow |
+| Operators            | [Deployment](DEPLOYMENT.md)                 | Production deployment, smoke checks, and rollback |
+| Maintainers          | [Overview](OVERVIEW.md)                     | Stable product and architecture truth             |
+| Product planning     | [Features](FEATURES.md)                     | Roadmap, dependencies, and acceptance criteria    |
+| Agents               | [AGENTS](../AGENTS.md)                      | Required reading order and operating contract     |
 
 ## Public discovery
 

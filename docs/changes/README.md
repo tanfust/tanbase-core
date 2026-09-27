@@ -47,6 +47,7 @@ Records:
 - [2026-09-27: Agent layer: module map, rules, and task skills](2026-09-27-agent-layer.md)
 - [2026-09-27: Module removal, proven for every optional module](2026-09-27-module-removal.md)
 - [2026-09-27: A deployment works without personalization](2026-09-27-deploy-without-personalization.md)
+- [2026-09-27: A Deploy to Cloudflare button and a generic top level](2026-09-27-deploy-button.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

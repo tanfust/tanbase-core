@@ -17,6 +17,7 @@ export default defineConfig({
       remoteBindings: false,
       wrangler: {
         configPath: "./wrangler.jsonc",
+        environment: "local",
       },
       miniflare: {
         bindings: {

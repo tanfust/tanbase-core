@@ -5,6 +5,8 @@ dist-ssr
 *.local
 .env*
 .dev.vars*
+# The secret names the Deploy to Cloudflare button asks for; no values.
+!.dev.vars.example
 .tanstack
 .tanbase
 .wrangler
