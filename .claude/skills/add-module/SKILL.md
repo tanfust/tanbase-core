@@ -35,17 +35,22 @@ New tables follow the `add-table` skill.
 
 ## 2. A new binding
 
-Declare it twice in `wrangler.jsonc`: in the base configuration for local
-development and again under `env.production`. Environments inherit nothing.
-Declare it a third time in `wrangler.e2e.jsonc` when the browser tests use
-the feature.
-Name local resources with a `-local` suffix, as `tanbase-core-files-local`
-is. For example, an R2 bucket:
+Declare it in all three sections of `wrangler.jsonc`: the top level, which
+the Deploy to Cloudflare button deploys to any account; `env.local` for local
+development and the Worker tests; and `env.production`. Environments inherit
+nothing from the top level. Declare it in `wrangler.e2e.jsonc` too when the
+browser tests use the feature. Name local resources with a `-local` suffix,
+as `tanbase-core-files-local` is, and give the top level a default name that
+works on a fresh account, since the button creates resources from it. For
+example, an R2 bucket:
 
 ```jsonc
-// base
-"r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files-local" }],
+// top level
+"r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files" }],
 "env": {
+  "local": {
+    "r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files-local" }],
+  },
   "production": {
     "r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files" }],
   },
@@ -115,7 +120,7 @@ services out of the default path. Update `docs/INSTALLING.md`. Run
 ## 5. Tests
 
 - Test the module's logic in the Workers runtime. Miniflare simulates D1, R2,
-  KV, Queues, Durable Objects, and Workflows from the base configuration.
+  KV, Queues, Durable Objects, and Workflows from `env.local`.
 - Test ownership: another user must not reach this module's data.
 - Tests must pass without `.dev.vars`; CI has no secrets.
 

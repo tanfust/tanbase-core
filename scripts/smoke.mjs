@@ -31,10 +31,20 @@ const expectedVersions = option("expect-version")?.split(",") ?? null
 // post-deploy runner can keep waiting instead of reporting a failure.
 const notYetServedStatus = 3
 const allowedEnvironments = new Set(["local", "production"])
+// The wrangler.jsonc section the target was deployed from: `default` is the
+// top level, which the Deploy to Cloudflare button and `pnpm run deploy`
+// use. It defaults to the section named like the environment.
+const configSection = option("config") ?? environment
+const allowedSections = new Set(["default", "local", "production"])
 
-if (!baseUrl || !environment || !allowedEnvironments.has(environment)) {
+if (
+  !baseUrl ||
+  !environment ||
+  !allowedEnvironments.has(environment) ||
+  !allowedSections.has(configSection)
+) {
   console.error(
-    "Usage: pnpm smoke -- [--url <url>] --environment <local|production> [--expect-version <id,...>]\n--url is required for local and defaults to the canonical origin for production."
+    "Usage: pnpm smoke -- [--url <url>] --environment <local|production> [--config <default|local|production>] [--expect-version <id,...>]\n--url is required for local and defaults to the canonical origin for production. Use --config default for a deployment of the top-level configuration, such as one made with the Deploy to Cloudflare button."
   )
   process.exit(1)
 }
@@ -52,7 +62,7 @@ function environmentConfig(name) {
       "utf8"
     )
   )
-  return (name === "production" ? config.env?.production : config) ?? {}
+  return (name === "default" ? config : config.env?.[name]) ?? {}
 }
 
 function turnstileSiteKey(name) {
@@ -90,7 +100,7 @@ if (expectedVersions && !expectedVersions.includes(health.version)) {
 }
 
 assert.ok(
-  environmentConfig(environment).version_metadata
+  environmentConfig(configSection).version_metadata
     ? typeof health.version === "string" && health.version.length > 0
     : health.version === null,
   "health endpoint must report the running Worker version"
@@ -102,12 +112,12 @@ assert.deepEqual(health, {
   version: health.version,
   checks: {
     database: "ok",
-    files: environmentConfig(environment).r2_buckets?.some(
+    files: environmentConfig(configSection).r2_buckets?.some(
       (bucket) => bucket.binding === "FILES"
     )
       ? "ok"
       : "disabled",
-    realtime: environmentConfig(environment).durable_objects?.bindings?.some(
+    realtime: environmentConfig(configSection).durable_objects?.bindings?.some(
       (binding) => binding.name === "BOARD"
     )
       ? "ok"
@@ -121,7 +131,7 @@ assert.deepEqual(health, {
 // The deployment's public origin: BETTER_AUTH_URL when the environment pins
 // one, otherwise the origin under test, as the Worker itself resolves it.
 const publicOrigin = new URL(
-  environmentConfig(environment).vars?.BETTER_AUTH_URL || url.origin
+  environmentConfig(configSection).vars?.BETTER_AUTH_URL || url.origin
 ).origin
 const authOrigin = new URL(publicOrigin)
 const mcpResource = new URL("/mcp", authOrigin).href
@@ -304,7 +314,7 @@ assert.doesNotMatch(
 
 // When the environment configures a Turnstile site key, a sign-in without a
 // challenge token must be rejected before any credential check runs.
-if (turnstileSiteKey(environment)) {
+if (turnstileSiteKey(configSection)) {
   const challengeResponse = await fetchWithTimeout(
     new URL("/api/auth/sign-in/email", url),
     {

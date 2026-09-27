@@ -22,6 +22,27 @@ primitive to the feature it powers and shows the cost model.
 
 ## Quick start
 
+### Deploy to Cloudflare
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tanfust/tanbase-core)
+
+You need a Cloudflare account with R2 enabled (**R2 Object Storage** in the
+dashboard), and a GitHub or GitLab account. The button:
+
+1. Copies this repository into your GitHub or GitLab account.
+2. Creates the D1 database, R2 bucket, and queue.
+3. Asks for `BETTER_AUTH_SECRET`: paste a random string of at least 32
+   characters, such as the output of `openssl rand -base64 32`.
+4. Builds and deploys with Workers Builds, and redeploys on every push.
+
+Open the `workers.dev` URL it gives you and create an account. Until you set
+up email, new accounts sign in without verifying their address; until you set
+up Turnstile, sign-up has no bot challenge.
+[Deploying](docs/DEPLOYMENT.md#deploy-to-cloudflare-button) covers both, and a
+custom domain.
+
+### Guided installer
+
 Prerequisites: Node.js 22.13 or newer on a supported line, and pnpm 10.11.1.
 
 For a fresh clone, run the guided installer:

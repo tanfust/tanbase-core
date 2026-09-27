@@ -26,3 +26,26 @@ export function remoteTip(run = spawnSync) {
   const sha = result.status === 0 ? result.stdout.trim().split(/\s+/)[0] : ""
   return /^[0-9a-f]{40}$/.test(sha) ? sha : null
 }
+
+/** The repository whose production is the TanBase demo, `env.production`. */
+export const upstreamRepository = "tanfust/tanbase-core"
+
+/**
+ * Whether a Git remote URL is the upstream TanBase repository. `pnpm run
+ * deploy` deploys the generic top-level configuration, which in the upstream
+ * checkout would replace the demo's production Worker; forks, including the
+ * ones the Deploy to Cloudflare button creates, have their own remote.
+ */
+export function isUpstreamRemote(url) {
+  return new RegExp(
+    `^(?:https://github\\.com/|git@github\\.com:)${upstreamRepository}(?:\\.git)?/?$`
+  ).test(url.trim())
+}
+
+/** The `origin` remote's URL, or "" when there is none. */
+export function originUrl(run = spawnSync) {
+  const result = run("git", ["remote", "get-url", "origin"], {
+    encoding: "utf8",
+  })
+  return result.status === 0 ? result.stdout.trim() : ""
+}

@@ -35,33 +35,42 @@ function postHogSourceMaps(): PluginOption[] {
   ]
 }
 
-const config = defineConfig(({ mode }) => ({
-  resolve: { tsconfigPaths: true },
-  plugins: [
-    devtools(),
-    ...(mode === "test"
-      ? []
-      : [
-          cloudflare({
-            configPath:
-              mode === "e2e" ? "wrangler.e2e.jsonc" : "wrangler.jsonc",
-            persistState:
-              mode === "e2e" ? { path: ".wrangler/e2e-state" } : true,
-            viteEnvironment: { name: "ssr" },
-          }),
-        ]),
-    tailwindcss(),
-    tanstackStart({
-      importProtection: {
-        behavior: "error",
-        client: {
-          files: ["**/*.server.*", "**/src/db/**", "**/src/platform/**"],
+const config = defineConfig(({ command, isPreview, mode }) => {
+  // The dev server always runs the local environment, however it is started.
+  // Builds keep the top level unless CLOUDFLARE_ENV names another, and the
+  // e2e configuration has no environments.
+  if (command === "serve" && !isPreview && mode !== "e2e") {
+    process.env.CLOUDFLARE_ENV ??= "local"
+  }
+
+  return {
+    resolve: { tsconfigPaths: true },
+    plugins: [
+      devtools(),
+      ...(mode === "test"
+        ? []
+        : [
+            cloudflare({
+              configPath:
+                mode === "e2e" ? "wrangler.e2e.jsonc" : "wrangler.jsonc",
+              persistState:
+                mode === "e2e" ? { path: ".wrangler/e2e-state" } : true,
+              viteEnvironment: { name: "ssr" },
+            }),
+          ]),
+      tailwindcss(),
+      tanstackStart({
+        importProtection: {
+          behavior: "error",
+          client: {
+            files: ["**/*.server.*", "**/src/db/**", "**/src/platform/**"],
+          },
         },
-      },
-    }),
-    viteReact(),
-    ...postHogSourceMaps(),
-  ],
-}))
+      }),
+      viteReact(),
+      ...postHogSourceMaps(),
+    ],
+  }
+})
 
 export default config

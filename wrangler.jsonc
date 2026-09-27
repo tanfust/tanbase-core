@@ -11,18 +11,25 @@
       "invocation_logs": true,
     },
   },
+  // The top level is a production configuration any Cloudflare account can
+  // deploy as committed: the Deploy to Cloudflare button and
+  // `pnpm run deploy` use it. The public origin comes from each request, and
+  // email, Turnstile, and analytics stay off until configured. `env.local`
+  // is local development; `env.production` is the TanBase demo, which the
+  // guided installer rewrites into your own pinned installation. ADR-0017.
   "vars": {
-    "APP_ENV": "local",
-    "BETTER_AUTH_URL": "http://localhost:3000",
+    "APP_ENV": "production",
+    // Empty: the Worker uses the origin each request arrives on. Set it to
+    // pin one canonical origin, and before enabling reminders.
+    "BETTER_AUTH_URL": "",
+    // Empty: email is logged as metadata and sign-up needs no verification.
     "EMAIL_FROM": "",
-    // Cloudflare's always-pass Turnstile test site key; pair it with the test
-    // secret in ignored .dev.vars. Production uses its own widget.
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
-    // PostHog loads only when the POSTHOG_KEY Worker secret is set; empty
-    // uses PostHog's US ingestion host.
+    // Empty: the Turnstile challenge is off.
+    "TURNSTILE_SITE_KEY": "",
+    // PostHog loads only when the POSTHOG_KEY Worker secret is set.
     "POSTHOG_HOST": "",
-    // Task breakdown: model and AI Gateway for every Workers AI call, and the
-    // per-user daily quota. The AI binding itself exists only in production.
+    // Task breakdown: the model, the AI Gateway (`default` is created on first
+    // use), and the per-user daily quota.
     "AI_MODEL": "@cf/mistralai/mistral-small-3.1-24b-instruct",
     "AI_GATEWAY_ID": "default",
     "AI_DAILY_LIMIT": "20",
@@ -41,6 +48,8 @@
       "simple": { "limit": 5, "period": 60 },
     },
   ],
+  // Workers AI through the AI Gateway named by AI_GATEWAY_ID.
+  "ai": { "binding": "AI" },
   // Lets /api/health report the running version, so post-deploy smoke
   // can wait for the edge to serve the version it just deployed.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
@@ -52,44 +61,127 @@
   // Breaks a task into subtasks with Workers AI, one durable step at a time.
   "workflows": [
     {
-      "name": "tanbase-core-task-breakdown-local",
+      "name": "tanbase-core-task-breakdown",
       "binding": "BREAKDOWN",
       "class_name": "TaskBreakdownWorkflow",
     },
   ],
   // Due-date reminders: the hourly cron enqueues one message per due task,
-  // this Worker consumes them, and a message that fails three retries
-  // moves to the dead-letter queue.
+  // this Worker consumes them, and a message that fails three retries moves
+  // to the dead-letter queue, which deploy creates when it is missing.
   "queues": {
-    "producers": [
-      { "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email-local" },
-    ],
+    "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" }],
     "consumers": [
       {
-        "queue": "tanbase-core-email-local",
+        "queue": "tanbase-core-email",
         "max_retries": 3,
         "retry_delay": 120,
-        "dead_letter_queue": "tanbase-core-email-dlq-local",
+        "dead_letter_queue": "tanbase-core-email-dlq",
       },
     ],
   },
   "triggers": { "crons": ["0 * * * *"] },
-  // Task attachments. Local development uses Wrangler's simulated bucket.
+  // Task attachments. R2 must be enabled on the account.
   "r2_buckets": [
     {
       "binding": "FILES",
-      "bucket_name": "tanbase-core-files-local",
+      "bucket_name": "tanbase-core-files",
     },
   ],
+  // No database_id: the Deploy to Cloudflare button and `wrangler deploy`
+  // create the database and record it.
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "tanbase-core-local",
+      "database_name": "tanbase-core",
       "migrations_dir": "drizzle",
       "migrations_pattern": "drizzle/migrations/*.sql",
     },
   ],
   "env": {
+    // Local development: `pnpm dev`, the local database scripts, and the Worker
+    // tests select it. It has no AI binding, because Workers AI always runs
+    // remotely.
+    "local": {
+      "vars": {
+        "APP_ENV": "local",
+        "BETTER_AUTH_URL": "http://localhost:3000",
+        "EMAIL_FROM": "",
+        // Cloudflare's always-pass Turnstile test site key; pair it with the test
+        // secret in ignored .dev.vars. Production uses its own widget.
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        // PostHog loads only when the POSTHOG_KEY Worker secret is set; empty
+        // uses PostHog's US ingestion host.
+        "POSTHOG_HOST": "",
+        // Task breakdown: model and AI Gateway for every Workers AI call, and the
+        // per-user daily quota. Local development has no AI binding.
+        "AI_MODEL": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+        "AI_GATEWAY_ID": "default",
+        "AI_DAILY_LIMIT": "20",
+      },
+      // Per-IP, per-endpoint limit for credential and email-sending auth
+      // requests, and a per-user burst limit for AI requests.
+      "ratelimits": [
+        {
+          "name": "AUTH_LIMITER",
+          "namespace_id": "1001",
+          "simple": { "limit": 10, "period": 60 },
+        },
+        {
+          "name": "AI_LIMITER",
+          "namespace_id": "1002",
+          "simple": { "limit": 5, "period": 60 },
+        },
+      ],
+      // Lets /api/health report the running version, so post-deploy smoke
+      // can wait for the edge to serve the version it just deployed.
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      // One BoardRoom per owner and project relays live board events.
+      "durable_objects": {
+        "bindings": [{ "name": "BOARD", "class_name": "BoardRoom" }],
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BoardRoom"] }],
+      // Breaks a task into subtasks with Workers AI, one durable step at a time.
+      "workflows": [
+        {
+          "name": "tanbase-core-task-breakdown-local",
+          "binding": "BREAKDOWN",
+          "class_name": "TaskBreakdownWorkflow",
+        },
+      ],
+      // Due-date reminders: the hourly cron enqueues one message per due task,
+      // this Worker consumes them, and a message that fails three retries
+      // moves to the dead-letter queue.
+      "queues": {
+        "producers": [
+          { "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email-local" },
+        ],
+        "consumers": [
+          {
+            "queue": "tanbase-core-email-local",
+            "max_retries": 3,
+            "retry_delay": 120,
+            "dead_letter_queue": "tanbase-core-email-dlq-local",
+          },
+        ],
+      },
+      "triggers": { "crons": ["0 * * * *"] },
+      // Task attachments. Local development uses Wrangler's simulated bucket.
+      "r2_buckets": [
+        {
+          "binding": "FILES",
+          "bucket_name": "tanbase-core-files-local",
+        },
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "tanbase-core-local",
+          "migrations_dir": "drizzle",
+          "migrations_pattern": "drizzle/migrations/*.sql",
+        },
+      ],
+    },
     "production": {
       "name": "tanbase-core",
       // Runs the Worker next to this installation's D1 primary (WEUR, in

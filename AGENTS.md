@@ -119,9 +119,11 @@ first user's rows.
 ## Binding rules
 
 - A binding enters only with the feature that uses it.
-- Declare it in the base `wrangler.jsonc` for local development and again
-  under `env.production`; environments do not inherit bindings. Local resource
-  names end in `-local`.
+- Declare it in all three sections of `wrangler.jsonc`: the top level, which
+  any account deploys through the Deploy to Cloudflare button, `env.local`, and
+  `env.production`. Environments inherit nothing from the top level. Local
+  resource names end in `-local`. Add it to `wrangler.e2e.jsonc` when the
+  browser tests use it ([ADR-0017](docs/decisions/0017-wrangler-configuration-layout.md)).
 - Read it from `env` in a `.server.ts` getter that returns `null` when the
   binding is absent, so an installation without it degrades instead of
   failing.

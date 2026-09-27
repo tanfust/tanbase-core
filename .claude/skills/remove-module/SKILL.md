@@ -78,7 +78,7 @@ After deleting a route, run `pnpm build` or `pnpm dev` to regenerate
 
 ## 3. Remove the bindings
 
-Remove the binding from the base configuration, `env.production`, and
+Remove the binding from the top level, `env.local`, `env.production`, and
 `wrangler.e2e.jsonc`, then:
 
 ```sh
@@ -89,7 +89,7 @@ Primitive-specific steps:
 
 - **Durable Object:** remove the class from `src/server.ts` and
   `test/worker.ts`, then append a migration with a new tag that deletes it, in
-  the base configuration and in `env.production`:
+  the top level, `env.local`, and `env.production`:
 
   ```jsonc
   "migrations": [

@@ -20,9 +20,13 @@ these lists. The [README](../README.md#removing-a-module) summarizes them.
   removal first. Ship the migration that drops the module's tables or
   columns in a later deploy. A Worker rollback after the drop needs a
   migration that recreates what it dropped.
-- **Edit all three Wrangler configurations:** the base configuration for local
-  development, `env.production`, and `wrangler.e2e.jsonc` for the browser
-  tests. CI does not run the browser tests, so a stale e2e configuration
+- **Edit every Wrangler section:** the top level, which the Deploy to
+  Cloudflare button deploys, `env.local` for local development,
+  `env.production`, and `wrangler.e2e.jsonc` for the browser tests. These
+  trials ran before the top level became a generic production configuration
+  ([ADR-0017](decisions/0017-wrangler-configuration-layout.md)), so where a
+  section below says "the base configuration", edit both the top level and
+  `env.local`. CI does not run the browser tests, so a stale e2e configuration
   stays green in CI and breaks `pnpm test:e2e`.
 - **Regenerate the route tree** after deleting a route: `pnpm build` or
   `pnpm dev` rewrites `src/routeTree.gen.ts`. Until then `pnpm typecheck`

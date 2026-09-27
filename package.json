@@ -27,14 +27,16 @@
     "verify": "pnpm format:check && pnpm lint && pnpm docs:check && pnpm db:check && pnpm typecheck && pnpm test && pnpm test:ui && pnpm test:setup && pnpm test:scripts && pnpm test:boundaries && pnpm build",
     "db:generate": "drizzle-kit generate && prettier --write drizzle/migrations/meta",
     "db:check": "drizzle-kit check",
-    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local --env local",
     "db:migrate:e2e": "wrangler d1 migrations apply DB --local --config wrangler.e2e.jsonc --persist-to .wrangler/e2e-state",
     "db:migrate:production": "wrangler d1 migrations apply DB --env production --remote",
-    "db:seed:local": "wrangler d1 execute DB --local --file scripts/seed.sql",
+    "db:seed:local": "wrangler d1 execute DB --local --env local --file scripts/seed.sql",
     "cf:typegen": "wrangler types src/worker-configuration.d.ts --env-file scripts/typegen.env",
     "cf:build:production": "cross-env CLOUDFLARE_ENV=production vite build",
     "cf:dry-run:production": "pnpm cf:build:production && wrangler deploy --dry-run",
+    "cf:dry-run:default": "pnpm build && wrangler deploy --dry-run",
     "cf:deploy:production": "pnpm cf:build:production && pnpm db:migrate:production && node scripts/deploy-if-current.mjs",
+    "deploy": "node scripts/deploy.mjs",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
@@ -97,5 +99,30 @@
     "vite": "8.3.0",
     "vitest": "4.1.11",
     "wrangler": "4.129.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "BETTER_AUTH_SECRET": {
+        "description": "Signs sessions and tokens. Use a random string of at least 32 characters, such as the output of `openssl rand -base64 32`, and keep it secret."
+      },
+      "BETTER_AUTH_URL": {
+        "description": "Leave empty to use the deployment's own URL. Set it to your canonical origin, such as `https://app.example.com`, once you add a custom domain or enable email reminders."
+      },
+      "EMAIL_FROM": {
+        "description": "Leave empty: email is logged, not sent, and sign-up needs no verification. To send, set up [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) and add an `EMAIL` binding first."
+      },
+      "TURNSTILE_SITE_KEY": {
+        "description": "Leave empty to turn the sign-up challenge off. To use [Turnstile](https://developers.cloudflare.com/turnstile/), set the widget's site key here and its secret as `TURNSTILE_SECRET_KEY`."
+      },
+      "POSTHOG_HOST": {
+        "description": "Optional. Analytics stay off unless the `POSTHOG_KEY` secret is set."
+      },
+      "DB": {
+        "description": "Projects, tasks, and accounts. Migrations run on every deploy."
+      },
+      "FILES": {
+        "description": "Task attachments. R2 must be enabled on the account."
+      }
+    }
   }
 }

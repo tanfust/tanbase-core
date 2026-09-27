@@ -1,7 +1,12 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { remoteTip, supersedingCommit } from "./deploy-guard.mjs"
+import {
+  isUpstreamRemote,
+  originUrl,
+  remoteTip,
+  supersedingCommit,
+} from "./deploy-guard.mjs"
 
 const older = "d169717e0000000000000000000000000000000a"
 const newer = "023fb25a0000000000000000000000000000000b"
@@ -79,5 +84,39 @@ test("returns null when git fails or prints nothing usable", () => {
   assert.equal(
     remoteTip(() => ({ status: 0, stdout: "not-a-sha" })),
     null
+  )
+})
+
+test("recognizes the upstream TanBase remote in every URL form", () => {
+  for (const url of [
+    "https://github.com/tanfust/tanbase-core",
+    "https://github.com/tanfust/tanbase-core.git",
+    "git@github.com:tanfust/tanbase-core.git",
+    "https://github.com/tanfust/tanbase-core/\n",
+  ]) {
+    assert.equal(isUpstreamRemote(url), true, url)
+  }
+})
+
+test("lets forks deploy, including look-alike names", () => {
+  for (const url of [
+    "https://github.com/someone/tanbase-core",
+    "git@github.com:someone/my-app.git",
+    "https://github.com/tanfust/tanbase-core-fork",
+    "https://gitlab.com/tanfust/tanbase-core",
+    "",
+  ]) {
+    assert.equal(isUpstreamRemote(url), false, url)
+  }
+})
+
+test("reads the origin remote, or nothing without one", () => {
+  assert.equal(
+    originUrl(() => ({ status: 0, stdout: "git@github.com:a/b.git\n" })),
+    "git@github.com:a/b.git"
+  )
+  assert.equal(
+    originUrl(() => ({ status: 2, stdout: "" })),
+    ""
   )
 })
