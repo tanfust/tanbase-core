@@ -1,11 +1,11 @@
 ---
 name: remove-module
-description: Remove an optional TanBase Core module (files, realtime, jobs, ai, or mcp) with its bindings, Worker exports, routes, UI, tables, installer steps, and docs, leaving CI green. Use when a fork does not need a feature, such as "remove attachments", "drop the live board", "delete the AI breakdown", or "I don't need MCP".
+description: Remove an optional TanBase Core module (files, realtime, jobs, ai, mcp, or og) with its bindings, Worker exports, routes, UI, tables, installer steps, and docs, leaving CI green. Use when a fork does not need a feature, such as "remove attachments", "drop the live board", "delete the AI breakdown", "I don't need MCP", or "drop the preview images".
 ---
 
 # Remove an optional module
 
-`files`, `realtime`, `jobs`, `ai`, and `mcp` are designed to be removable.
+`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are designed to be removable.
 `auth`, `tasks`, `email`, `seo`, and `discovery` are the core; do not remove
 them with this skill.
 
@@ -110,10 +110,14 @@ Primitive-specific steps:
   deletes them with `wrangler queues delete`.
 - **Workflow:** remove the class exports and the `workflows` entry. The
   operator deletes the production Workflow with `wrangler workflows delete`.
+- **Cached entrypoint:** remove its `exports` entry from every section, the
+  class exports, and the `ctx.exports` dispatch in `src/server.ts`. The cache
+  empties itself: the Worker version is part of its key.
 - **R2:** remove the bucket binding. The bucket and its objects stay until the
   operator empties and deletes them.
-- **Workers AI:** remove `ai` from `env.production`, where alone it exists, the
-  `AI_*` variables, and the `AI_LIMITER` entry in `ratelimits`. AI Gateway
+- **Workers AI:** remove `ai` from the top level and `env.production`, the
+  only sections that have it, the `AI_*` variables, and the `AI_LIMITER` entry
+  in `ratelimits`. AI Gateway
   stays, with logs of every prompt, until the operator deletes it.
 - **CSP:** remove any origin the module added, in
   `src/platform/security-headers.ts` or as a `connectSources` entry in

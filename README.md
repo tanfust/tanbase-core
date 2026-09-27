@@ -112,8 +112,8 @@ remains deferred until its owning product feature is implemented.
 
 ## Removing a module
 
-`files`, `realtime`, `jobs`, `ai`, and `mcp` are optional. Each was removed once
-on a throwaway branch with CI green. The
+`files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are optional. Each was
+removed once on a throwaway branch with its checks green. The
 [module removal guide](docs/MODULE_REMOVAL.md) lists every file to edit, the
 cloud resources left behind, and the evidence. The `remove-module` skill in
 `.claude/skills/` follows it. If the fork is already in production, deploy the
@@ -159,6 +159,15 @@ code removal before the migration that drops its data.
 - Bindings: none; the Better Auth OAuth provider and three packages go with it
 - Exports: none; `src/server.ts` drops its `/mcp` and OAuth discovery routing
 - Migrations: drop the seven OAuth tables and `jwks`
+
+### og: link preview images
+
+- Folders: `src/modules/og/`
+- Bindings: none; the `exports` block with `OgImage` turns off Workers
+  Caching, and `@takumi-rs/wasm` goes with it
+- Exports: `OgImage` from `src/server.ts` and `test/worker.ts`, and the `/og/`
+  dispatch
+- Migrations: none
 
 ## Documentation
 
