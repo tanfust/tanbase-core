@@ -73,12 +73,23 @@ Local:
   the field-by-field views still carry everything the board reads.
 - `pnpm cf:dry-run:production` — passed.
 
+Production:
+
+- Workers Build `6cb8ec5b` deployed merge `289d84c` as version `5a41c0ea` at
+  11:24 UTC, two minutes after PR #35 merged, and its post-deploy smoke
+  passed. The four GitHub checks passed on the merge commit.
+- `pnpm smoke -- --environment production --expect-version 5a41c0ea-7d7d-4c0f-83a8-8ba41e0fb200`
+  — passed at 11:30 UTC.
+- The field-by-field task views were not inspected in production, because a
+  board response needs a signed-in session; the local browser journeys above
+  cover them.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `307cb23` | `http://localhost:3110`    | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `307cb23` | `http://localhost:3110`    | 2026-09-27 | Passed |
+| Production | `289d84c` / version `5a41c0ea`  | `https://core.tanbase.dev` | 2026-09-27 | Passed |
 
 ## Rollback notes
 
