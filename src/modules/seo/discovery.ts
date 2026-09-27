@@ -12,7 +12,7 @@ export function discoveryLinks(origin: string): string[] {
   ]
 }
 
-/** The pages search engines may index: only the homepage. */
+/** The pages search engines may index outside the blog: the homepage. */
 export function publicUrls(origin: string): string[] {
   return [canonicalUrl("/", origin)]
 }

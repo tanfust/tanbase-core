@@ -4,14 +4,16 @@ import { siteConfig } from "@/lib/site"
 export const ogImageSize = { width: 1200, height: 630 } as const
 
 /**
- * Every preview image the Worker renders, by slug, with its alternative
- * text. What each card draws lives in `content.server.ts`, so route heads that
- * name an image never load the homepage copy.
+ * The fixed preview images the Worker renders, by slug, with their
+ * alternative text. What each card draws lives in `content.server.ts`, so
+ * route heads that name an image never load the homepage copy. Each blog
+ * post also has a card, `blog-<slug>`, drawn from its title and tags.
  */
 export const ogCards = {
   home: {
     alt: `${siteConfig.name}: A task board that proves the whole stack works.`,
   },
+  blog: { alt: `The ${siteConfig.name} blog.` },
 } as const satisfies Record<string, { alt: string }>
 
 export type OgCardSlug = keyof typeof ogCards

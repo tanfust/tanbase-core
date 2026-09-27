@@ -9,14 +9,16 @@
 
 The production site runs a personal task board: verified email and password
 accounts protected by Cloudflare Turnstile and per-IP rate limits, D1-backed
-projects and tasks, private file attachments in R2, a live board synced across
-devices through Durable Objects, due-date reminder emails through Cron Triggers
-and Queues, AI task breakdown through Workflows and Workers AI, and an MCP
-server.
+projects and tasks shown as a board, a sortable list, and weekly stats,
+private file attachments in R2, a live board synced across devices through
+Durable Objects, due-date reminder emails through Cron Triggers and Queues, AI
+task breakdown through Workflows and Workers AI, and an MCP server. A public
+blog, written in Markdown in the repository, explains how it is built.
 
 ## Docs
 
 - [Homepage]({{origin}}/): What {{name}} is, the map of Cloudflare primitives, the cost model, and how to deploy it. Request it with `Accept: text/markdown` for Markdown.
+- [Blog]({{origin}}/blog): Posts about building {{name}}, also as an [RSS feed]({{origin}}/blog/rss.xml)
 - [README]({{repository}}/blob/main/README.md): Overview, quick start, and current scope
 - [Architecture]({{repository}}/blob/main/docs/OVERVIEW.md): Principles, feature-to-primitive map, performance budgets, and cost model
 - [Guided installation]({{repository}}/blob/main/docs/INSTALLING.md): Deploy your own copy with `pnpm run setup`
@@ -44,7 +46,7 @@ policy, and discovery documents describe only implemented resources.
 ## Optional
 
 - [Source repository]({{repository}}): The full source, MIT licensed
-- [Sitemap]({{origin}}/sitemap.xml): The public pages; only the homepage is indexable
+- [Sitemap]({{origin}}/sitemap.xml): The pages search engines may index: the homepage, the blog, and its posts
 
 Production deployment is not verified until the canonical URL passes the
 repository smoke checks and that evidence is recorded in the status snapshot.

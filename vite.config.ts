@@ -44,6 +44,8 @@ const routeDependencies = [
   "@tanstack/charts/scales/band",
   "@tanstack/charts/scales/linear",
   "@tanstack/charts/tooltip",
+  "@tanstack/markdown/html",
+  "@tanstack/markdown/parser",
   "@tanstack/react-form",
   "@tanstack/react-table",
 ]

@@ -196,6 +196,7 @@ export const homepage = {
   footer: {
     license: { label: "MIT license", href: sourceFileUrl("LICENSE") },
     links: [
+      { label: "Blog", href: "/blog" },
       { label: "Source", href: siteConfig.sourceRepository },
       { label: "llms.txt", href: "/llms.txt" },
       { label: "Status", href: sourceFileUrl("docs/STATUS.md") },
