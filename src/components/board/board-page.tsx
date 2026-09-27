@@ -9,9 +9,11 @@ import { useNavigate, useRouter } from "@tanstack/react-router"
 import { format } from "date-fns"
 import {
   CalendarIcon,
+  ColumnsIcon,
   CornerDownRightIcon,
   EllipsisIcon,
   FolderPlusIcon,
+  ListIcon,
   ListTreeIcon,
   PencilIcon,
   PlusIcon,
@@ -20,6 +22,7 @@ import {
 } from "lucide-react"
 
 import { TaskDialog } from "@/components/board/task-dialog"
+import { TaskTable } from "@/components/board/task-table"
 import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import {
   AlertDialog,
@@ -67,6 +70,7 @@ import {
 } from "@/components/ui/empty"
 import { FieldError, FieldGroup } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/toast"
 import type { BreakdownState } from "@/modules/ai/contracts"
 import { startTaskBreakdown } from "@/modules/ai/functions"
@@ -89,6 +93,8 @@ import {
 } from "@/modules/tasks/functions"
 import { useBoardRealtime } from "@/modules/realtime/use-board-realtime"
 import type { RealtimeStatus } from "@/modules/realtime/use-board-realtime"
+import { boardViews } from "@/modules/tasks/board-search"
+import type { BoardSearch, BoardView } from "@/modules/tasks/board-search"
 import { boardQueryKey, boardQueryOptions } from "@/modules/tasks/queries"
 import { createProjectInputSchema } from "@/modules/tasks/schemas"
 import type { TaskValues } from "@/modules/tasks/schemas"
@@ -128,7 +134,21 @@ function RealtimeIndicator({ status }: { status: RealtimeStatus }) {
   )
 }
 
-export function BoardPage({ projectId }: { projectId?: string }) {
+const viewLabels: Record<BoardView, { label: string; icon: typeof ListIcon }> =
+  {
+    board: { label: "Board", icon: ColumnsIcon },
+    list: { label: "List", icon: ListIcon },
+  }
+
+export function BoardPage({
+  search,
+  onSearchChange,
+}: {
+  /** `/app`'s search params: the project, the view, and the list's state. */
+  search: BoardSearch
+  onSearchChange: (patch: Partial<BoardSearch>) => void
+}) {
+  const projectId = search.project
   const query = useSuspenseQuery(boardQueryOptions(projectId))
   const snapshot = query.data
   const queryClient = useQueryClient()
@@ -401,6 +421,48 @@ export function BoardPage({ projectId }: { projectId?: string }) {
     }
   }
 
+  const titles = new Map(snapshot.tasks.map((task) => [task.id, task.title]))
+  const subtaskCounts = new Map<string, number>()
+  for (const task of snapshot.tasks) {
+    if (task.parentId) {
+      subtaskCounts.set(
+        task.parentId,
+        (subtaskCounts.get(task.parentId) ?? 0) + 1
+      )
+    }
+  }
+
+  function taskMenu(task: TaskView) {
+    return (
+      <TaskMenu
+        task={task}
+        onBreakdown={
+          aiStatus?.enabled &&
+          !task.parentId &&
+          !subtaskCounts.has(task.id) &&
+          !breakdowns[task.id] &&
+          !task.id.startsWith("optimistic:")
+            ? () => breakdownMutation.mutate(task.id)
+            : undefined
+        }
+        onEdit={() =>
+          setTaskDialog({
+            open: true,
+            status: task.status,
+            task,
+          })
+        }
+        onDelete={() => setDeleteTaskTarget(task)}
+        onMove={(status) =>
+          updateTaskMutation.mutate({
+            taskId: task.id,
+            values: { status },
+          })
+        }
+      />
+    )
+  }
+
   if (!snapshot.activeProject) {
     return (
       <Empty className="min-h-[60vh] border">
@@ -484,140 +546,128 @@ export function BoardPage({ projectId }: { projectId?: string }) {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-3">
-        {columns.map((column) => {
-          const titles = new Map(
-            snapshot.tasks.map((task) => [task.id, task.title])
-          )
-          const subtaskCounts = new Map<string, number>()
-          for (const task of snapshot.tasks) {
-            if (task.parentId) {
-              subtaskCounts.set(
-                task.parentId,
-                (subtaskCounts.get(task.parentId) ?? 0) + 1
+      <Tabs
+        value={search.view}
+        onValueChange={(view) => onSearchChange({ view: view as BoardView })}
+      >
+        <TabsList aria-label="View">
+          {boardViews.map((view) => {
+            const { label, icon: Icon } = viewLabels[view]
+            return (
+              <TabsTrigger key={view} value={view}>
+                <Icon data-icon="inline-start" />
+                {label}
+              </TabsTrigger>
+            )
+          })}
+        </TabsList>
+        <TabsContent value="board" className="pt-2">
+          <div className="grid items-start gap-4 lg:grid-cols-3">
+            {columns.map((column) => {
+              const tasks = snapshot.tasks.filter(
+                (task) => task.status === column.status
               )
-            }
-          }
-          const tasks = snapshot.tasks.filter(
-            (task) => task.status === column.status
-          )
-          return (
-            <section
-              key={column.status}
-              aria-label={column.title}
-              className="flex min-w-0 flex-col gap-3 rounded-4xl bg-muted/50 p-3"
-            >
-              <div className="flex items-center justify-between gap-3 px-1 py-1">
-                <div>
-                  <h2 className="font-medium">{column.title}</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {column.description}
-                  </p>
-                </div>
-                <Badge variant="secondary">{tasks.length}</Badge>
-              </div>
-              {tasks.length === 0 ? (
-                <Empty className="min-h-40 border">
-                  <EmptyHeader>
-                    <EmptyTitle>No tasks</EmptyTitle>
-                    <EmptyDescription>
-                      Add the first task in this column.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        setTaskDialog({
-                          open: true,
-                          status: column.status,
-                          task: null,
-                        })
-                      }
-                    >
-                      <PlusIcon data-icon="inline-start" /> Add task
-                    </Button>
-                  </EmptyContent>
-                </Empty>
-              ) : (
-                tasks.map((task) => (
-                  <Card key={task.id} size="sm">
-                    <CardHeader>
-                      {task.parentId && titles.has(task.parentId) && (
-                        <p className="flex min-w-0 items-center gap-1 pe-8 text-xs text-muted-foreground">
-                          <CornerDownRightIcon className="size-3 shrink-0" />
-                          <span className="truncate">
-                            Part of {titles.get(task.parentId)}
-                          </span>
-                        </p>
-                      )}
-                      <CardTitle className="pe-8">{task.title}</CardTitle>
-                      <CardDescription>
-                        {task.notes || "No notes"}
-                      </CardDescription>
-                      <CardAction>
-                        <TaskMenu
-                          task={task}
-                          onBreakdown={
-                            aiStatus?.enabled &&
-                            !task.parentId &&
-                            !subtaskCounts.has(task.id) &&
-                            !breakdowns[task.id] &&
-                            !task.id.startsWith("optimistic:")
-                              ? () => breakdownMutation.mutate(task.id)
-                              : undefined
-                          }
-                          onEdit={() =>
+              return (
+                <section
+                  key={column.status}
+                  aria-label={column.title}
+                  className="flex min-w-0 flex-col gap-3 rounded-4xl bg-muted/50 p-3"
+                >
+                  <div className="flex items-center justify-between gap-3 px-1 py-1">
+                    <div>
+                      <h2 className="font-medium">{column.title}</h2>
+                      <p className="text-xs text-muted-foreground">
+                        {column.description}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">{tasks.length}</Badge>
+                  </div>
+                  {tasks.length === 0 ? (
+                    <Empty className="min-h-40 border">
+                      <EmptyHeader>
+                        <EmptyTitle>No tasks</EmptyTitle>
+                        <EmptyDescription>
+                          Add the first task in this column.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                      <EmptyContent>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
                             setTaskDialog({
                               open: true,
-                              status: task.status,
-                              task,
+                              status: column.status,
+                              task: null,
                             })
                           }
-                          onDelete={() => setDeleteTaskTarget(task)}
-                          onMove={(status) =>
-                            updateTaskMutation.mutate({
-                              taskId: task.id,
-                              values: { status },
-                            })
-                          }
-                        />
-                      </CardAction>
-                    </CardHeader>
-                    {(task.dueAt ||
-                      subtaskCounts.has(task.id) ||
-                      breakdowns[task.id]) && (
-                      <CardContent className="flex flex-wrap items-center gap-2">
-                        {task.dueAt && (
-                          <Badge variant="outline">
-                            <CalendarIcon />
-                            {format(task.dueAt, "MMM d, yyyy")}
-                          </Badge>
+                        >
+                          <PlusIcon data-icon="inline-start" /> Add task
+                        </Button>
+                      </EmptyContent>
+                    </Empty>
+                  ) : (
+                    tasks.map((task) => (
+                      <Card key={task.id} size="sm">
+                        <CardHeader>
+                          {task.parentId && titles.has(task.parentId) && (
+                            <p className="flex min-w-0 items-center gap-1 pe-8 text-xs text-muted-foreground">
+                              <CornerDownRightIcon className="size-3 shrink-0" />
+                              <span className="truncate">
+                                Part of {titles.get(task.parentId)}
+                              </span>
+                            </p>
+                          )}
+                          <CardTitle className="pe-8">{task.title}</CardTitle>
+                          <CardDescription>
+                            {task.notes || "No notes"}
+                          </CardDescription>
+                          <CardAction>{taskMenu(task)}</CardAction>
+                        </CardHeader>
+                        {(task.dueAt ||
+                          subtaskCounts.has(task.id) ||
+                          breakdowns[task.id]) && (
+                          <CardContent className="flex flex-wrap items-center gap-2">
+                            {task.dueAt && (
+                              <Badge variant="outline">
+                                <CalendarIcon />
+                                {format(task.dueAt, "MMM d, yyyy")}
+                              </Badge>
+                            )}
+                            {subtaskCounts.has(task.id) && (
+                              <Badge variant="outline">
+                                <ListTreeIcon />
+                                {subtaskCounts.get(task.id)} subtasks
+                              </Badge>
+                            )}
+                            {breakdowns[task.id] && (
+                              <BreakdownProgress
+                                instanceId={breakdowns[task.id]}
+                                onFinished={(result) =>
+                                  finishBreakdown(task.id, result)
+                                }
+                              />
+                            )}
+                          </CardContent>
                         )}
-                        {subtaskCounts.has(task.id) && (
-                          <Badge variant="outline">
-                            <ListTreeIcon />
-                            {subtaskCounts.get(task.id)} subtasks
-                          </Badge>
-                        )}
-                        {breakdowns[task.id] && (
-                          <BreakdownProgress
-                            instanceId={breakdowns[task.id]}
-                            onFinished={(result) =>
-                              finishBreakdown(task.id, result)
-                            }
-                          />
-                        )}
-                      </CardContent>
-                    )}
-                  </Card>
-                ))
-              )}
-            </section>
-          )
-        })}
-      </div>
+                      </Card>
+                    ))
+                  )}
+                </section>
+              )
+            })}
+          </div>
+        </TabsContent>
+        <TabsContent value="list" className="pt-2">
+          <TaskTable
+            tasks={snapshot.tasks}
+            projectName={snapshot.activeProject.name}
+            search={search}
+            onSearchChange={onSearchChange}
+            renderActions={taskMenu}
+          />
+        </TabsContent>
+      </Tabs>
 
       <TaskDialog
         open={taskDialog.open}
