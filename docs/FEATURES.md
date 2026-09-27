@@ -664,15 +664,20 @@ button run confirms what it provisions, then an outside tester runs the
 
 ### F-024: Public launch
 
-**Module:** launch | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-016, F-017, F-018, F-019, F-020, F-023
+**Module:** launch | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-016, F-017, F-018, F-019, F-020, F-023
 
 **Acceptance criteria**
 
 - [x] MIT license
-- [ ] README: what it is, primitive map, quick start, cost model, removing a module
+- [x] README: what it is, primitive map, quick start, cost model, removing a
+      module. A test keeps its primitive map and cost lists equal to the
+      homepage's
 - [x] Repository public and demo live: `tanfust/tanbase-core` is public and
       `https://core.tanbase.dev` is live
-- [ ] Launch video and posts ready
+
+The launch video and posts are handled outside the repository, and are not
+tracked here (2026-09-27). The launch waits on F-023's first button run and
+outside fresh-account test.
 
 ---
 
