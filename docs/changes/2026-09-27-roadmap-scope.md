@@ -62,12 +62,22 @@ Local:
   no "invoice" or "Planned" text, and the cost section renders with the
   allowances, risks, and guardrails.
 
+Production:
+
+- Workers Build `b99d9561` deployed merge `357239d` as version `91965a6a` at
+  2026-09-26 23:36 UTC, three minutes after PR #33 merged, and its post-deploy
+  smoke passed. The four GitHub checks passed on the merge commit.
+- `pnpm smoke -- --environment production --expect-version 91965a6a-ec28-4f9e-8cc6-78e735d46f45`
+  — passed on 2026-09-27 at 09:24 UTC.
+- The live homepage and its Markdown contain no "invoice" or "Planned" text,
+  and the cost section still shows the allowances, risks, and guardrails.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `3b755bd` | `http://localhost:4391`    | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                          | URL                        | Date       | Result |
+| ---------- | ------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `3b755bd` | `http://localhost:4391`    | 2026-09-27 | Passed |
+| Production | `357239d` / version `91965a6a`  | `https://core.tanbase.dev` | 2026-09-27 | Passed |
 
 ## Rollback notes
 
