@@ -103,12 +103,39 @@ Local:
   `pnpm cf:typegen` is stable against the committed types.
 - `pnpm test:e2e` with the system Chrome: 3 passed.
 
+Production, 2026-09-27, merge commit `b84bbfe`:
+
+- PRs #39 and #40 merged 12 seconds apart. Workers Build `f398ff4b`, for the
+  older `85d6338`, uploaded no version. Workers Build `e09bd7f3`, for
+  `b84bbfe`, deployed version `e83b7e10` at 15:51 UTC and passed its
+  post-deploy smoke.
+- `/api/health` reported `environment: production` and version `e83b7e10`,
+  and `pnpm smoke -- --environment production --expect-version e83b7e10-08ea-4b2a-810d-3f3906ba5e44`
+  passed at 15:52 UTC.
+- `env.production` deployed as before. `wrangler versions view` lists the same
+  bindings, variables, and secrets for `e83b7e10` as for the previous version,
+  `8f17bbc6`:
+  - `EMAIL` restricted to `noreply@send.tanbase.dev`
+  - the pinned D1 database
+  - `BETTER_AUTH_URL=https://core.tanbase.dev`
+  - the production Turnstile key
+- Also unchanged:
+  - `cf-placement: remote-MRS`
+  - the hourly cron, re-applied at deploy
+  - the email queue, with the Worker as producer and consumer
+- **Live pages:**
+  - the canonical link, JSON-LD, the sitemap, and robots name
+    `core.tanbase.dev`
+  - `/login` loads the production Turnstile widget and asks for a verified
+    email
+  - `/forgot-password` shows no email notice
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `af8a708` | `http://localhost:4391`    | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                                | URL                        | Date       | Result |
+| ---------- | ------------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `af8a708`       | `http://localhost:4391`    | 2026-09-27 | Passed |
+| Production | `b84bbfe` / Worker version `e83b7e10` | `https://core.tanbase.dev` | 2026-09-27 | Passed |
 
 ## Rollback notes
 
