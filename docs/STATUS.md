@@ -92,6 +92,7 @@ fresh-account, under-15-minute acceptance test is still pending.
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                    |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `289d84c` / Worker version `5a41c0ea` | `https://core.tanbase.dev`             | 2026-09-27 11:30 UTC | F-020 agent layer: Workers Build `6cb8ec5b` deployed at 11:24 UTC and passed its post-deploy smoke; pinned smoke passed; the tasks view mapping it ships was exercised by the local browser journeys, since checking a signed-in board response in production needs the operator's session                                  |
 | Production    | `357239d` / Worker version `91965a6a` | `https://core.tanbase.dev`             | 2026-09-27 09:24 UTC | Roadmap scope: Workers Build `b99d9561` deployed and passed its post-deploy smoke; pinned smoke passed; the homepage and its Markdown no longer mention an invoice, and the cost section still lists the allowances, risks, and guardrails                                                                                  |
 | Production    | `9204d48` / Worker version `be3a85c9` | `https://core.tanbase.dev`             | 2026-09-26 22:59 UTC | F-016 landing page and SEO: Workers Build `8e1c71dc` deployed and passed its post-deploy smoke; pinned smoke passed; `/` has one canonical URL, `index, follow`, and `SoftwareSourceCode` JSON-LD, `/login` is `noindex` with no canonical; PageSpeed Insights mobile 97/100/100/100 and Agentic Browsing 4/4               |
 | Production    | `a2fe387` / Worker version `86a32108` | `https://core.tanbase.dev`             | 2026-09-26 21:57 UTC | Web vitals and deploy guard: Workers Build `9c9ca53f` ran the guard, which found its commit at the tip of `main` and deployed; post-deploy and pinned smoke passed; with PostHog requests aborted, the live page sent `$pageview` and a `$web_vitals` FCP event without attribution or query strings, and no CSP violations |
@@ -132,10 +133,13 @@ None.
 
 ## Last known deployed commit
 
-Production runs merge commit `357239d` as Worker version `91965a6a`, deployed
-by Workers Build `b99d9561` at 2026-09-26 23:36 UTC with the narrowed roadmap
-and the landing page's invoice promise removed. Its post-deploy smoke passed,
-and a pinned smoke passed on 2026-09-27 at 09:24 UTC.
+Production runs merge commit `289d84c` as Worker version `5a41c0ea`, deployed
+by Workers Build `6cb8ec5b` at 2026-09-27 11:24 UTC with the F-020 agent layer
+and field-by-field task views. Its post-deploy smoke passed, and a pinned
+smoke passed at 11:30 UTC.
+
+The narrowed roadmap shipped in version `91965a6a` from `357239d`, deployed by
+Workers Build `b99d9561` at 2026-09-26 23:36 UTC.
 
 The F-016 landing page and SEO layer shipped in version `be3a85c9` from
 `9204d48`, deployed by Workers Build `8e1c71dc` at 2026-09-26 22:46 UTC.
