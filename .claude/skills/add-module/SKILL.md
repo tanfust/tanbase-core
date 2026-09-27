@@ -37,6 +37,8 @@ New tables follow the `add-table` skill.
 
 Declare it twice in `wrangler.jsonc`: in the base configuration for local
 development and again under `env.production`. Environments inherit nothing.
+Declare it a third time in `wrangler.e2e.jsonc` when the browser tests use
+the feature.
 Name local resources with a `-local` suffix, as `tanbase-core-files-local`
 is. For example, an R2 bucket:
 
@@ -89,9 +91,10 @@ production`, run by the operator. Local values go in ignored `.dev.vars`,
   binding into the code that calls it, as `generateSubtasks()` in
   `src/modules/ai/model.server.ts` takes it, so tests supply a fake and never
   reach Cloudflare.
-- **External origin:** add any new script, frame, or connection origin to the
-  CSP in `src/platform/security-headers.ts`, then check it with `pnpm build`
-  and `pnpm preview`.
+- **External origin:** add a new script or frame origin to the CSP in
+  `src/platform/security-headers.ts`, and a new connection origin to the
+  `connectSources` that `src/server.ts` passes to it. Check both with
+  `pnpm build` and `pnpm preview`.
 
 ## 3. Health and diagnostics
 
@@ -130,6 +133,9 @@ Update everything that describes the product:
   `src/modules/seo/llms.txt` when it changes what the site offers. Every
   claim must be true of production.
 - `docs/decisions/`: an ADR when the module makes a choice worth recording.
+- `docs/MODULE_REMOVAL.md` and the README's "Removing a module" section,
+  when forks may remove the module: what to delete, which bindings and
+  migrations go, and the cloud resources left behind.
 - `docs/FEATURES.md` and a change record.
 
 ## 7. Verify

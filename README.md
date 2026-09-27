@@ -88,6 +88,56 @@ pnpm cf:dry-run:production
 Local and production use separate D1 databases. Every later Cloudflare binding
 remains deferred until its owning product feature is implemented.
 
+## Removing a module
+
+`files`, `realtime`, `jobs`, `ai`, and `mcp` are optional. Each was removed once
+on a throwaway branch with CI green. The
+[module removal guide](docs/MODULE_REMOVAL.md) lists every file to edit, the
+cloud resources left behind, and the evidence. The `remove-module` skill in
+`.claude/skills/` follows it. If the fork is already in production, deploy the
+code removal before the migration that drops its data.
+
+### files: task attachments on R2
+
+- Folders: `src/modules/files/`, `src/routes/api/attachments/`,
+  `src/routes/api/tasks/`
+- Bindings: `FILES` (R2)
+- Exports: none
+- Migrations: drop the `attachment` table
+
+### realtime: the live board
+
+- Folders: `src/modules/realtime/`
+- Bindings: `BOARD` (Durable Object)
+- Exports: `BoardRoom` from `src/server.ts` and `test/worker.ts`
+- Migrations: a `v2` Durable Object migration with
+  `deleted_classes: ["BoardRoom"]`; no D1 change
+
+### jobs: due-date reminders
+
+- Folders: `src/modules/jobs/`
+- Bindings: `EMAIL_QUEUE` (Queues) and the hourly cron; production keeps
+  `"triggers": { "crons": [] }` so the deployed cron is removed
+- Exports: the `scheduled` and `queue` handlers in `src/server.ts`, and
+  `queue` in `test/worker.ts`
+- Migrations: drop `task.reminder_sent_at` and `task_due_reminder_idx`
+
+### ai: task breakdown
+
+- Folders: `src/modules/ai/`
+- Bindings: `AI` (Workers AI), `BREAKDOWN` (Workflow), `AI_LIMITER`, and the
+  `AI_*` variables
+- Exports: `TaskBreakdownWorkflow` from `src/server.ts` and `test/worker.ts`
+- Migrations: drop the `ai_usage` table
+
+### mcp: the MCP server and WebMCP
+
+- Folders: `src/modules/mcp/`, `src/routes/oauth/`,
+  `src/modules/discovery/skills/`
+- Bindings: none; the Better Auth OAuth provider and three packages go with it
+- Exports: none; `src/server.ts` drops its `/mcp` and OAuth discovery routing
+- Migrations: drop the seven OAuth tables and `jwks`
+
 ## Documentation
 
 - [Documentation index](docs/README.md)
@@ -96,6 +146,7 @@ remains deferred until its owning product feature is implemented.
 - [Current status](docs/STATUS.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [Guided installation](docs/INSTALLING.md)
+- [Module removal](docs/MODULE_REMOVAL.md)
 - [Deployment runbook](docs/DEPLOYMENT.md)
 - [AI agent contract](AGENTS.md)
 
