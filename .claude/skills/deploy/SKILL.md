@@ -78,8 +78,15 @@ A deploy is done only when its evidence is in `docs/STATUS.md`:
 - Fill in the production row of the change record's deployment table, and
   add its production evidence.
 
-Open these as a docs pull request. A docs-only merge also deploys; its
-evidence need not be recorded unless it changed what production serves.
+Record the evidence in the next feature's pull request, not in a pull
+request of its own: each feature ships in one pull request, which also
+carries the previous deploy's evidence. Tell the person the deploy passed
+right away. Open a docs-only pull request for evidence only when no feature
+work follows, or when `main` needs the record sooner, for example before an
+outside test or the launch.
+
+A docs-only merge also deploys; its evidence need not be recorded unless it
+changed what production serves.
 
 ## When it fails
 

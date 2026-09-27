@@ -349,6 +349,8 @@ Exact versions are pinned in F-001.
 
 Target: the public demo runs on the Workers Paid plan at $5 a month, with usage inside included allowances.
 
+Every deployment needs Workers Paid: password sign-in and drawing a preview image each take over 100 ms of CPU, and Workers Free allows 10 ms per request ([Deploying](DEPLOYMENT.md#workers-paid-is-required)).
+
 Included in Workers Paid (checked against Cloudflare's pricing pages on
 2026-09-26; the landing page publishes the same table from
 `src/modules/seo/homepage.ts`):

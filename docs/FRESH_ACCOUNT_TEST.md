@@ -17,6 +17,8 @@ You need:
 - A new Cloudflare account, or one that has never deployed a Worker. Sign up
   at [dash.cloudflare.com](https://dash.cloudflare.com/sign-up) if needed;
   account creation is not timed.
+- A payment method. The README asks for Workers Paid, $5 a month; upgrading
+  is part of the timed test.
 - A GitHub or GitLab account.
 - A browser. A terminal is optional.
 
@@ -32,7 +34,7 @@ Start a timer when you open the README. Write down the time at each step.
 | Step | Do this                                                                             | Time |
 | ---- | ----------------------------------------------------------------------------------- | ---- |
 | 1    | Open the README and find how to deploy                                              |      |
-| 2    | Do whatever the README says is needed first, such as enabling R2                    |      |
+| 2    | Do whatever the README says is needed first, such as Workers Paid and R2            |      |
 | 3    | Click **Deploy to Cloudflare** and finish the setup page                            |      |
 | 4    | Wait for the first deploy to finish                                                 |      |
 | 5    | Open the deployed `workers.dev` URL; the landing page loads                         |      |

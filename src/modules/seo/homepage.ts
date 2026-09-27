@@ -174,7 +174,7 @@ export const homepage = {
   deploy: {
     heading: "Deploy your own",
     intro:
-      "Clone the repository and run the guided installer. It provisions D1, R2, and Queues in your Cloudflare account, generates the auth secret, deploys the Worker, and runs production smoke checks.",
+      "Clone the repository and run the guided installer with a Cloudflare account on Workers Paid. It provisions D1, R2, and Queues in your account, generates the auth secret, deploys the Worker, and runs production smoke checks.",
     commands: [
       `git clone ${siteConfig.sourceRepository}.git`,
       "cd tanbase-core",

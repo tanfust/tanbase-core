@@ -26,8 +26,15 @@ primitive to the feature it powers and shows the cost model.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tanfust/tanbase-core)
 
-You need a Cloudflare account with R2 enabled (**R2 Object Storage** in the
-dashboard), and a GitHub or GitLab account. The button:
+You need:
+
+- A Cloudflare account on **Workers Paid**, $5 a month (upgrade under
+  **Workers & Pages** in the dashboard). Signing in and drawing link preview images take
+  more CPU per request than Workers Free allows.
+- R2 enabled on that account (**R2 Object Storage** in the dashboard).
+- A GitHub or GitLab account.
+
+The button:
 
 1. Copies this repository into your GitHub or GitLab account.
 2. Creates the D1 database, R2 bucket, and queue.
@@ -43,7 +50,8 @@ custom domain.
 
 ### Guided installer
 
-Prerequisites: Node.js 22.13 or newer on a supported line, and pnpm 10.11.1.
+Prerequisites: Node.js 22.13 or newer on a supported line, pnpm 10.11.1, and a
+Cloudflare account on Workers Paid.
 
 For a fresh clone, run the guided installer:
 
