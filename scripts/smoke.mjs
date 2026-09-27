@@ -440,11 +440,86 @@ assert.equal(
   cacheControl,
   "sitemap must use the discovery cache policy"
 )
-assert.deepEqual(
-  [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]),
-  [`${publicOrigin}/`],
-  "sitemap must list only the canonical homepage"
+const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+  (match) => match[1]
 )
+assert.deepEqual(
+  sitemapUrls.slice(0, 2),
+  [`${publicOrigin}/`, `${publicOrigin}/blog`],
+  "sitemap must list the canonical homepage, then the blog"
+)
+const postUrls = sitemapUrls.slice(2)
+assert.ok(postUrls.length > 0, "sitemap must list the blog's posts")
+for (const postUrl of postUrls) {
+  assert.match(
+    postUrl,
+    new RegExp(`^${publicOrigin.replaceAll(".", "\\.")}/blog/[a-z0-9-]+$`),
+    "sitemap must list nothing but the homepage, the blog, and its posts"
+  )
+}
+
+// The blog: an indexable index, server-rendered posts, and an RSS feed.
+const blogResponse = await fetchWithTimeout(new URL("/blog", url))
+const blogHtml = await blogResponse.text()
+assert.equal(blogResponse.status, 200, "/blog must return HTTP 200")
+assert.ok(
+  blogHtml.includes(`<link rel="canonical" href="${publicOrigin}/blog"`),
+  "/blog must name its canonical URL"
+)
+assert.ok(
+  blogHtml.includes('<meta name="robots" content="index, follow"'),
+  "/blog must be indexable"
+)
+
+const postPath = new URL(postUrls[0]).pathname
+const postResponse = await fetchWithTimeout(new URL(postPath, url))
+const postHtml = await postResponse.text()
+assert.equal(postResponse.status, 200, `${postPath} must return HTTP 200`)
+assert.ok(
+  postHtml.includes('<meta property="og:type" content="article"'),
+  `${postPath} must be an Open Graph article`
+)
+assert.ok(
+  postHtml.includes('"@type":"BlogPosting"'),
+  `${postPath} must carry BlogPosting JSON-LD`
+)
+assert.match(
+  postHtml,
+  /<article[\s\S]*<h2 id="/,
+  `${postPath} must be rendered on the server`
+)
+const postImagePath = `/og/blog-${postPath.split("/").pop()}.png`
+assert.ok(
+  postHtml.includes(`content="${publicOrigin}${postImagePath}"`),
+  `${postPath} must name its preview image`
+)
+const postImageResponse = await fetchWithTimeout(new URL(postImagePath, url))
+await postImageResponse.arrayBuffer()
+assert.equal(postImageResponse.status, 200, `${postImagePath} must be drawn`)
+assert.equal(
+  postImageResponse.headers.get("content-type"),
+  "image/png",
+  `${postImagePath} must be a PNG`
+)
+
+const feedResponse = await fetchWithTimeout(new URL("/blog/rss.xml", url))
+const feed = await feedResponse.text()
+assert.equal(feedResponse.status, 200, "the blog feed must return HTTP 200")
+assert.match(
+  feedResponse.headers.get("content-type") ?? "",
+  /^application\/rss\+xml\b/,
+  "the blog feed must be RSS"
+)
+assert.ok(
+  feed.includes(`<link>${postUrls[0]}</link>`),
+  "the blog feed must link its posts on the canonical origin"
+)
+
+const missingPostResponse = await fetchWithTimeout(
+  new URL("/blog/no-such-post", url)
+)
+await missingPostResponse.arrayBuffer()
+assert.equal(missingPostResponse.status, 404, "a missing post must be a 404")
 
 const robotsResponse = await fetchWithTimeout(new URL("/robots.txt", url))
 const robots = await robotsResponse.text()
