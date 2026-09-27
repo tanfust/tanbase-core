@@ -1,8 +1,10 @@
 import * as React from "react"
 
+import { siteConfig } from "@/lib/site"
+
 export type Theme = "light" | "dark" | "system"
 
-const storageKey = "tanbase-theme"
+export const themeStorageKey = `${siteConfig.id}-theme`
 
 const ThemeContext = React.createContext<{
   theme: Theme
@@ -23,7 +25,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = React.useState<Theme>("system")
 
   React.useEffect(() => {
-    const saved = window.localStorage.getItem(storageKey)
+    const saved = window.localStorage.getItem(themeStorageKey)
     const next =
       saved === "light" || saved === "dark" || saved === "system"
         ? saved
@@ -40,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme])
 
   const setTheme = React.useCallback((next: Theme) => {
-    window.localStorage.setItem(storageKey, next)
+    window.localStorage.setItem(themeStorageKey, next)
     setThemeState(next)
     applyTheme(next)
   }, [])
@@ -58,7 +60,7 @@ export function useTheme() {
 
 export const themeScript = `
 try {
-  const value = localStorage.getItem("${storageKey}") || "system";
+  const value = localStorage.getItem("${themeStorageKey}") || "system";
   const dark = value === "dark" || (value === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", dark);
   document.documentElement.style.colorScheme = dark ? "dark" : "light";

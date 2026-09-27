@@ -129,6 +129,43 @@ pnpm verify
 pnpm cf:dry-run:production
 ```
 
+## Make it yours
+
+The app's identity lives in one file, `src/lib/site.ts`. Pages, page titles,
+emails, the link preview image, the web manifest, the MCP server, the agent
+discovery documents, and `llms.txt` all read it. `pnpm run setup` asks for
+the name and description and writes them there, or you can edit it yourself:
+
+| Field                        | Used for                                                               |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `name`, `shortName`          | Titles, the header, emails, and running text such as "New to TanBase?" |
+| `tagline`, `subtitle`        | The homepage title, and the line under the name in the header          |
+| `description`                | The default page description and the web manifest                      |
+| `id`                         | The MCP server name, the agent skill, the health check, storage keys   |
+| `logo`                       | The header mark and the preview image; see below                       |
+| `icons`, `themeColor`        | The favicon, home-screen icons, the web manifest, and the browser UI   |
+| `sourceRepository`, `author` | Links and structured data                                              |
+
+Put your logo and icons in `public/`:
+
+- `logo.svg`: the mark, drawn in the header and the preview image. Set
+  `logo.monochrome` to `true` for a one-color mark: the app then draws it in
+  the theme's colors, so a black mark still shows in dark mode. A PNG logo
+  also works in the app, but only an SVG appears in the preview image. Set
+  `logo` to `null` for the built-in check-square icon.
+- `favicon.ico`, `icon.png` (96 by 96), `apple-icon.png` (180 by 180), and
+  `web-app-manifest-192x192.png` and `web-app-manifest-512x512.png`.
+
+The rest is yours to rewrite: the landing page copy in
+`src/modules/seo/homepage.ts` and the product summary in
+`src/modules/seo/llms.txt`. The colors are the tokens in `src/styles.css`.
+Cloudflare resource names belong to `wrangler.jsonc`, which the Deploy to
+Cloudflare button's setup page and `pnpm run setup` rename.
+
+A test fails while the template's name is still written anywhere in `src/`
+outside `src/lib/site.ts`. After renaming, update the email snapshots, which
+include the name, with `pnpm exec vitest run src/modules/email -u`.
+
 ## Current scope
 
 - TanStack Start SSR with an explicit server entry

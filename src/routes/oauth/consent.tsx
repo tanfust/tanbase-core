@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { CircleAlertIcon, ShieldCheckIcon } from "lucide-react"
 
+import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/oauth/consent")({
   head: () =>
     seo({
       title: "Allow access",
-      description: "Approve an MCP client's access to your TanBase Core tasks.",
+      description: `Approve an MCP client's access to your ${siteConfig.name} tasks.`,
       noindex: true,
     }),
   component: ConsentPage,
@@ -112,7 +113,7 @@ function ConsentPage() {
           </CardTitle>
           <CardDescription>
             {name} will be able to list your tasks, create tasks, and mark them
-            done in TanBase Core, acting as you.
+            done in {siteConfig.name}, acting as you.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

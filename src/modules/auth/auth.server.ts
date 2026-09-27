@@ -8,6 +8,7 @@ import {
   isEmailDeliveryConfigured,
   sendEmail,
 } from "@/modules/email/send-email.server"
+import { siteConfig } from "@/lib/site"
 import type { SendEmailInput } from "@/modules/email/types"
 import { ensureDefaultProject } from "@/modules/tasks/repository.server"
 import { log } from "@/platform/log"
@@ -153,7 +154,7 @@ export function createAuth(dependencies: AuthDependencies = {}) {
   }
 
   return betterAuth({
-    appName: "TanBase Core",
+    appName: siteConfig.name,
     baseURL: origin,
     secret: environment.BETTER_AUTH_SECRET,
     database: getAuthDatabase(database),
@@ -194,7 +195,7 @@ export function createAuth(dependencies: AuthDependencies = {}) {
       sendResetPassword: ({ user: authUser, url }) =>
         deliver({
           to: authUser.email,
-          subject: "Reset your TanBase Core password",
+          subject: `Reset your ${siteConfig.name} password`,
           template: "resetPassword",
           props: {
             name: authUser.name,
@@ -209,7 +210,7 @@ export function createAuth(dependencies: AuthDependencies = {}) {
       sendVerificationEmail: ({ user: authUser, url }) =>
         deliver({
           to: authUser.email,
-          subject: "Verify your TanBase Core email",
+          subject: `Verify your ${siteConfig.name} email`,
           template: "verifyEmail",
           props: {
             name: authUser.name,

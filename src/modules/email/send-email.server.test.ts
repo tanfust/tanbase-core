@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
+import { siteConfig } from "@/lib/site"
+
 import { createEmailSender } from "./send-email.server"
 
 const input = {
@@ -51,7 +53,7 @@ describe("sendEmail", () => {
     })
     expect(providerSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: { email: "hello@example.com", name: "TanBase Core" },
+        from: { email: "hello@example.com", name: siteConfig.name },
         subject: "Verify your email",
         to: "person@example.com",
       })

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 
+import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/reset-password")({
   head: () =>
     seo({
       title: "Choose a new password",
-      description: "Set a new password for your TanBase Core account.",
+      description: `Set a new password for your ${siteConfig.name} account.`,
       noindex: true,
     }),
   component: ResetPasswordPage,

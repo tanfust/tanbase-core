@@ -12,12 +12,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { siteConfig } from "@/lib/site"
 
 function StatusShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex min-h-svh flex-col bg-muted/40">
       <header className="mx-auto flex h-16 w-full max-w-6xl items-center px-6">
-        <Link to="/" aria-label="TanBase Core home">
+        <Link to="/" aria-label={`${siteConfig.name} home`}>
           <BrandLockup />
         </Link>
       </header>

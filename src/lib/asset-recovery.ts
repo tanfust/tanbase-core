@@ -1,3 +1,5 @@
+import { siteConfig } from "./site"
+
 // For a few seconds after a deployment, a page rendered by the new Worker
 // version can reference a fingerprinted script or stylesheet that the edge
 // location does not serve yet. This inline script reloads the page once when
@@ -6,7 +8,7 @@
 
 /** Kept as source text: it runs as an inline script before the app loads. */
 export const assetRecoverySource = `function (w, reload) {
-  var key = "tanbase:asset-reload";
+  var key = "${siteConfig.id}:asset-reload";
   function recover() {
     try {
       var last = Number(w.sessionStorage.getItem(key) || 0);

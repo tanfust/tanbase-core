@@ -3,6 +3,8 @@ import { initSync, Renderer } from "@takumi-rs/wasm"
 import type { Node } from "@takumi-rs/wasm"
 import takumiModule from "@takumi-rs/wasm/auto"
 
+import { siteConfig } from "@/lib/site"
+
 import { ogImageSize } from "./cards"
 import type { OgCardContent } from "./content.server"
 
@@ -18,8 +20,36 @@ const colors = {
   primaryForeground: "#eff6ff",
 }
 
-// Lucide's square-check icon, the mark in the site's brand lockup.
-const brandMark = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${colors.primaryForeground}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>`
+// Lucide's square-check icon, the header's mark when there is no logo.
+const fallbackMark = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${colors.primaryForeground}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>`
+
+// The SVGs in public/, bundled as text so the Worker can draw the logo.
+const publicSvgs = import.meta.glob<string>("/public/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+})
+
+/** Paints every filled or stroked shape of a one-color SVG in `color`. */
+export function tintSvg(svg: string, color: string): string {
+  return svg.replace(/\b(fill|stroke)="(?!none")[^"]*"/g, `$1="${color}"`)
+}
+
+/**
+ * The configured logo as an image source, light on the primary tile like
+ * the header's. A logo that is not an SVG in public/ falls back to the icon.
+ */
+function brandMark(): string {
+  const { logo } = siteConfig
+  const svg = logo ? publicSvgs[`/public${logo.src}`] : undefined
+  const mark =
+    !logo || !svg
+      ? fallbackMark
+      : logo.monochrome
+        ? tintSvg(svg, colors.primaryForeground)
+        : svg
+  return `data:image/svg+xml;utf8,${encodeURIComponent(mark)}`
+}
 
 let renderer: Renderer | undefined
 
@@ -57,9 +87,10 @@ function lockup(): Node {
         children: [
           {
             type: "image",
-            src: `data:image/svg+xml;utf8,${encodeURIComponent(brandMark)}`,
-            width: 44,
-            height: 44,
+            src: brandMark(),
+            width: 64,
+            height: 64,
+            style: { objectFit: "contain" },
           },
         ],
       },
@@ -69,12 +100,12 @@ function lockup(): Node {
         children: [
           {
             type: "text",
-            text: "TanBase Core",
+            text: siteConfig.name,
             style: { fontSize: 34, fontWeight: 600 },
           },
           {
             type: "text",
-            text: "Tasks on Cloudflare",
+            text: siteConfig.subtitle,
             style: { fontSize: 26, color: colors.muted },
           },
         ],

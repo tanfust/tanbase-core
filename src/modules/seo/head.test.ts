@@ -23,7 +23,7 @@ function metaContent(
 
 describe("document titles", () => {
   it("puts the page name before the site name", () => {
-    expect(documentTitle("Sign in")).toBe("Sign in · TanBase Core")
+    expect(documentTitle("Sign in")).toBe(`Sign in · ${siteConfig.name}`)
   })
 
   it("names the site and its tagline on the homepage", () => {
@@ -128,9 +128,9 @@ describe("seo() for noindex pages", () => {
   })
 
   it("still titles the page for tabs and link previews", () => {
-    expect(head.meta).toContainEqual({ title: "Settings · TanBase Core" })
+    expect(head.meta).toContainEqual({ title: `Settings · ${siteConfig.name}` })
     expect(metaContent(head.meta, "property", "og:title")?.content).toBe(
-      "Settings · TanBase Core"
+      `Settings · ${siteConfig.name}`
     )
   })
 })

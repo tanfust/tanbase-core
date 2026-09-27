@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { ThemeProvider, useTheme } from "./theme-provider"
+import { ThemeProvider, themeStorageKey, useTheme } from "./theme-provider"
 
 const listeners = new Set<() => void>()
 let systemIsDark = false
@@ -55,7 +55,7 @@ describe("ThemeProvider", () => {
   })
 
   it("restores and persists an explicit appearance", async () => {
-    window.localStorage.setItem("tanbase-theme", "light")
+    window.localStorage.setItem(themeStorageKey, "light")
     render(
       <ThemeProvider>
         <ThemeControls />
@@ -68,7 +68,7 @@ describe("ThemeProvider", () => {
     expect(document.documentElement.classList.contains("dark")).toBe(false)
 
     fireEvent.click(screen.getByRole("button"))
-    expect(window.localStorage.getItem("tanbase-theme")).toBe("dark")
+    expect(window.localStorage.getItem(themeStorageKey)).toBe("dark")
     expect(document.documentElement.classList.contains("dark")).toBe(true)
     expect(document.documentElement.style.colorScheme).toBe("dark")
   })

@@ -44,6 +44,11 @@ change note as current truth. A superseded ADR must link to its replacement.
 - Read the deployment's public origin through `publicOrigin()` in
   `src/platform/origin.ts`, or `getSiteOrigin()` in route heads. Never compile
   an origin into links, feeds, or auth ([ADR-0016](docs/decisions/0016-deploy-without-personalization.md)).
+- Read the app's name, logo, icons, and machine name from `siteConfig` in
+  `src/lib/site.ts`, and never write them anywhere else in `src/`; a test
+  fails when the template's name appears outside that file. Served text
+  templates, such as `llms.txt` and the SKILL.md, use `{{name}}` and
+  `{{origin}}` placeholders that `fillTemplate()` fills.
 - Get the session from `getSessionFromHeaders()` and Better Auth from
   `getAuth()`. Both are cached, per request and per isolate; a new Better Auth
   instance per call costs D1 reads.
@@ -79,20 +84,20 @@ change note as current truth. A superseded ADR must link to its replacement.
 | `src/lib/`            | Shared utilities: site config, health checks, asset recovery                                                                                         |
 | `src/modules/<name>/` | One feature per folder, below                                                                                                                        |
 
-| Module      | Feature                                                                               | Bindings                                     |
-| ----------- | ------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `auth`      | Better Auth, sessions, Turnstile, auth rate limits                                    | `DB`, `AUTH_LIMITER`, `TURNSTILE_SECRET_KEY` |
-| `tasks`     | Projects and tasks                                                                    | `DB`                                         |
-| `files`     | Task attachments                                                                      | `FILES`                                      |
-| `realtime`  | Live board through the `BoardRoom` Durable Object                                     | `BOARD`                                      |
-| `jobs`      | Hourly cron and reminder queue consumer                                               | `EMAIL_QUEUE`, cron trigger                  |
-| `email`     | React Email templates and `sendEmail()`                                               | `EMAIL`                                      |
-| `ai`        | Task breakdown Workflow, Workers AI, daily quota                                      | `AI`, `BREAKDOWN`, `AI_LIMITER`              |
-| `mcp`       | `/mcp` server, OAuth discovery, WebMCP tools                                          | none; uses Better Auth                       |
-| `discovery` | API catalog, AI Catalog, MCP server card, skills index                                | none                                         |
-| `seo`       | `seo()` head helper, homepage copy, sitemap, robots, `llms.txt`, Markdown negotiation | none                                         |
-| `og`        | Preview images: fixed cards drawn by the cached `OgImage` entrypoint                  | `exports.OgImage` Workers Caching            |
-| `analytics` | Optional PostHog configuration and URL scrubbing                                      | `POSTHOG_KEY` secret                         |
+| Module      | Feature                                                                                             | Bindings                                     |
+| ----------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `auth`      | Better Auth, sessions, Turnstile, auth rate limits                                                  | `DB`, `AUTH_LIMITER`, `TURNSTILE_SECRET_KEY` |
+| `tasks`     | Projects and tasks                                                                                  | `DB`                                         |
+| `files`     | Task attachments                                                                                    | `FILES`                                      |
+| `realtime`  | Live board through the `BoardRoom` Durable Object                                                   | `BOARD`                                      |
+| `jobs`      | Hourly cron and reminder queue consumer                                                             | `EMAIL_QUEUE`, cron trigger                  |
+| `email`     | React Email templates and `sendEmail()`                                                             | `EMAIL`                                      |
+| `ai`        | Task breakdown Workflow, Workers AI, daily quota                                                    | `AI`, `BREAKDOWN`, `AI_LIMITER`              |
+| `mcp`       | `/mcp` server, OAuth discovery, WebMCP tools                                                        | none; uses Better Auth                       |
+| `discovery` | API catalog, AI Catalog, MCP server card, skills index                                              | none                                         |
+| `seo`       | `seo()` head helper, homepage copy, sitemap, robots, `llms.txt`, web manifest, Markdown negotiation | none                                         |
+| `og`        | Preview images: fixed cards drawn by the cached `OgImage` entrypoint                                | `exports.OgImage` Workers Caching            |
+| `analytics` | Optional PostHog configuration and URL scrubbing                                                    | `POSTHOG_KEY` secret                         |
 
 `files`, `realtime`, `jobs`, `ai`, `mcp`, and `og` are optional modules that
 a fork can remove; [module removal](docs/MODULE_REMOVAL.md) lists what each takes

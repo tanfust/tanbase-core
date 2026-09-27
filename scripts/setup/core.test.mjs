@@ -10,13 +10,13 @@ import {
   normalizeOrigin,
   r2Unavailable,
   parseArguments,
+  updateSiteIdentity,
   readWranglerInstallation,
   resolveTurnstileSiteKey,
   selectAccount,
   selectDatabase,
   sendingDomainEnabled,
   setupPlan,
-  updateLlmsOrigin,
   updateSiteOrigin,
   updateWranglerInstallation,
 } from "./core.mjs"
@@ -90,6 +90,8 @@ test("derives a valid default Worker name from a directory", () => {
 test("parses setup arguments with remote setup defaults", () => {
   assert.deepEqual(parseArguments([], "my-app"), {
     accountId: null,
+    appDescription: null,
+    appName: null,
     dryRun: false,
     help: false,
     localOnly: false,
@@ -108,9 +110,15 @@ test("parses explicit safe automation options", () => {
       "--account-id",
       "account-1",
       "--reuse-existing",
+      "--app-name",
+      " Acme Tasks ",
+      "--description",
+      "Tasks for Acme.",
     ]),
     {
       accountId: "account-1",
+      appDescription: "Tasks for Acme.",
+      appName: "Acme Tasks",
       dryRun: false,
       help: false,
       localOnly: false,
@@ -394,18 +402,6 @@ test("canonical origin helpers reject paths and update both sources", () => {
     ),
     /origin: "https:\/\/new\.example\.com"/
   )
-  assert.equal(
-    updateLlmsOrigin(
-      "# Product\n- Production origin: https://old.example.com/\n" +
-        "- [MCP server](https://old.example.com/mcp): Tasks\n",
-      "https://new.example.com/"
-    ),
-    "# Product\n- Production origin: https://new.example.com/\n" +
-      "- [MCP server](https://new.example.com/mcp): Tasks\n"
-  )
-  assert.throws(() =>
-    updateLlmsOrigin("# Product\n", "https://new.example.com")
-  )
 })
 
 test("secret detection checks names without exposing values", () => {
@@ -446,4 +442,30 @@ test("captured commands keep stdout JSON separate from stderr warnings", async (
 
   assert.equal(result.output, '{"ok":true}')
   assert.equal(result.errorOutput, "warning")
+})
+
+test("renames the app in the site config, leaving the author alone", () => {
+  const source = `export const siteConfig: SiteConfig = {
+  name: "TanBase Core",
+  shortName: "TanBase",
+  tagline: "TanStack Start on Cloudflare Workers",
+  description:
+    "An open-source foundation.",
+  id: "tanbase-core",
+  author: { name: "Tanfust", url: "https://github.com/tanfust" },
+}`
+
+  const renamed = updateSiteIdentity(source, {
+    name: 'Acme "Tasks"',
+    description: "Tasks for Acme.",
+    id: "acme-tasks",
+  })
+
+  assert.match(renamed, /^  name: "Acme \\"Tasks\\"",$/m)
+  assert.match(renamed, /^  shortName: "Acme \\"Tasks\\"",$/m)
+  assert.match(renamed, /^  id: "acme-tasks",$/m)
+  assert.match(renamed, /description:\n    "Tasks for Acme\.",/)
+  assert.match(renamed, /author: \{ name: "Tanfust"/)
+  assert.equal(updateSiteIdentity(source, {}), source)
+  assert.throws(() => updateSiteIdentity("const x = {}", { name: "Acme" }))
 })

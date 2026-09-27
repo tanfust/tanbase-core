@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 
+import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -34,8 +35,7 @@ export const Route = createFileRoute("/forgot-password")({
   head: () =>
     seo({
       title: "Reset your password",
-      description:
-        "Request a password reset link for your TanBase Core account.",
+      description: `Request a password reset link for your ${siteConfig.name} account.`,
       noindex: true,
     }),
   component: ForgotPasswordPage,

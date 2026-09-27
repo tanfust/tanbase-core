@@ -1,3 +1,5 @@
+import { siteConfig } from "@/lib/site"
+
 /** The size Open Graph and X recommend for large preview images. */
 export const ogImageSize = { width: 1200, height: 630 } as const
 
@@ -8,7 +10,7 @@ export const ogImageSize = { width: 1200, height: 630 } as const
  */
 export const ogCards = {
   home: {
-    alt: "TanBase Core: A task board that proves the whole stack works.",
+    alt: `${siteConfig.name}: A task board that proves the whole stack works.`,
   },
 } as const satisfies Record<string, { alt: string }>
 

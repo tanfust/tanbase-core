@@ -116,7 +116,7 @@ Edit:
 - `e2e/app.spec.ts`: the two-device test.
 - Copy that says tasks appear live: `src/modules/mcp/tool-definitions.ts`,
   which feeds `tools/list`, the server card, and WebMCP, and
-  `src/modules/discovery/skills/tanbase-tasks/SKILL.md`.
+  `src/modules/discovery/skills/tasks/SKILL.md`.
 - Public copy in `src/modules/seo/homepage.ts` (live-board row, Durable
   Objects allowance, Worker card) and `src/modules/seo/llms.txt`.
 - Docs: `README.md`, `AGENTS.md`, `docs/OVERVIEW.md` (primitive map, budgets,

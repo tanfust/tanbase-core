@@ -45,12 +45,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       // Routes opt in to indexing, with a canonical URL, through seo().
       defaultRobots,
+      { name: "theme-color", content: siteConfig.themeColor },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", href: siteConfig.icons.favicon, sizes: "48x48" },
+      {
+        rel: "icon",
+        href: siteConfig.icons.png,
+        sizes: "96x96",
+        type: "image/png",
+      },
+      { rel: "apple-touch-icon", href: siteConfig.icons.appleTouch },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   errorComponent: ErrorPage,

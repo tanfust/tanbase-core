@@ -13,6 +13,8 @@ import {
   Text,
 } from "react-email"
 
+import { siteConfig } from "@/lib/site"
+
 import type {
   MagicLinkProps,
   ResetPasswordProps,
@@ -120,7 +122,7 @@ function EmailShell({
       <Preview>{preview}</Preview>
       <Body style={styles.body}>
         <Container style={styles.container}>
-          <Text style={styles.eyebrow}>TanBase Core</Text>
+          <Text style={styles.eyebrow}>{siteConfig.name}</Text>
           <Heading style={styles.heading}>{title}</Heading>
           {children}
           <Section style={styles.section}>
@@ -216,7 +218,7 @@ export function TaskReminder({
     <EmailShell
       actionLabel="View task"
       actionUrl={taskUrl}
-      footer="TanBase sends one reminder when a task is due within a day. Mark the task done or clear its due date to skip it."
+      footer={`${siteConfig.shortName} sends one reminder when a task is due within a day. Mark the task done or clear its due date to skip it.`}
       preview={`Reminder: ${taskTitle}`}
       title="Task reminder"
     >

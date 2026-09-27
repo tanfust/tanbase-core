@@ -60,14 +60,14 @@ const documents = new Map<string, Document>([
   [
     skillsIndexPath,
     {
-      body: async () => json(await createSkillsIndex()),
+      body: async (origin) => json(await createSkillsIndex(origin)),
       contentType: "application/json",
     },
   ],
   ...skills.map((skill): [string, Document] => [
     skill.path,
     {
-      body: () => skill.content,
+      body: (origin) => skill.content(origin),
       contentType: "text/markdown; charset=utf-8",
     },
   ]),
