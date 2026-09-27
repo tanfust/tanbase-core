@@ -43,6 +43,17 @@ function logEmail(
   return { delivery: "logged", id: null }
 }
 
+/**
+ * Whether this deployment can deliver email: a sender address and the Email
+ * Service binding. Without both, messages are logged as metadata only.
+ */
+export function isEmailDeliveryConfigured(environment: {
+  EMAIL_FROM?: string
+  EMAIL?: unknown
+}): boolean {
+  return Boolean(environment.EMAIL_FROM && environment.EMAIL)
+}
+
 export function createEmailSender(
   dependencies: EmailSenderDependencies
 ): (input: SendEmailInput) => Promise<EmailDeliveryResult> {

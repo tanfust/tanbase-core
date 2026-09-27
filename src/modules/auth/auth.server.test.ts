@@ -9,11 +9,12 @@ import { createAuth } from "./auth.server"
 const baseURL = "http://localhost:3000"
 const testSecret = "test-only-secret-that-is-at-least-32-characters"
 
-function createTestAuth() {
+function createTestAuth({ emailDelivery = true } = {}) {
   const deliveries: SendEmailInput[] = []
   const pending: Promise<unknown>[] = []
   const auth = createAuth({
     database: env.DB,
+    emailDelivery,
     environment: {
       APP_ENV: "local",
       BETTER_AUTH_SECRET: testSecret,
@@ -143,6 +144,72 @@ describe("Better Auth D1 core", () => {
       .first<{ count: number }>()
     expect(signUps?.count).toBe(0)
     expect(deliveries).toHaveLength(0)
+  })
+
+  it("lets new accounts in without verification when email is not delivered", async () => {
+    const { auth, deliveries, flushDeliveries } = createTestAuth({
+      emailDelivery: false,
+    })
+    const email = `unverified-${crypto.randomUUID()}@example.com`
+
+    const signUpResponse = await auth.handler(
+      authRequest("/sign-up/email", {
+        callbackURL: "/app",
+        email,
+        name: "Fresh Fork",
+        password: "fresh-fork-password-123",
+      })
+    )
+    expect(signUpResponse.status).toBe(200)
+    const cookie = sessionCookie(signUpResponse)
+
+    await flushDeliveries()
+    expect(deliveries).toEqual([])
+
+    const sessionResponse = await auth.handler(
+      authRequest("/get-session", undefined, cookie)
+    )
+    const session = await sessionResponse.json<{
+      user: { email: string; emailVerified: boolean }
+    } | null>()
+    expect(session?.user.email).toBe(email)
+    expect(session?.user.emailVerified).toBe(false)
+  })
+
+  it("uses the request's origin when no public origin is configured", async () => {
+    const auth = createAuth({
+      database: env.DB,
+      emailDelivery: false,
+      environment: {
+        APP_ENV: "production",
+        BETTER_AUTH_SECRET: testSecret,
+        DB: env.DB,
+      },
+      origin: "https://fresh-fork.example.workers.dev",
+    })
+
+    expect(auth.options.baseURL).toBe("https://fresh-fork.example.workers.dev")
+    expect(() =>
+      createAuth({
+        database: env.DB,
+        environment: {
+          APP_ENV: "production",
+          BETTER_AUTH_SECRET: testSecret,
+          DB: env.DB,
+        },
+      })
+    ).toThrow("Authentication is not configured")
+    expect(() =>
+      createAuth({
+        database: env.DB,
+        environment: {
+          APP_ENV: "production",
+          BETTER_AUTH_SECRET: testSecret,
+          BETTER_AUTH_URL: "not a url",
+          DB: env.DB,
+        },
+      })
+    ).toThrow("Authentication is not configured")
   })
 
   it("supports the verified email, session, sign-out, and reset journey", async () => {

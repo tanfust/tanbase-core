@@ -182,6 +182,25 @@ describe("reminder consumer", () => {
     expect(sent).toHaveLength(1)
   })
 
+  it("skips reminders unclaimed when no public origin is configured", async () => {
+    const owner = await createUser()
+    const task = await dueTask(owner, Date.UTC(2032, 2, 10, 12))
+    const body = { taskId: task.id, dueAt: task.dueAt }
+    const { send, sent } = recorder()
+    const batch = batchOf([{ id: "no-origin", body }])
+
+    await processReminderBatch(batch, {
+      appOrigin: null,
+      database: env.DB,
+      send,
+    })
+    const result = await getQueueResult(batch, createExecutionContext())
+
+    expect(sent).toEqual([])
+    expect(result.explicitAcks).toEqual(["no-origin"])
+    expect((await getTask(owner, task.id, env.DB))?.reminderSentAt).toBeNull()
+  })
+
   it("releases the claim and retries when delivery fails", async () => {
     const owner = await createUser()
     const task = await dueTask(owner, Date.UTC(2032, 1, 10, 12))

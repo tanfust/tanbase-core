@@ -27,6 +27,7 @@ Accepted decisions:
 - [ADR-0013: Workers AI model and gateway for task breakdown](0013-workers-ai-model-and-gateway.md)
 - [ADR-0014: MCP over OAuth 2.1 with Better Auth and the official MCP SDK](0014-mcp-oauth-with-better-auth.md)
 - [ADR-0015: The Worker serves agent discovery and Markdown](0015-worker-served-agent-discovery.md)
+- [ADR-0016: A deployment works without personalization](0016-deploy-without-personalization.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

@@ -4,18 +4,26 @@ import { betterAuth } from "better-auth"
 import { captcha, jwt } from "better-auth/plugins"
 import { tanstackStartCookies } from "better-auth/tanstack-start"
 
-import { sendEmail } from "@/modules/email/send-email.server"
+import {
+  isEmailDeliveryConfigured,
+  sendEmail,
+} from "@/modules/email/send-email.server"
 import type { SendEmailInput } from "@/modules/email/types"
 import { ensureDefaultProject } from "@/modules/tasks/repository.server"
 import { log } from "@/platform/log"
+import { configuredOrigin } from "@/platform/origin"
+import { getRequestContext } from "@/platform/request-context"
 
 import { getAuthDatabase } from "./repository.server"
 
 interface AuthEnvironment {
   APP_ENV: "local" | "production"
   BETTER_AUTH_SECRET?: string
-  BETTER_AUTH_URL: string
+  /** The public origin. Unset, auth uses the origin of the current request. */
+  BETTER_AUTH_URL?: string
   DB: D1Database
+  EMAIL?: unknown
+  EMAIL_FROM?: string
   TURNSTILE_SECRET_KEY?: string
   TURNSTILE_SITE_KEY?: string
 }
@@ -32,7 +40,15 @@ export const captchaProtectedEndpoints = [
 interface AuthDependencies {
   database?: D1Database
   defer?: (promise: Promise<unknown>) => void
+  /**
+   * Whether email can be delivered. With it, new accounts must verify their
+   * address; without it, they sign in straight away. Defaults to whether the
+   * sender address and the Email Service binding are both configured.
+   */
+  emailDelivery?: boolean
   environment?: AuthEnvironment
+  /** The public origin, when there is no request context, as in tests. */
+  origin?: string
   send?: (input: SendEmailInput) => Promise<unknown>
 }
 
@@ -49,13 +65,13 @@ export const oauthConsentPage = "/oauth/consent"
 // Claude (ADR-0014). The JWT plugin signs the audience-bound access tokens and
 // serves the JWKS that /mcp verifies them with. Clients register through
 // Dynamic Client Registration, rate-limited in the auth route.
-function mcpPlugins(environment: AuthEnvironment) {
+function mcpPlugins(origin: string) {
   return [
     jwt(),
     mcp({
       loginPage: oauthLoginPage,
       consentPage: oauthConsentPage,
-      resource: mcpResource(environment.BETTER_AUTH_URL),
+      resource: mcpResource(origin),
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true,
     }),
@@ -75,12 +91,6 @@ function validateAuthEnvironment(environment: AuthEnvironment) {
     throw new Error("Authentication is not configured")
   }
 
-  try {
-    new URL(environment.BETTER_AUTH_URL)
-  } catch {
-    throw new Error("Authentication is not configured")
-  }
-
   // A configured site key means the challenge is required, so a missing
   // secret fails closed instead of silently disabling bot protection.
   if (environment.TURNSTILE_SITE_KEY && !environment.TURNSTILE_SECRET_KEY) {
@@ -88,7 +98,26 @@ function validateAuthEnvironment(environment: AuthEnvironment) {
   }
 }
 
-function captchaPlugins(environment: AuthEnvironment) {
+/**
+ * The origin auth issues cookies, links, and tokens for: the configured
+ * public origin, or the one the request arrived on.
+ */
+function resolveAuthOrigin(
+  environment: AuthEnvironment,
+  explicit?: string
+): string {
+  let origin: string | null | undefined = explicit
+  try {
+    origin ??= configuredOrigin(environment.BETTER_AUTH_URL)
+  } catch {
+    throw new Error("Authentication is not configured")
+  }
+  origin ??= getRequestContext()?.origin
+  if (!origin) throw new Error("Authentication is not configured")
+  return origin
+}
+
+function captchaPlugins(environment: AuthEnvironment, origin: string) {
   if (!environment.TURNSTILE_SITE_KEY || !environment.TURNSTILE_SECRET_KEY) {
     return []
   }
@@ -101,7 +130,7 @@ function captchaPlugins(environment: AuthEnvironment) {
       // Test keys report a placeholder hostname, so only production pins it.
       allowedHostnames:
         environment.APP_ENV === "production"
-          ? [new URL(environment.BETTER_AUTH_URL).hostname]
+          ? [new URL(origin).hostname]
           : undefined,
     }),
   ]
@@ -110,6 +139,9 @@ function captchaPlugins(environment: AuthEnvironment) {
 export function createAuth(dependencies: AuthDependencies = {}) {
   const environment = dependencies.environment ?? getAuthEnvironment()
   validateAuthEnvironment(environment)
+  const origin = resolveAuthOrigin(environment, dependencies.origin)
+  const emailDelivery =
+    dependencies.emailDelivery ?? isEmailDeliveryConfigured(environment)
 
   const database = dependencies.database ?? environment.DB
   const defer = dependencies.defer ?? waitUntil
@@ -122,7 +154,7 @@ export function createAuth(dependencies: AuthDependencies = {}) {
 
   return betterAuth({
     appName: "TanBase Core",
-    baseURL: environment.BETTER_AUTH_URL,
+    baseURL: origin,
     secret: environment.BETTER_AUTH_SECRET,
     database: getAuthDatabase(database),
     advanced: {
@@ -156,7 +188,9 @@ export function createAuth(dependencies: AuthDependencies = {}) {
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      // Verification needs email. A deployment without delivery lets new
+      // accounts in straight away; set up Email Service to require it.
+      requireEmailVerification: emailDelivery,
       sendResetPassword: ({ user: authUser, url }) =>
         deliver({
           to: authUser.email,
@@ -171,7 +205,7 @@ export function createAuth(dependencies: AuthDependencies = {}) {
     },
     emailVerification: {
       expiresIn: 60 * 60,
-      sendOnSignUp: true,
+      sendOnSignUp: emailDelivery,
       sendVerificationEmail: ({ user: authUser, url }) =>
         deliver({
           to: authUser.email,
@@ -195,8 +229,8 @@ export function createAuth(dependencies: AuthDependencies = {}) {
     },
     // tanstackStartCookies() must remain the last plugin.
     plugins: [
-      ...captchaPlugins(environment),
-      ...mcpPlugins(environment),
+      ...captchaPlugins(environment, origin),
+      ...mcpPlugins(origin),
       tanstackStartCookies(),
     ],
   })

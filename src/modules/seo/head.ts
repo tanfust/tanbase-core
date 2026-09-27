@@ -13,6 +13,8 @@ interface SeoCommon {
 interface IndexablePage extends SeoCommon {
   /** Canonical path. Every page search engines may index names one. */
   path: string
+  /** The deployment's public origin, from `getSiteOrigin()`. */
+  origin: string
   noindex?: false
   /** A schema.org object, rendered as JSON-LD. */
   structuredData?: LdJsonObject
@@ -22,6 +24,7 @@ interface NoindexPage extends SeoCommon {
   /** Keeps the page out of search results; it gets no canonical URL. */
   noindex: true
   path?: never
+  origin?: never
   structuredData?: never
 }
 
@@ -63,7 +66,7 @@ export function seo(options: SeoOptions) {
     return { meta: [...meta, defaultRobots], links: [], scripts: [] }
   }
 
-  const url = canonicalUrl(options.path)
+  const url = canonicalUrl(options.path, options.origin)
   return {
     meta: [
       ...meta,
@@ -91,13 +94,13 @@ export function jsonLd(data: LdJsonObject): string {
 }
 
 /** The repository itself, described for search engines on the homepage. */
-export function softwareSourceCode(): LdJsonObject {
+export function softwareSourceCode(origin: string): LdJsonObject {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareSourceCode",
     name: siteConfig.name,
     description: siteConfig.description,
-    url: canonicalUrl(),
+    url: canonicalUrl("/", origin),
     codeRepository: siteConfig.sourceRepository,
     programmingLanguage: "TypeScript",
     runtimePlatform: "Cloudflare Workers",

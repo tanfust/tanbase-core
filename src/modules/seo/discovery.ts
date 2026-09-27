@@ -4,13 +4,18 @@ export const contentSignal = "ai-train=no, search=yes, ai-input=yes" as const
 
 export const discoveryCacheControl = "public, max-age=300" as const
 
-export const discoveryLinks = [
-  `<${canonicalUrl("/llms.txt")}>; rel="describedby"; type="text/markdown"`,
-  `<${canonicalUrl("/sitemap.xml")}>; rel="related"; type="application/xml"`,
-  `<${canonicalUrl("/.well-known/api-catalog")}>; rel="api-catalog"; type="application/linkset+json"`,
-] as const
+export function discoveryLinks(origin: string): string[] {
+  return [
+    `<${canonicalUrl("/llms.txt", origin)}>; rel="describedby"; type="text/markdown"`,
+    `<${canonicalUrl("/sitemap.xml", origin)}>; rel="related"; type="application/xml"`,
+    `<${canonicalUrl("/.well-known/api-catalog", origin)}>; rel="api-catalog"; type="application/linkset+json"`,
+  ]
+}
 
-const publicUrls = [canonicalUrl("/")] as const
+/** The pages search engines may index: only the homepage. */
+export function publicUrls(origin: string): string[] {
+  return [canonicalUrl("/", origin)]
+}
 
 export function escapeXml(value: string): string {
   return value
@@ -21,7 +26,7 @@ export function escapeXml(value: string): string {
     .replaceAll("'", "&apos;")
 }
 
-export function createSitemapXml(urls: readonly string[] = publicUrls): string {
+export function createSitemapXml(urls: readonly string[]): string {
   const entries = urls
     .map((url) => `  <url>\n    <loc>${escapeXml(url)}</loc>\n  </url>`)
     .join("\n")
@@ -35,7 +40,7 @@ export function createSitemapXml(urls: readonly string[] = publicUrls): string {
   ].join("\n")
 }
 
-export function createRobotsTxt(environment: string): string {
+export function createRobotsTxt(environment: string, origin: string): string {
   const production = environment === "production"
   const lines = [
     "User-agent: *",
@@ -44,7 +49,7 @@ export function createRobotsTxt(environment: string): string {
   ]
 
   if (production) {
-    lines.push("", `Sitemap: ${canonicalUrl("/sitemap.xml")}`)
+    lines.push("", `Sitemap: ${canonicalUrl("/sitemap.xml", origin)}`)
   }
 
   return `${lines.join("\n")}\n`
@@ -52,7 +57,8 @@ export function createRobotsTxt(environment: string): string {
 
 export function addHomepageDiscoveryHeaders(
   request: Request,
-  response: Response
+  response: Response,
+  origin: string
 ): Response {
   const { pathname } = new URL(request.url)
   const contentType = response.headers.get("Content-Type") ?? ""
@@ -66,7 +72,7 @@ export function addHomepageDiscoveryHeaders(
 
   const decoratedResponse = new Response(response.body, response)
 
-  for (const link of discoveryLinks) {
+  for (const link of discoveryLinks(origin)) {
     decoratedResponse.headers.append("Link", link)
   }
 

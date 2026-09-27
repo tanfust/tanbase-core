@@ -1,7 +1,7 @@
 ---
 status: active
 audience: maintainers, operators, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-27
 ---
 
 # Deployment runbook
@@ -242,9 +242,15 @@ from `oauth_client` revokes that client and its tokens.
 
 ### Better Auth
 
-The production URL is committed as `BETTER_AUTH_URL`; the secret is not. Create
-a unique production secret of at least 32 characters and store it as the
-Worker secret `BETTER_AUTH_SECRET` in Cloudflare. For a manual setup:
+`BETTER_AUTH_URL` pins the public origin. TanBase commits its own; left empty,
+the Worker uses the origin each request arrives on, so a fresh deployment
+works on its `workers.dev` URL. Set it once the installation has one
+canonical hostname, such as a custom domain, and before enabling due-date
+reminders, which run without a request ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
+
+The secret is never committed. Create a unique production secret of at least
+32 characters and store it as the Worker secret `BETTER_AUTH_SECRET` in
+Cloudflare. For a manual setup:
 
 ```sh
 pnpm exec wrangler secret put BETTER_AUTH_SECRET --env production
@@ -304,6 +310,12 @@ that one sender through `allowed_sender_addresses`.
 While it is empty, the module records only non-sensitive delivery metadata and
 does not send. The local configuration has no `EMAIL` binding, so local
 development never sends.
+
+Email delivery also decides whether sign-up needs verification. With the
+`EMAIL` binding and `EMAIL_FROM` both set, new accounts must verify their
+address. Without them, new accounts sign in straight away and the reset page
+says reset links cannot be emailed. Set up email before a public launch:
+unverified sign-up can reveal which addresses have accounts.
 
 The binding fails to deploy on accounts without Email Sending, so the guided
 installer removes it and clears `EMAIL_FROM` unless the account has the

@@ -8,11 +8,23 @@ import { GitHubMark } from "@/components/landing/github-mark"
 import { PrimitiveMap } from "@/components/landing/primitive-map"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { siteConfig } from "@/lib/site"
+import { getSiteOrigin } from "@/modules/seo/functions"
 import { seo, softwareSourceCode } from "@/modules/seo/head"
 import { homepage } from "@/modules/seo/homepage"
 
 export const Route = createFileRoute("/")({
-  head: () => seo({ path: "/", structuredData: softwareSourceCode() }),
+  // The origin changes only with configuration, so load it once per visit.
+  loader: () => getSiteOrigin(),
+  staleTime: Number.POSITIVE_INFINITY,
+  head: ({ loaderData }) => {
+    const origin = loaderData?.origin ?? siteConfig.origin
+    return seo({
+      path: "/",
+      origin,
+      structuredData: softwareSourceCode(origin),
+    })
+  },
   component: App,
 })
 

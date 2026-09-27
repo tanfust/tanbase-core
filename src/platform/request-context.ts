@@ -5,6 +5,8 @@ export interface RequestContext {
   requestId: string
   /** Per-response CSP nonce for server-rendered inline scripts. */
   nonce: string
+  /** The origin this request arrived on, such as https://example.workers.dev. */
+  origin: string
 }
 
 const storage = new AsyncLocalStorage<RequestContext>()

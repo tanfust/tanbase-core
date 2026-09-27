@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { MailCheckIcon } from "lucide-react"
 
 import { AuthShell } from "@/components/auth/auth-shell"
@@ -48,8 +48,9 @@ export const Route = createFileRoute("/sign-up")({
 
 function SignUpPage() {
   const { redirect } = Route.useSearch()
-  const { turnstileSiteKey } = Route.useLoaderData()
+  const { turnstileSiteKey, emailDelivery } = Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
+  const navigate = useNavigate()
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -86,6 +87,12 @@ function SignUpPage() {
     captcha.reset()
     if (result.error) {
       setError(authErrorMessage(result.error, "Unable to create the account"))
+      return
+    }
+    // Without email delivery there is nothing to verify: the account is
+    // signed in, so go straight to the board.
+    if (!emailDelivery) {
+      await navigate({ to: redirectTarget })
       return
     }
     setSubmitted(true)

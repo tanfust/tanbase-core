@@ -24,6 +24,7 @@ import {
   readAnalyticsConfig,
 } from "@/platform/analytics"
 import { log } from "@/platform/log"
+import { requirePublicOrigin } from "@/platform/origin"
 import { runWithRequestContext } from "@/platform/request-context"
 import { applySecurityHeaders, createNonce } from "@/platform/security-headers"
 
@@ -32,16 +33,11 @@ export { BoardRoom } from "@/modules/realtime/board-room.server"
 
 const realtimePath = /^\/api\/realtime\/([^/]+)$/
 
-/** This deployment's public origin, which OAuth and MCP identifiers use. */
-function appOrigin() {
-  return new URL(env.BETTER_AUTH_URL).origin
-}
-
 // WebSocket upgrades go straight to the room so TanStack never wraps the 101.
 async function realtimeResponse(request: Request, projectId: string) {
   const session = await getSessionFromHeaders(request.headers)
   return handleRealtimeUpgrade(request, decodeURIComponent(projectId), {
-    appOrigin: appOrigin(),
+    appOrigin: requirePublicOrigin(),
     namespace: getBoardNamespace(),
     ownsProject: async (userId, id) => (await getProject(userId, id)) !== null,
     userId: session?.user.id ?? null,
@@ -65,8 +61,8 @@ async function route(request: Request, pathname: string): Promise<Response> {
   if (realtime) return realtimeResponse(request, realtime[1])
   return (
     (await oauthDiscoveryResponse(request)) ??
-    (await discoveryResponse(request, appOrigin())) ??
-    markdownPageResponse(request) ??
+    (await discoveryResponse(request, requirePublicOrigin())) ??
+    markdownPageResponse(request, requirePublicOrigin()) ??
     handler.fetch(asPageRequest(request))
   )
 }
@@ -86,7 +82,9 @@ export default {
     const requestId = request.headers.get("cf-ray") ?? crypto.randomUUID()
     const nonce = createNonce()
 
-    return runWithRequestContext({ nonce, requestId }, async () => {
+    const origin = new URL(request.url).origin
+
+    return runWithRequestContext({ nonce, origin, requestId }, async () => {
       const { pathname } = new URL(request.url)
       const cors = isCorsPath(pathname)
       let response: Response
@@ -106,7 +104,7 @@ export default {
       if (response.webSocket) return response
 
       const secured = applySecurityHeaders(
-        addHomepageDiscoveryHeaders(request, response),
+        addHomepageDiscoveryHeaders(request, response, requirePublicOrigin()),
         {
           connectSources: [
             socketOrigin(request),

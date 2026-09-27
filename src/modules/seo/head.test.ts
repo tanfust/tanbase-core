@@ -30,17 +30,19 @@ describe("document titles", () => {
   })
 })
 
+// A fork's origin, so each test proves the runtime origin is used.
+const origin = "https://fork.example.workers.dev"
+
 describe("seo() for indexable pages", () => {
   const head = seo({
     path: "/",
+    origin,
     description: "A description.",
-    structuredData: softwareSourceCode(),
+    structuredData: softwareSourceCode(origin),
   })
 
   it("emits one canonical link on the production origin", () => {
-    expect(head.links).toEqual([
-      { rel: "canonical", href: `${siteConfig.origin}/` },
-    ])
+    expect(head.links).toEqual([{ rel: "canonical", href: `${origin}/` }])
   })
 
   it("allows indexing and mirrors the page in Open Graph", () => {
@@ -52,7 +54,7 @@ describe("seo() for indexable pages", () => {
       "A description."
     )
     expect(metaContent(head.meta, "property", "og:url")?.content).toBe(
-      `${siteConfig.origin}/`
+      `${origin}/`
     )
     expect(metaContent(head.meta, "property", "og:title")?.content).toBe(
       documentTitle()
@@ -69,13 +71,13 @@ describe("seo() for indexable pages", () => {
     expect(head.scripts).toEqual([
       {
         type: "application/ld+json",
-        children: jsonLd(softwareSourceCode()),
+        children: jsonLd(softwareSourceCode(origin)),
       },
     ])
   })
 
   it("defaults the description to the site description", () => {
-    const { meta } = seo({ path: "/" })
+    const { meta } = seo({ path: "/", origin })
     expect(metaContent(meta, "name", "description")?.content).toBe(
       siteConfig.description
     )
@@ -102,11 +104,11 @@ describe("seo() for noindex pages", () => {
 
 describe("SoftwareSourceCode structured data", () => {
   it("describes the public MIT repository", () => {
-    expect(softwareSourceCode()).toMatchObject({
+    expect(softwareSourceCode(origin)).toMatchObject({
       "@context": "https://schema.org",
       "@type": "SoftwareSourceCode",
       name: siteConfig.name,
-      url: `${siteConfig.origin}/`,
+      url: `${origin}/`,
       codeRepository: siteConfig.sourceRepository,
       programmingLanguage: "TypeScript",
       runtimePlatform: "Cloudflare Workers",
