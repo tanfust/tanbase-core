@@ -69,7 +69,7 @@ export function asPageRequest(request: Request): Request {
 }
 
 /** Pages with a Markdown representation, by path. */
-const markdownPages = new Map<string, () => string>([
+const markdownPages = new Map<string, (origin: string) => string>([
   ["/", createHomepageMarkdown],
 ])
 
@@ -79,13 +79,16 @@ export function estimateTokens(text: string): number {
 }
 
 /** The Markdown representation of a page when the client prefers it. */
-export function markdownPageResponse(request: Request): Response | null {
+export function markdownPageResponse(
+  request: Request,
+  origin: string
+): Response | null {
   if (!isPageRequest(request)) return null
   if (!prefersMarkdown(request.headers.get("Accept"))) return null
   const render = markdownPages.get(new URL(request.url).pathname)
   if (!render) return null
 
-  const markdown = render()
+  const markdown = render(origin)
   return new Response(request.method === "HEAD" ? null : markdown, {
     headers: {
       "Cache-Control": discoveryCacheControl,

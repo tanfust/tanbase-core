@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 
 import { AuthShell } from "@/components/auth/auth-shell"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/forgot-password")({
 
 function ForgotPasswordPage() {
   const { redirect } = Route.useSearch()
-  const { turnstileSiteKey } = Route.useLoaderData()
+  const { turnstileSiteKey, emailDelivery } = Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +72,15 @@ function ForgotPasswordPage() {
 
   return (
     <AuthShell>
+      {!emailDelivery && (
+        <Alert>
+          <AlertTitle>This deployment does not send email</AlertTitle>
+          <AlertDescription>
+            A reset link cannot be emailed until email delivery is set up. If
+            you are signed in, change your password in Settings.
+          </AlertDescription>
+        </Alert>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Reset your password</CardTitle>

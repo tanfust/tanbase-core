@@ -151,7 +151,10 @@ BETTER_AUTH_SECRET=<generate-a-development-secret>
 
 Generate the value locally with a cryptographically secure password generator;
 never copy a production secret into local development. `BETTER_AUTH_URL` is
-already `http://localhost:3000` in the base Wrangler configuration.
+already `http://localhost:3000` in the base Wrangler configuration. Server
+code reads the public origin through `publicOrigin()` in
+`src/platform/origin.ts`, which falls back to the request's origin when
+`BETTER_AUTH_URL` is empty.
 
 Local development and the browser suite use Cloudflare's always-pass Turnstile
 test site key from the base Wrangler configuration. Add its paired test secret
@@ -172,7 +175,8 @@ pnpm dev
 ```
 
 With `EMAIL_FROM` empty, verification and reset messages use the safe metadata
-fallback and do not expose their links. Workers-runtime tests inject a fake
+fallback and do not expose their links, and new accounts need no
+verification: sign-up signs them in and opens the board. Workers-runtime tests inject a fake
 sender and exercise the complete core flow without real delivery. The browser
 suite uses `wrangler.e2e.jsonc`, port `3110`, and `.wrangler/e2e-state`; it
 prepares one verified account only in that isolated local D1 database and reads

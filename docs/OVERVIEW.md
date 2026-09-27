@@ -78,7 +78,8 @@ Subtasks are tasks with a `parent_id`.
 
 ### User flow
 
-1. Sign up with email and password, verify the address, and sign in.
+1. Sign up with email and password, verify the address, and sign in. Without
+   email delivery configured, sign-up signs the account in directly.
 2. Land on a default project board with todo, doing, and done columns.
 3. Create, edit, delete, and move tasks through explicit controls. Set notes and due dates.
 4. Create, rename, switch, and delete projects from a responsive desktop or mobile shell.
@@ -249,6 +250,8 @@ CLAUDE.md
 - `tanstackStartCookies()` is the last plugin in the array.
 - The protected area is a pathless `_app` layout that checks the session in `beforeLoad`.
 - Core methods are email and password with verification and password reset.
+  Verification is required only when email delivery is configured
+  ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
   Magic link and Google are left to forks: Better Auth adds both through
   plugins, and the email module already renders a magic-link template.
 - Sessions and one-time verification state remain in D1. Cloudflare KV is not

@@ -58,7 +58,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const search = Route.useSearch()
-  const { turnstileSiteKey } = Route.useLoaderData()
+  const { turnstileSiteKey, emailDelivery } = Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
@@ -145,7 +145,11 @@ function LoginPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Sign in with your verified email.</CardDescription>
+          <CardDescription>
+            {emailDelivery
+              ? "Sign in with your verified email."
+              : "Sign in with your email and password."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form method="post" onSubmit={submit}>

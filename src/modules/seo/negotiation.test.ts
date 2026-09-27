@@ -21,6 +21,9 @@ function request(path: string, accept?: string, method = "GET") {
   })
 }
 
+// A fork's origin, so each test proves the runtime origin is used.
+const origin = "https://fork.example.workers.dev"
+
 describe("Markdown preference", () => {
   it.each([
     ["text/markdown", true],
@@ -75,8 +78,8 @@ describe("page requests", () => {
 
 describe("Markdown pages", () => {
   it("serves the homepage as Markdown with the negotiation headers", async () => {
-    const response = markdownPageResponse(request("/", "text/markdown"))
-    const markdown = createHomepageMarkdown()
+    const response = markdownPageResponse(request("/", "text/markdown"), origin)
+    const markdown = createHomepageMarkdown(origin)
 
     expect(response?.status).toBe(200)
     expect(response?.headers.get("Content-Type")).toBe(
@@ -92,7 +95,10 @@ describe("Markdown pages", () => {
   })
 
   it("answers HEAD without a body", async () => {
-    const response = markdownPageResponse(request("/", "text/markdown", "HEAD"))
+    const response = markdownPageResponse(
+      request("/", "text/markdown", "HEAD"),
+      origin
+    )
     expect(response?.headers.get("Content-Type")).toMatch(/^text\/markdown/)
     await expect(response?.text()).resolves.toBe("")
   })
@@ -103,11 +109,11 @@ describe("Markdown pages", () => {
     ["/login", "text/markdown"],
     ["/api/health", "text/markdown"],
   ])("does not answer %s with Accept %s", (path, accept) => {
-    expect(markdownPageResponse(request(path, accept))).toBeNull()
+    expect(markdownPageResponse(request(path, accept), origin)).toBeNull()
   })
 
   it("renders the homepage copy with absolute links", () => {
-    const markdown = createHomepageMarkdown()
+    const markdown = createHomepageMarkdown(origin)
 
     expect(markdown).toMatch(/^---\ntitle: TanBase Core\n/)
     expect(markdown).toContain(`# ${homepage.title}\n`)
@@ -116,13 +122,13 @@ describe("Markdown pages", () => {
       `[${homepage.source.label}](${homepage.source.href})`
     )
     expect(markdown).toContain(
-      `[${homepage.demo.label}](${canonicalUrl(homepage.demo.path)})`
+      `[${homepage.demo.label}](${canonicalUrl(homepage.demo.path, origin)})`
     )
     expect(markdown).not.toMatch(/<[a-z]/i)
   })
 
   it("carries the primitive map, cost model, and deploy steps", () => {
-    const markdown = createHomepageMarkdown()
+    const markdown = createHomepageMarkdown(origin)
     const { primitives, cost, deploy } = homepage
 
     expect(markdown).toContain(`## ${primitives.heading}\n`)

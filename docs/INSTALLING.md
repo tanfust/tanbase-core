@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, operators, agents
-last_verified: 2026-09-24
+last_verified: 2026-09-27
 ---
 
 # Guided installation
@@ -94,7 +94,8 @@ The default path excludes Cloudflare Email Service domain onboarding, Turnstile
 widget creation, a custom domain, Workers Builds Git integration, preview deployments,
 and future optional bindings. The setup summary states whether Turnstile is
 enabled; see the [deployment runbook](DEPLOYMENT.md) to enable it. The application logs safe email metadata while `EMAIL_FROM` is empty,
-so Email Service cannot block a fresh deployment.
+so Email Service cannot block a fresh deployment. Until email is set up, new
+accounts sign in without verifying their address.
 
 After installation, review and commit `wrangler.jsonc`, the generated Worker
 types, and canonical URL changes so later Workers Builds use the same resources.

@@ -74,9 +74,15 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByLabel("Confirm password").fill(initialPassword)
   await waitForChallenge(page)
   await page.getByRole("button", { name: "Create account" }).click()
+  // The e2e Worker has no email delivery, so a new account needs no
+  // verification and lands on its board signed in.
+  await expect(page).toHaveURL(/\/app$/)
   await expect(
-    page.getByText("Check your email", { exact: true })
+    page.getByRole("heading", { level: 1, name: "My project" })
   ).toBeVisible()
+  await page.getByRole("button", { name: new RegExp(signupEmail) }).click()
+  await page.getByRole("menuitem", { name: "Sign out" }).click()
+  await expect(page).toHaveURL(/\/login$/)
 
   await page.goto("/login")
   await waitForHydration(page)

@@ -3,14 +3,18 @@ import { env } from "cloudflare:workers"
 import { sendEmail } from "@/modules/email/send-email.server"
 import type { SendEmailInput } from "@/modules/email/types"
 import { log } from "@/platform/log"
+import { configuredOrigin } from "@/platform/origin"
 
 import { formatDueDate, reminderMessageSchema } from "./reminders"
 import { claimReminder, releaseReminder } from "./repository.server"
 import type { ClaimedReminder } from "./repository.server"
 
 interface ConsumerOptions {
-  /** Origin for links in the email; defaults to the configured auth URL. */
-  appOrigin?: string
+  /**
+   * Origin for links in the email; defaults to `BETTER_AUTH_URL`. A queue
+   * handler has no request to borrow an origin from, so reminders need it.
+   */
+  appOrigin?: string | null
   database?: D1Database
   now?: () => number
   send?: (input: SendEmailInput) => Promise<unknown>
@@ -48,12 +52,26 @@ function reminderEmail(
 export async function processReminderBatch(
   batch: MessageBatch<unknown>,
   {
-    appOrigin = new URL(env.BETTER_AUTH_URL).origin,
+    appOrigin = configuredOrigin(
+      (env as { BETTER_AUTH_URL?: string }).BETTER_AUTH_URL
+    ),
     database,
     now = Date.now,
     send = sendEmail,
   }: ConsumerOptions = {}
 ): Promise<void> {
+  if (!appOrigin) {
+    // Without a public origin the email could not link to the board. Leave
+    // every reminder unclaimed so setting BETTER_AUTH_URL later still sends
+    // the ones that are due then.
+    log.warn("Reminders skipped: set BETTER_AUTH_URL to send them.", {
+      event: "reminders.no_origin",
+      count: batch.messages.length,
+    })
+    for (const message of batch.messages) message.ack()
+    return
+  }
+
   for (const message of batch.messages) {
     const parsed = reminderMessageSchema.safeParse(message.body)
     if (!parsed.success) {

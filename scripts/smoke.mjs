@@ -118,9 +118,12 @@ assert.deepEqual(health, {
 // MCP: an unauthenticated call is challenged toward the OAuth discovery chain
 // that MCP clients such as Claude follow. Identifiers derive from the
 // configured auth URL; documents are fetched from the target under test.
-const authOrigin = new URL(
-  environmentConfig(environment).vars?.BETTER_AUTH_URL ?? url.origin
-)
+// The deployment's public origin: BETTER_AUTH_URL when the environment pins
+// one, otherwise the origin under test, as the Worker itself resolves it.
+const publicOrigin = new URL(
+  environmentConfig(environment).vars?.BETTER_AUTH_URL || url.origin
+).origin
+const authOrigin = new URL(publicOrigin)
 const mcpResource = new URL("/mcp", authOrigin).href
 const mcpChallenge = await fetchWithTimeout(new URL("/mcp", url), {
   method: "POST",
@@ -171,7 +174,7 @@ assert.deepEqual(
   [...html.matchAll(/<link[^>]+rel="canonical"[^>]*>/gi)].map(
     ([tag]) => tag.match(/href="([^"]+)"/)?.[1]
   ),
-  [`${canonicalOrigin}/`],
+  [`${publicOrigin}/`],
   "root must identify exactly one canonical production URL"
 )
 assert.match(
@@ -191,13 +194,13 @@ assert.deepEqual(
 )
 assert.equal(
   structuredData[0].url,
-  `${canonicalOrigin}/`,
+  `${publicOrigin}/`,
   "JSON-LD must name the canonical production URL"
 )
 assert.match(
   html,
   new RegExp(
-    `<meta[^>]+property="og:url"[^>]+content="${canonicalOrigin}/"[^>]*>`,
+    `<meta[^>]+property="og:url"[^>]+content="${publicOrigin}/"[^>]*>`,
     "i"
   ),
   "root must expose the canonical Open Graph URL"
@@ -328,19 +331,19 @@ if (turnstileSiteKey(environment)) {
 const rootLinks = rootResponse.headers.get("link") ?? ""
 assert.ok(
   rootLinks.includes(
-    `<${canonicalOrigin}/llms.txt>; rel="describedby"; type="text/markdown"`
+    `<${publicOrigin}/llms.txt>; rel="describedby"; type="text/markdown"`
   ),
   "root must advertise llms.txt"
 )
 assert.ok(
   rootLinks.includes(
-    `<${canonicalOrigin}/sitemap.xml>; rel="related"; type="application/xml"`
+    `<${publicOrigin}/sitemap.xml>; rel="related"; type="application/xml"`
   ),
   "root must advertise sitemap.xml"
 )
 assert.ok(
   rootLinks.includes(
-    `<${canonicalOrigin}/.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"`
+    `<${publicOrigin}/.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"`
   ),
   "root must advertise the API catalog"
 )
@@ -361,7 +364,7 @@ assert.equal(
 )
 assert.deepEqual(
   [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]),
-  [`${canonicalOrigin}/`],
+  [`${publicOrigin}/`],
   "sitemap must list only the canonical homepage"
 )
 
@@ -396,7 +399,7 @@ if (environment === "production") {
   )
   assert.match(
     robots,
-    new RegExp(`^Sitemap: ${canonicalOrigin}/sitemap\\.xml$`, "m"),
+    new RegExp(`^Sitemap: ${publicOrigin}/sitemap\\.xml$`, "m"),
     "production robots.txt must advertise the canonical sitemap"
   )
 } else {
@@ -433,11 +436,11 @@ assert.equal(
 )
 assert.match(llms, /^# TanBase Core$/m, "llms.txt must identify the product")
 assert.ok(
-  llms.includes(`${canonicalOrigin}/`),
+  llms.includes(`${publicOrigin}/`),
   "llms.txt must name the canonical production origin"
 )
 assert.ok(
-  llms.includes(`${canonicalOrigin}/mcp`),
+  llms.includes(`${publicOrigin}/mcp`),
   "llms.txt must name the MCP endpoint"
 )
 assert.ok(

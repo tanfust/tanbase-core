@@ -97,17 +97,19 @@ describe("request-scoped logging", () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined)
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined)
 
-    await runWithRequestContext(
-      { requestId: "ray-9", nonce: "n" },
-      async () => {
-        await Promise.resolve()
-        expect(getRequestContext()).toEqual({ requestId: "ray-9", nonce: "n" })
-        log.info("Email delivery logged without sending.", {
-          event: "email.logged",
-        })
-        log.error("Unhandled request error", { event: "request.failed" })
-      }
-    )
+    const context = {
+      requestId: "ray-9",
+      nonce: "n",
+      origin: "https://example.test",
+    }
+    await runWithRequestContext(context, async () => {
+      await Promise.resolve()
+      expect(getRequestContext()).toEqual(context)
+      log.info("Email delivery logged without sending.", {
+        event: "email.logged",
+      })
+      log.error("Unhandled request error", { event: "request.failed" })
+    })
     log.info("Outside a request")
 
     expect(info).toHaveBeenNthCalledWith(1, {

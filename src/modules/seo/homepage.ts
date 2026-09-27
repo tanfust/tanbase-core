@@ -195,9 +195,9 @@ export const homepage = {
 } as const
 
 /** The homepage as Markdown, for clients that ask for `text/markdown`. */
-export function createHomepageMarkdown(): string {
+export function createHomepageMarkdown(origin: string): string {
   const internal = ({ label, path }: InternalAction) =>
-    `[${label}](${canonicalUrl(path)})`
+    `[${label}](${canonicalUrl(path, origin)})`
   const external = ({ label, href }: ExternalAction) => `[${label}](${href})`
   const { primitives, cost, deploy } = homepage
 
@@ -205,7 +205,7 @@ export function createHomepageMarkdown(): string {
     "---",
     `title: ${siteConfig.name}`,
     `description: ${siteConfig.description}`,
-    `url: ${canonicalUrl()}`,
+    `url: ${canonicalUrl("/", origin)}`,
     "---",
     "",
     `# ${homepage.title}`,

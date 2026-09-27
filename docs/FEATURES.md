@@ -629,6 +629,12 @@ billing alerts. The operator can set the billing notifications at any time.
       deferral (`pnpm setup` itself is reserved by pnpm)
 - [ ] Someone outside Tanfust with a fresh Cloudflare account reaches a working deploy in under 15 minutes using only the README
 
+**Progress:** a deployment no longer needs personalization. The public origin
+resolves at runtime, and sign-up needs verification only when email delivery
+is configured ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
+Next, the top-level Wrangler configuration becomes a generic production
+configuration the button can deploy.
+
 ---
 
 ### F-024: Public launch

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { canonicalUrl, siteConfig } from "@/lib/site"
+import { canonicalUrl } from "@/lib/site"
 
 import {
   addHomepageDiscoveryHeaders,
@@ -9,24 +9,26 @@ import {
   createSitemapXml,
   discoveryLinks,
   escapeXml,
+  publicUrls,
 } from "./discovery"
 
+// A fork's origin, so each test proves the runtime origin is used.
+const origin = "https://fork.example.workers.dev"
+
 describe("site URLs", () => {
-  it("builds URLs from the canonical production origin", () => {
-    expect(canonicalUrl()).toBe(`${siteConfig.origin}/`)
-    expect(canonicalUrl("/sitemap.xml")).toBe(
-      `${siteConfig.origin}/sitemap.xml`
-    )
+  it("builds URLs on the given public origin", () => {
+    expect(canonicalUrl("/", origin)).toBe(`${origin}/`)
+    expect(canonicalUrl("/sitemap.xml", origin)).toBe(`${origin}/sitemap.xml`)
   })
 })
 
 describe("sitemap", () => {
   it("lists only the canonical homepage by default", () => {
-    expect(createSitemapXml()).toBe(
+    expect(createSitemapXml(publicUrls(origin))).toBe(
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
         `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
         `  <url>\n` +
-        `    <loc>${siteConfig.origin}/</loc>\n` +
+        `    <loc>${origin}/</loc>\n` +
         `  </url>\n` +
         `</urlset>\n`
     )
@@ -42,18 +44,18 @@ describe("sitemap", () => {
 
 describe("robots policy", () => {
   it("allows production crawling and advertises the canonical sitemap", () => {
-    expect(createRobotsTxt("production")).toBe(
+    expect(createRobotsTxt("production", origin)).toBe(
       `User-agent: *\n` +
         `Content-Signal: ${contentSignal}\n` +
         `Allow: /\n\n` +
-        `Sitemap: ${siteConfig.origin}/sitemap.xml\n`
+        `Sitemap: ${origin}/sitemap.xml\n`
     )
   })
 
   it.each(["local", "unknown"])(
     "blocks %s crawling without advertising a sitemap",
     (environment) => {
-      const robots = createRobotsTxt(environment)
+      const robots = createRobotsTxt(environment, origin)
 
       expect(robots).toBe(
         `User-agent: *\n` +
@@ -73,12 +75,15 @@ describe("homepage discovery headers", () => {
 
     const decorated = addHomepageDiscoveryHeaders(
       new Request("https://example.test/"),
-      response
+      response,
+      origin
     )
 
     expect(decorated).not.toBe(response)
     expect(decorated.headers.get("Content-Signal")).toBe(contentSignal)
-    expect(decorated.headers.get("Link")).toBe(discoveryLinks.join(", "))
+    expect(decorated.headers.get("Link")).toBe(
+      discoveryLinks(origin).join(", ")
+    )
     expect(decorated.headers.get("Link")).toContain('rel="api-catalog"')
     expect(decorated.headers.get("Vary")).toBe("Accept")
     await expect(decorated.text()).resolves.toBe("<html>ready</html>")
@@ -92,7 +97,8 @@ describe("homepage discovery headers", () => {
     expect(
       addHomepageDiscoveryHeaders(
         new Request("https://example.test/about"),
-        response
+        response,
+        origin
       )
     ).toBe(response)
   })
