@@ -29,8 +29,11 @@ networks. F-017 asks for the image to be drawn on the Worker and cached.
 - **Routing:**
   - `/og/<slug>.png` draws a registered card; any other slug answers `404`
     and any method but `GET` and `HEAD` answers `405`
-  - `src/server.ts` sends `/og/` to `ctx.exports.OgImage` as a bare request,
-    without cookies or credentials
+  - `src/server.ts` sends `/og/` to `ctx.exports.OgImage` with only the
+    method and path, through `imageRequest()`, so a query string cannot add
+    cache entries and no cookies or credentials reach the renderer
+  - an uncached `HEAD` answers with no body and `no-store`; on Cloudflare a
+    `HEAD` on a cold cache arrives as a `GET`
 - **Caching:**
   - `exports.OgImage` in every Wrangler section, including
     `wrangler.e2e.jsonc`, turns on Workers Caching for that entrypoint alone
@@ -63,16 +66,17 @@ None. There is no new binding, secret, or resource. The new dependency is
 
 Local, from `0d47e61` and the evidence commit on top of it:
 
-- `pnpm verify` without `.dev.vars` or `.env`: 193 Worker tests, 21 UI, 23
+- `pnpm verify` without `.dev.vars` or `.env`: 194 Worker tests, 21 UI, 23
   setup, and 9 script tests passed, with format, lint, docs, schema, types,
   boundaries, and build. The new Worker tests:
   - render through `exports.OgImage` and check the PNG signature, size, and
     headers
   - check `HEAD`, `404`, and `405`
   - reject prototype names such as `/og/constructor.png`
+  - check that `imageRequest()` drops the query string and headers
 - `pnpm cf:dry-run:production` and `pnpm cf:dry-run:default` passed with
   `exports.OgImage` in the built configuration.
-  - The upload grew from 5950.91 KiB to 9775.04 KiB, 3021.87 KiB gzipped.
+  - The upload grew from 5950.91 KiB to 9775.57 KiB, 3022.01 KiB gzipped.
   - Wrangler rejects `exports` beside `migrations` only for Durable Object
     exports, so `BoardRoom`'s `v1` migration is unaffected.
 - `pnpm test:e2e` with the system Chrome: 3 passed.
@@ -115,5 +119,8 @@ cache key; sites that already fetched the preview keep their copy.
 
 - Production: confirm the image renders on Cloudflare within the CPU limit,
   that the second request is a cache `HIT`, and the CPU time of the first
-  render, then tick F-017's last criterion.
+  render, then tick F-017's last criterion. workerd issue
+  [#6865](https://github.com/cloudflare/workerd/issues/6865), where
+  per-entrypoint caching skipped `ctx.exports` calls in Workers with static
+  assets, was fixed on the platform on 2026-07-13; a `HIT` confirms it here.
 - F-019 budgets should count the larger Worker upload.

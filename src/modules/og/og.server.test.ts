@@ -5,6 +5,7 @@ import { homepage } from "@/modules/seo/homepage"
 
 import { ogCards, ogImage, ogImagePath } from "./cards"
 import { ogCardContent, ogCardForPath } from "./content.server"
+import { imageRequest } from "./entrypoint.server"
 
 const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 
@@ -14,7 +15,7 @@ function pngSize(bytes: Uint8Array) {
   return { width: view.getUint32(16), height: view.getUint32(20) }
 }
 
-function imageRequest(path: string, init?: RequestInit) {
+function fetchImage(path: string, init?: RequestInit) {
   return workerExports.OgImage.fetch(
     new Request(`https://example.com${path}`, init)
   )
@@ -54,9 +55,24 @@ describe("preview image cards", () => {
   })
 })
 
+describe("the request the Worker hands OgImage", () => {
+  it("keeps the method and path, and drops the query string and headers", () => {
+    const request = imageRequest(
+      new Request("https://example.com/og/home.png?v=1&utm_source=x#top", {
+        method: "HEAD",
+        headers: { Authorization: "Bearer token", Cookie: "session=1" },
+      })
+    )
+
+    expect(request.url).toBe("https://example.com/og/home.png")
+    expect(request.method).toBe("HEAD")
+    expect([...request.headers.keys()]).toEqual([])
+  })
+})
+
 describe("the OgImage entrypoint", () => {
   it("draws a 1200 by 630 PNG that caches until the next deploy", async () => {
-    const response = await imageRequest("/og/home.png")
+    const response = await fetchImage("/og/home.png")
 
     expect(response.status).toBe(200)
     expect(response.headers.get("Content-Type")).toBe("image/png")
@@ -72,23 +88,24 @@ describe("the OgImage entrypoint", () => {
     )
   })
 
-  it("answers HEAD without a body", async () => {
-    const response = await imageRequest("/og/home.png", { method: "HEAD" })
+  it("answers an uncached HEAD without drawing or storing it", async () => {
+    const response = await fetchImage("/og/home.png", { method: "HEAD" })
 
     expect(response.status).toBe(200)
-    expect(Number(response.headers.get("Content-Length"))).toBeGreaterThan(0)
+    expect(response.headers.get("Content-Type")).toBe("image/png")
+    expect(response.headers.get("Cache-Control")).toBe("no-store")
     expect(await response.text()).toBe("")
   })
 
   it("does not draw unknown cards", async () => {
-    const response = await imageRequest("/og/anything-you-like.png")
+    const response = await fetchImage("/og/anything-you-like.png")
 
     expect(response.status).toBe(404)
     expect(response.headers.get("Content-Type")).not.toBe("image/png")
   })
 
   it("rejects other methods without caching", async () => {
-    const response = await imageRequest("/og/home.png", { method: "POST" })
+    const response = await fetchImage("/og/home.png", { method: "POST" })
 
     expect(response.status).toBe(405)
     expect(response.headers.get("Allow")).toBe("GET, HEAD")

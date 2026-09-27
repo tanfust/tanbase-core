@@ -36,8 +36,14 @@ Constraints:
 - **Workers Caching keeps them.** The named entrypoint `OgImage` serves the
   images, and `exports.OgImage` in each Wrangler section turns on Workers
   Caching for that entrypoint alone. The default entrypoint, and so every
-  page, API, and auth response, stays uncached. The Worker version is part of
-  the cache key, so a deploy draws each image again. Responses send
+  page, API, and auth response, stays uncached. The Worker hands the
+  entrypoint only the method and path: the query string is part of the cache
+  key, so passing it on would let `?1`, `?2`, and so on each force a render,
+  and dropping the headers keeps cookies and credentials away from the
+  renderer. The Worker version is part of the cache key too, so a deploy draws
+  each image again. Cloudflare turns a `HEAD` on a cold cache into a `GET`;
+  an uncached `HEAD` answers with no body and `no-store`, so it can never
+  become the entry `GET` shares. Responses send
   `Cloudflare-CDN-Cache-Control: max-age` of a year for the edge and
   `Cache-Control: max-age` of a day for browsers and crawlers.
 - **Indexable pages name an image.** A page that names a canonical path can

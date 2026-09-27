@@ -12,6 +12,7 @@ import {
   withCors,
 } from "@/modules/mcp/discovery.server"
 import { handleMcpRequest } from "@/modules/mcp/server.server"
+import { imageRequest } from "@/modules/og/entrypoint.server"
 import {
   getBoardNamespace,
   handleRealtimeUpgrade,
@@ -64,9 +65,7 @@ async function route(
   }
   if (pathname === "/mcp") return handleMcpRequest(request)
   if (pathname.startsWith("/og/")) {
-    // A bare request: images never depend on cookies or credentials.
-    const bare = new Request(request.url, { method: request.method })
-    return ctx.exports.OgImage.fetch(bare)
+    return ctx.exports.OgImage.fetch(imageRequest(request))
   }
   const realtime = realtimePath.exec(pathname)
   if (realtime) return realtimeResponse(request, realtime[1])
