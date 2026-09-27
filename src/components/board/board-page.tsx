@@ -80,6 +80,7 @@ import {
   aiStatusQueryOptions,
   breakdownQueryOptions,
 } from "@/modules/ai/queries"
+import { optimisticTaskPrefix } from "@/modules/tasks/contracts"
 import type {
   BoardSnapshot,
   TaskStatus,
@@ -196,7 +197,7 @@ export function BoardPage({
     onMutate: async (values) => {
       await queryClient.cancelQueries({ queryKey: key })
       const previous = queryClient.getQueryData<BoardSnapshot>(key)
-      const tempId = `optimistic:${crypto.randomUUID()}`
+      const tempId = `${optimisticTaskPrefix}${crypto.randomUUID()}`
       const now = Date.now()
       updateCache((current) => ({
         ...current,
@@ -216,18 +217,22 @@ export function BoardPage({
       return { previous, tempId }
     },
     onSuccess: (task, _values, context) => {
-      // The realtime echo of this task can arrive before this response, so
-      // drop that copy while the optimistic entry takes the real task.
-      updateCache((current) => ({
-        ...current,
-        tasks: current.tasks.flatMap((item) =>
-          item.id === context.tempId
-            ? [task]
-            : item.id === task.id
-              ? []
-              : [item]
-        ),
-      }))
+      // The realtime echo of this task can arrive first and take the
+      // optimistic entry's place; then there is nothing left to swap.
+      updateCache((current) =>
+        current.tasks.some((item) => item.id === context.tempId)
+          ? {
+              ...current,
+              tasks: current.tasks.flatMap((item) =>
+                item.id === context.tempId
+                  ? [task]
+                  : item.id === task.id
+                    ? []
+                    : [item]
+              ),
+            }
+          : current
+      )
       setTaskDialog((current) => ({ ...current, open: false }))
     },
     onError: (_error, _values, context) => {
@@ -447,7 +452,7 @@ export function BoardPage({
           !task.parentId &&
           !subtaskCounts.has(task.id) &&
           !breakdowns[task.id] &&
-          !task.id.startsWith("optimistic:")
+          !task.id.startsWith(optimisticTaskPrefix)
             ? () => breakdownMutation.mutate(task.id)
             : undefined
         }

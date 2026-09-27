@@ -7,6 +7,12 @@ export const taskStatusLabels: Record<TaskStatus, string> = {
   done: "Done",
 }
 
+/**
+ * The ID prefix of a task the board shows before the server has created it.
+ * The server's own IDs are UUIDs, so they never start with it.
+ */
+export const optimisticTaskPrefix = "optimistic:"
+
 export interface ProjectView {
   id: string
   name: string

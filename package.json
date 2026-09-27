@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:ui": "vitest run --config vitest.ui.config.ts",
-    "test:e2e": "pnpm db:migrate:e2e && node scripts/prepare-e2e-account.mjs && playwright test",
+    "test:e2e": "pnpm db:migrate:e2e && node scripts/prepare-e2e-account.mjs && playwright test --workers=1",
     "test:setup": "node --test scripts/setup/*.test.mjs",
     "test:scripts": "node --test scripts/*.test.mjs",
     "test:boundaries": "node scripts/test-import-protection.mjs && node scripts/check-db-boundaries.mjs",

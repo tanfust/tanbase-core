@@ -15,6 +15,7 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table"
+import { useHydrated } from "@tanstack/react-router"
 import type {
   ColumnFiltersState,
   ColumnVisibilityState,
@@ -92,8 +93,29 @@ const features = tableFeatures({
 
 const helper = createColumnHelper<typeof features, TaskRow>()
 
-function day(timestamp: number | undefined) {
-  return timestamp ? format(timestamp, "MMM d, yyyy") : "—"
+const utcDay = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+})
+
+/**
+ * A timestamp's calendar day. The Worker renders in UTC, so the server's
+ * HTML and the first client render show the UTC day; once hydrated, the
+ * table shows the day in the browser's time zone.
+ */
+function TaskDate({ timestamp }: { timestamp: number | undefined }) {
+  const hydrated = useHydrated()
+  if (!timestamp) return <span>—</span>
+  return (
+    <time
+      dateTime={new Date(timestamp).toISOString()}
+      className="whitespace-nowrap"
+    >
+      {hydrated ? format(timestamp, "MMM d, yyyy") : utcDay.format(timestamp)}
+    </time>
+  )
 }
 
 const columns = helper.columns([
@@ -135,9 +157,7 @@ const columns = helper.columns([
     sortDescFirst: false,
     sortUndefined: "last",
     enableGlobalFilter: false,
-    cell: ({ getValue }) => (
-      <span className="whitespace-nowrap">{day(getValue())}</span>
-    ),
+    cell: ({ getValue }) => <TaskDate timestamp={getValue()} />,
   }),
   helper.accessor((task) => task.notes ?? "", {
     id: "notes",
@@ -153,17 +173,13 @@ const columns = helper.columns([
     header: columnLabels.createdAt,
     sortFn: "basic",
     enableGlobalFilter: false,
-    cell: ({ getValue }) => (
-      <span className="whitespace-nowrap">{day(getValue())}</span>
-    ),
+    cell: ({ getValue }) => <TaskDate timestamp={getValue()} />,
   }),
   helper.accessor("updatedAt", {
     header: columnLabels.updatedAt,
     sortFn: "basic",
     enableGlobalFilter: false,
-    cell: ({ getValue }) => (
-      <span className="whitespace-nowrap">{day(getValue())}</span>
-    ),
+    cell: ({ getValue }) => <TaskDate timestamp={getValue()} />,
   }),
 ])
 

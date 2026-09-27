@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test"
 import type { Page } from "@playwright/test"
 
+// Several spec files share one dev server, so an auth request or the
+// Turnstile token can take longer than the default five seconds.
+const authTimeout = 15_000
+
 const email = "webmcp-verified@example.com"
 const password = "correct-horse-1"
 
@@ -85,10 +89,11 @@ test("WebMCP tools list, create, and complete the signed-in person's tasks", asy
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password", { exact: true }).fill(password)
   await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(
-    /.+/
+    /.+/,
+    { timeout: authTimeout }
   )
   await page.getByRole("button", { name: "Sign in" }).click()
-  await expect(page).toHaveURL(/\/app$/)
+  await expect(page).toHaveURL(/\/app$/, { timeout: authTimeout })
   await expect(
     page.getByRole("heading", { level: 1, name: "My project" })
   ).toBeVisible()

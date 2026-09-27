@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test"
 import type { Page } from "@playwright/test"
 
+// Several spec files share one dev server, so an auth request or the
+// Turnstile token can take longer than the default five seconds.
+const authTimeout = 15_000
+
 const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const email = `views-${suffix}@example.com`
 const password = "correct-horse-1"
@@ -16,7 +20,8 @@ async function waitForHydration(page: Page) {
 // The local test site key always passes, but the token arrives asynchronously.
 async function waitForChallenge(page: Page) {
   await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(
-    /.+/
+    /.+/,
+    { timeout: authTimeout }
   )
 }
 
@@ -65,7 +70,7 @@ test("forms validate with the shared schemas; the list and stats views live in t
   await expect(confirmation).not.toHaveAttribute("aria-invalid")
   await waitForChallenge(page)
   await page.getByRole("button", { name: "Create account" }).click()
-  await expect(page).toHaveURL(/\/app$/)
+  await expect(page).toHaveURL(/\/app$/, { timeout: authTimeout })
   await expect(
     page.getByRole("heading", { level: 1, name: "My project" })
   ).toBeVisible()
