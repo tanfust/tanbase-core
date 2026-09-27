@@ -1,7 +1,7 @@
 ---
 status: active
 audience: agents, contributors, maintainers
-last_verified: 2026-09-25
+last_verified: 2026-09-27
 ---
 
 # AI agent operating contract
@@ -48,6 +48,111 @@ change note as current truth. A superseded ADR must link to its replacement.
   meaningful implementation PR. Historical change records are immutable except
   for factual corrections.
 - Use the repository scripts in automation so local and CI behavior stay equal.
+
+## Stack
+
+| Layer      | Choice                                                                   |
+| ---------- | ------------------------------------------------------------------------ |
+| Framework  | TanStack Start (React 19), TanStack Router and Query                     |
+| Runtime    | One Cloudflare Worker, built with `@cloudflare/vite-plugin` and Wrangler |
+| Data       | D1 through Drizzle ORM; migrations are generated SQL in `drizzle/`       |
+| Auth       | Better Auth on D1, with its OAuth 2.1 provider for MCP clients           |
+| UI         | Tailwind CSS v4 and shadcn/ui on Base UI                                 |
+| Validation | Zod                                                                      |
+| Tests      | Vitest in the Workers runtime, Vitest with jsdom for UI, Playwright      |
+
+## Module map
+
+| Path                  | Holds                                                                                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/server.ts`       | Worker entry: routes MCP, realtime upgrades, discovery, and Markdown ahead of TanStack; cron and queue handlers; Durable Object and Workflow exports |
+| `src/routes/`         | File routes. `_app` is the signed-in layout; `api/` holds server routes                                                                              |
+| `src/components/`     | UI. `ui/` is shadcn/ui; feature components sit beside it                                                                                             |
+| `src/db/`             | Drizzle schema, one file per table, and `getDb()`. Server-only                                                                                       |
+| `src/platform/`       | Logging, request context, security headers, analytics config. Server-only                                                                            |
+| `src/lib/`            | Shared utilities: site config, health checks, asset recovery                                                                                         |
+| `src/modules/<name>/` | One feature per folder, below                                                                                                                        |
+
+| Module      | Feature                                                                               | Bindings                                     |
+| ----------- | ------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `auth`      | Better Auth, sessions, Turnstile, auth rate limits                                    | `DB`, `AUTH_LIMITER`, `TURNSTILE_SECRET_KEY` |
+| `tasks`     | Projects and tasks                                                                    | `DB`                                         |
+| `files`     | Task attachments                                                                      | `FILES`                                      |
+| `realtime`  | Live board through the `BoardRoom` Durable Object                                     | `BOARD`                                      |
+| `jobs`      | Hourly cron and reminder queue consumer                                               | `EMAIL_QUEUE`, cron trigger                  |
+| `email`     | React Email templates and `sendEmail()`                                               | `EMAIL`                                      |
+| `ai`        | Task breakdown Workflow, Workers AI, daily quota                                      | `AI`, `BREAKDOWN`, `AI_LIMITER`              |
+| `mcp`       | `/mcp` server, OAuth discovery, WebMCP tools                                          | none; uses Better Auth                       |
+| `discovery` | API catalog, AI Catalog, MCP server card, skills index                                | none                                         |
+| `seo`       | `seo()` head helper, homepage copy, sitemap, robots, `llms.txt`, Markdown negotiation | none                                         |
+| `analytics` | Optional PostHog configuration and URL scrubbing                                      | `POSTHOG_KEY` secret                         |
+
+`files`, `realtime`, `jobs`, `ai`, and `mcp` are optional modules that a fork
+can remove. Inside a module, files follow one convention:
+
+| File                   | Role                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| `schemas.ts`           | Zod input schemas for server functions                                                               |
+| `contracts.ts`         | View types and constants shared with the UI                                                          |
+| `functions.ts`         | `createServerFn` definitions that routes import; each handler imports its implementation dynamically |
+| `functions.server.ts`  | Implementations: resolve the session's user, then call the repository                                |
+| `repository.server.ts` | The only files besides `src/db/` that may call `getDb()`                                             |
+| `queries.ts`           | TanStack Query options                                                                               |
+| `*.test.ts`            | Tests in the Workers runtime against real migrations                                                 |
+| `*.ui.test.tsx`        | Component tests in jsdom                                                                             |
+
+## Ownership rule
+
+D1 has no row-level security, so ownership lives in code. Every repository
+function takes the user ID as its first argument, and every query filters by
+it. A row another user owns reads as missing: `null`, an empty list, or
+`false`, never an error that reveals it exists. Child tables carry `user_id`
+and reference their parent through a composite foreign key that includes it,
+so the database rejects a row whose owner disagrees with its parent's. Every
+repository has a test that a second user cannot read, change, or delete the
+first user's rows.
+
+## Binding rules
+
+- A binding enters only with the feature that uses it.
+- Declare it in the base `wrangler.jsonc` for local development and again
+  under `env.production`; environments do not inherit bindings. Local resource
+  names end in `-local`.
+- Read it from `env` in a `.server.ts` getter that returns `null` when the
+  binding is absent, so an installation without it degrades instead of
+  failing.
+- Export Durable Object and Workflow classes from both `src/server.ts` and
+  `test/worker.ts`.
+- Run `pnpm cf:typegen` and commit `src/worker-configuration.d.ts`.
+- Add a cached check to `/api/health` when the feature cannot work without the
+  binding, and teach `pnpm run setup` to provision or defer it.
+
+## Commands
+
+| Command                                                        | Use                                                    |
+| -------------------------------------------------------------- | ------------------------------------------------------ |
+| `pnpm dev`                                                     | Run the app in the Workers runtime on port 3000        |
+| `pnpm verify`                                                  | Every gate CI runs; required before a pull request     |
+| `pnpm exec vitest run <path>`                                  | One Worker test file                                   |
+| `pnpm db:generate`                                             | Generate a migration from the Drizzle schema           |
+| `pnpm db:migrate:local`                                        | Apply migrations to local D1                           |
+| `pnpm cf:typegen`                                              | Regenerate Worker binding types                        |
+| `pnpm cf:dry-run:production`                                   | Package the production configuration without deploying |
+| `pnpm smoke -- --environment production --expect-version <id>` | Verify production after a deploy                       |
+
+The [development guide](docs/DEVELOPMENT.md#commands) lists every command.
+
+## Skills
+
+Task runbooks live in `.claude/skills/`. Claude Code loads them by name; any
+other agent can read each `SKILL.md` as a checklist.
+
+| Skill           | Use it to                                                                |
+| --------------- | ------------------------------------------------------------------------ |
+| `add-table`     | Add a user-owned D1 table with a repository, server functions, and tests |
+| `add-module`    | Add a feature module, with or without a new Cloudflare binding           |
+| `remove-module` | Remove an optional module and its bindings, exports, and data            |
+| `deploy`        | Ship a merged change and record production evidence                      |
 
 ## Foundation boundaries
 
