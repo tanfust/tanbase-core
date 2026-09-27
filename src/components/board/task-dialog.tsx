@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react"
-
 import { TaskAttachments } from "@/components/board/task-attachments"
+import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -10,13 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import {
   Select,
   SelectContent,
@@ -25,68 +18,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Spinner } from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
 import type { TaskStatus, TaskView } from "@/modules/tasks/contracts"
-
-interface TaskValues {
-  title: string
-  notes: string | null
-  status: TaskStatus
-  dueAt: number | null
-}
-
-function dateValue(timestamp: number | null) {
-  if (!timestamp) return ""
-  const date = new Date(timestamp)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
+import { dateFromDueAt, taskFormSchema } from "@/modules/tasks/schemas"
+import type { TaskValues } from "@/modules/tasks/schemas"
 
 export function TaskDialog({
   open,
   onOpenChange,
   status = "todo",
   task,
-  pending,
   onSubmit,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   status?: TaskStatus
   task?: TaskView | null
-  pending: boolean
+  /** Saves the task; it reports its own failures, so a rejection is ignored. */
   onSubmit: (values: TaskValues) => Promise<void>
 }) {
-  const [selectedStatus, setSelectedStatus] = useState<TaskStatus>(status)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (open) {
-      setSelectedStatus(task?.status ?? status)
-      setError(null)
-    }
-  }, [open, status, task])
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const title = String(form.get("title") ?? "").trim()
-    if (!title) {
-      setError("Enter a task title.")
-      return
-    }
-    const rawDueAt = String(form.get("dueAt") ?? "")
-    await onSubmit({
-      title,
-      notes: String(form.get("notes") ?? "").trim() || null,
-      status: selectedStatus,
-      dueAt: rawDueAt ? new Date(`${rawDueAt}T12:00:00`).getTime() : null,
-    })
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -96,41 +45,83 @@ export function TaskDialog({
             Keep the next action clear. Notes and a due date are optional.
           </DialogDescription>
         </DialogHeader>
-        <form
+        {/* The dialog unmounts its content when closed, so each opening
+            starts a form from the task's current values. */}
+        <TaskForm
           key={task?.id ?? `new:${status}`}
-          method="post"
-          onSubmit={submit}
-          className="flex flex-col gap-6"
-        >
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="task-title">Title</FieldLabel>
-              <Input
-                id="task-title"
-                name="title"
-                defaultValue={task?.title}
-                maxLength={200}
-                autoFocus
-                required
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="task-notes">Notes</FieldLabel>
-              <Textarea
-                id="task-notes"
-                name="notes"
-                defaultValue={task?.notes ?? ""}
-                maxLength={10_000}
-                rows={4}
-              />
-            </Field>
+          status={status}
+          task={task ?? null}
+          onCancel={() => onOpenChange(false)}
+          onSubmit={onSubmit}
+        />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function TaskForm({
+  status,
+  task,
+  onCancel,
+  onSubmit,
+}: {
+  status: TaskStatus
+  task: TaskView | null
+  onCancel: () => void
+  onSubmit: (values: TaskValues) => Promise<void>
+}) {
+  const form = useAppForm({
+    defaultValues: {
+      title: task?.title ?? "",
+      notes: task?.notes ?? "",
+      status: task?.status ?? status,
+      dueAt: dateFromDueAt(task?.dueAt ?? null),
+    },
+    validationLogic: validateOnSubmit,
+    validators: { onDynamic: taskFormSchema },
+    onSubmit: async ({ value }) => {
+      await onSubmit(taskFormSchema.parse(value)).catch(() => undefined)
+    },
+  })
+
+  return (
+    <form
+      method="post"
+      onSubmit={submitHandler(form)}
+      className="flex flex-col gap-6"
+    >
+      <FieldGroup>
+        <form.AppField name="title">
+          {(field) => (
+            <field.TextField
+              id="task-title"
+              label="Title"
+              maxLength={200}
+              autoFocus
+              required
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="notes">
+          {(field) => (
+            <field.TextareaField
+              id="task-notes"
+              label="Notes"
+              maxLength={10_000}
+              rows={4}
+            />
+          )}
+        </form.AppField>
+        <form.Field name="status">
+          {(field) => (
             <Field>
               <FieldLabel>Status</FieldLabel>
               <Select
-                value={selectedStatus}
-                onValueChange={(value) => value && setSelectedStatus(value)}
+                name={field.name}
+                value={field.state.value}
+                onValueChange={(value) => value && field.handleChange(value)}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full" onBlur={field.handleBlur}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,34 +133,26 @@ export function TaskDialog({
                 </SelectContent>
               </Select>
             </Field>
-            <Field>
-              <FieldLabel htmlFor="task-due-at">Due date</FieldLabel>
-              <Input
-                id="task-due-at"
-                name="dueAt"
-                type="date"
-                defaultValue={dateValue(task?.dueAt ?? null)}
-              />
-            </Field>
-            {error && <FieldError>{error}</FieldError>}
-          </FieldGroup>
-          {/* Attachments save immediately and need an existing task. */}
-          {task && <TaskAttachments taskId={task.id} />}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending && <Spinner data-icon="inline-start" />}
-              {pending ? "Saving…" : task ? "Save changes" : "Create task"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          )}
+        </form.Field>
+        <form.AppField name="dueAt">
+          {(field) => (
+            <field.TextField id="task-due-at" label="Due date" type="date" />
+          )}
+        </form.AppField>
+      </FieldGroup>
+      {/* Attachments save immediately and need an existing task. */}
+      {task && <TaskAttachments taskId={task.id} />}
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <form.AppForm>
+          <form.SubmitButton pendingLabel="Saving…">
+            {task ? "Save changes" : "Create task"}
+          </form.SubmitButton>
+        </form.AppForm>
+      </DialogFooter>
+    </form>
   )
 }

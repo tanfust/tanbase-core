@@ -5,6 +5,7 @@ import { MailCheckIcon } from "lucide-react"
 import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
+import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,14 +20,12 @@ import {
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Spinner } from "@/components/ui/spinner"
 import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
 import { authHref, safeRedirect } from "@/modules/auth/redirects"
+import { signUpFormSchema, signUpSchema } from "@/modules/auth/schemas"
 import { seo } from "@/modules/seo/head"
 
 interface SignUpSearch {
@@ -54,50 +53,38 @@ function SignUpPage() {
   const navigate = useNavigate()
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const password = String(form.get("password") ?? "")
-    const confirmation = String(form.get("confirmation") ?? "")
-    if (password !== confirmation) {
-      setError("Passwords do not match.")
-      return
-    }
-    if (password.length < 8) {
-      setError("Use at least 8 characters for your password.")
-      return
-    }
-    if (!captcha.ready) {
-      setError("Complete the security check, then try again.")
-      return
-    }
-
-    setPending(true)
-    setError(null)
-    const redirectTarget = safeRedirect(redirect)
-    const result = await authClient.signUp.email({
-      name: String(form.get("name") ?? "").trim(),
-      email: String(form.get("email") ?? "").trim(),
-      password,
-      callbackURL: `/login?verified=true&redirect=${encodeURIComponent(redirectTarget)}`,
-      fetchOptions: captcha.fetchOptions,
-    })
-    setPending(false)
-    captcha.reset()
-    if (result.error) {
-      setError(authErrorMessage(result.error, "Unable to create the account"))
-      return
-    }
-    // Without email delivery there is nothing to verify: the account is
-    // signed in, so go straight to the board.
-    if (!emailDelivery) {
-      await navigate({ to: redirectTarget })
-      return
-    }
-    setSubmitted(true)
-  }
+  const form = useAppForm({
+    defaultValues: { name: "", email: "", password: "", confirmation: "" },
+    validationLogic: validateOnSubmit,
+    validators: { onDynamic: signUpFormSchema },
+    onSubmit: async ({ value }) => {
+      if (!captcha.ready) {
+        setError("Complete the security check, then try again.")
+        return
+      }
+      setError(null)
+      const redirectTarget = safeRedirect(redirect)
+      const account = signUpSchema.parse(value)
+      const result = await authClient.signUp.email({
+        ...account,
+        callbackURL: `/login?verified=true&redirect=${encodeURIComponent(redirectTarget)}`,
+        fetchOptions: captcha.fetchOptions,
+      })
+      captcha.reset()
+      if (result.error) {
+        setError(authErrorMessage(result.error, "Unable to create the account"))
+        return
+      }
+      // Without email delivery there is nothing to verify: the account is
+      // signed in, so go straight to the board.
+      if (!emailDelivery) {
+        await navigate({ to: redirectTarget })
+        return
+      }
+      setSubmitted(true)
+    },
+  })
 
   return (
     <AuthShell>
@@ -141,60 +128,66 @@ function SignUpPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form method="post" onSubmit={submit}>
+            <form method="post" onSubmit={submitHandler(form)}>
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="name">Name</FieldLabel>
-                  <Input
-                    id="name"
-                    name="name"
-                    autoComplete="name"
-                    required
-                    maxLength={80}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                  />
-                  <FieldDescription>At least 8 characters.</FieldDescription>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="confirmation">
-                    Confirm password
-                  </FieldLabel>
-                  <Input
-                    id="confirmation"
-                    name="confirmation"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                  />
-                </Field>
+                <form.AppField name="name">
+                  {(field) => (
+                    <field.TextField
+                      id="name"
+                      label="Name"
+                      autoComplete="name"
+                      required
+                      maxLength={80}
+                    />
+                  )}
+                </form.AppField>
+                <form.AppField name="email">
+                  {(field) => (
+                    <field.TextField
+                      id="email"
+                      label="Email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                    />
+                  )}
+                </form.AppField>
+                <form.AppField name="password">
+                  {(field) => (
+                    <field.TextField
+                      id="password"
+                      label="Password"
+                      description="At least 8 characters."
+                      type="password"
+                      autoComplete="new-password"
+                      required
+                      minLength={8}
+                    />
+                  )}
+                </form.AppField>
+                <form.AppField name="confirmation">
+                  {(field) => (
+                    <field.TextField
+                      id="confirmation"
+                      label="Confirm password"
+                      type="password"
+                      autoComplete="new-password"
+                      required
+                      minLength={8}
+                    />
+                  )}
+                </form.AppField>
                 <TurnstileField captcha={captcha} />
                 {error && <FieldError>{error}</FieldError>}
                 <Field>
-                  <Button type="submit" disabled={pending} className="w-full">
-                    {pending && <Spinner data-icon="inline-start" />}
-                    {pending ? "Creating account…" : "Create account"}
-                  </Button>
+                  <form.AppForm>
+                    <form.SubmitButton
+                      className="w-full"
+                      pendingLabel="Creating account…"
+                    >
+                      Create account
+                    </form.SubmitButton>
+                  </form.AppForm>
                   <FieldDescription className="text-center">
                     Already have an account?{" "}
                     <Link to={authHref("/login", redirect)}>Sign in</Link>

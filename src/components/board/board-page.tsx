@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 
 import { TaskDialog } from "@/components/board/task-dialog"
+import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,13 +65,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { FieldError, FieldGroup } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "@/components/ui/toast"
 import type { BreakdownState } from "@/modules/ai/contracts"
@@ -95,6 +90,8 @@ import {
 import { useBoardRealtime } from "@/modules/realtime/use-board-realtime"
 import type { RealtimeStatus } from "@/modules/realtime/use-board-realtime"
 import { boardQueryKey, boardQueryOptions } from "@/modules/tasks/queries"
+import { createProjectInputSchema } from "@/modules/tasks/schemas"
+import type { TaskValues } from "@/modules/tasks/schemas"
 
 const columns: Array<{
   status: TaskStatus
@@ -105,8 +102,6 @@ const columns: Array<{
   { status: "doing", title: "Doing", description: "In progress" },
   { status: "done", title: "Done", description: "Completed" },
 ]
-
-type TaskValues = Pick<TaskView, "title" | "notes" | "status" | "dueAt">
 
 const realtimeLabels: Record<RealtimeStatus, string> = {
   connecting: "Connecting…",
@@ -388,16 +383,11 @@ export function BoardPage({ projectId }: { projectId?: string }) {
     },
   })
 
-  async function saveProject(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const name = String(
-      new FormData(event.currentTarget).get("name") ?? ""
-    ).trim()
-    if (!name) {
-      setProjectError("Enter a project name.")
-      return
-    }
-    await projectMutation.mutateAsync({ mode: projectDialog!, name })
+  async function saveProject(name: string) {
+    await projectMutation
+      .mutateAsync({ mode: projectDialog!, name })
+      // The mutation reports the failure in the dialog.
+      .catch(() => undefined)
   }
 
   async function saveTask(values: TaskValues) {
@@ -433,7 +423,6 @@ export function BoardPage({ projectId }: { projectId?: string }) {
           mode={projectDialog}
           onOpenChange={(open) => setProjectDialog(open ? "create" : null)}
           activeName=""
-          pending={projectMutation.isPending}
           error={projectError}
           onSubmit={saveProject}
         />
@@ -637,7 +626,6 @@ export function BoardPage({ projectId }: { projectId?: string }) {
         }
         status={taskDialog.status}
         task={taskDialog.task}
-        pending={createTaskMutation.isPending || updateTaskMutation.isPending}
         onSubmit={saveTask}
       />
       <ProjectDialog
@@ -646,7 +634,6 @@ export function BoardPage({ projectId }: { projectId?: string }) {
           setProjectDialog(open ? (projectDialog ?? "create") : null)
         }
         activeName={snapshot.activeProject.name}
-        pending={projectMutation.isPending}
         error={projectError}
         onSubmit={saveProject}
       />
@@ -758,16 +745,14 @@ function ProjectDialog({
   mode,
   onOpenChange,
   activeName,
-  pending,
   error,
   onSubmit,
 }: {
   mode: "create" | "rename" | null
   onOpenChange: (open: boolean) => void
   activeName: string
-  pending: boolean
   error: string | null
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void
+  onSubmit: (name: string) => Promise<void>
 }) {
   return (
     <Dialog open={mode !== null} onOpenChange={onOpenChange}>
@@ -780,43 +765,69 @@ function ProjectDialog({
             Use a short name that makes the board easy to recognize.
           </DialogDescription>
         </DialogHeader>
-        <form
+        <ProjectForm
           key={mode ?? "closed"}
-          method="post"
+          defaultName={mode === "rename" ? activeName : ""}
+          error={error}
+          onCancel={() => onOpenChange(false)}
           onSubmit={onSubmit}
-          className="flex flex-col gap-6"
-        >
-          <FieldGroup>
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="project-name">Name</FieldLabel>
-              <Input
-                id="project-name"
-                name="name"
-                defaultValue={mode === "rename" ? activeName : ""}
-                maxLength={80}
-                aria-invalid={Boolean(error)}
-                autoFocus
-                required
-              />
-              {error && <FieldError>{error}</FieldError>}
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending && <Spinner data-icon="inline-start" />}
-              {pending ? "Saving…" : "Save project"}
-            </Button>
-          </DialogFooter>
-        </form>
+        />
       </DialogContent>
     </Dialog>
+  )
+}
+
+function ProjectForm({
+  defaultName,
+  error,
+  onCancel,
+  onSubmit,
+}: {
+  defaultName: string
+  error: string | null
+  onCancel: () => void
+  onSubmit: (name: string) => Promise<void>
+}) {
+  const form = useAppForm({
+    defaultValues: { name: defaultName },
+    validationLogic: validateOnSubmit,
+    // The schema createProject and renameProject validate the name with.
+    validators: { onDynamic: createProjectInputSchema },
+    onSubmit: ({ value }) =>
+      onSubmit(createProjectInputSchema.parse(value).name),
+  })
+
+  return (
+    <form
+      method="post"
+      onSubmit={submitHandler(form)}
+      className="flex flex-col gap-6"
+    >
+      <FieldGroup>
+        <form.AppField name="name">
+          {(field) => (
+            <field.TextField
+              id="project-name"
+              label="Name"
+              maxLength={80}
+              autoFocus
+              required
+            />
+          )}
+        </form.AppField>
+        {error && <FieldError>{error}</FieldError>}
+      </FieldGroup>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <form.AppForm>
+          <form.SubmitButton pendingLabel="Saving…">
+            Save project
+          </form.SubmitButton>
+        </form.AppForm>
+      </DialogFooter>
+    </form>
   )
 }
 

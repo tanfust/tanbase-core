@@ -3,10 +3,10 @@ import { createFileRoute, useRouter } from "@tanstack/react-router"
 import { LaptopIcon, MoonIcon, SunIcon } from "lucide-react"
 
 import { siteConfig } from "@/lib/site"
+import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import { useTheme } from "@/components/theme-provider"
 import type { Theme } from "@/components/theme-provider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -22,10 +22,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Spinner } from "@/components/ui/spinner"
 import { toast } from "@/components/ui/toast"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { authClient } from "@/modules/auth/client"
+import {
+  changePasswordFormSchema,
+  changePasswordSchema,
+  updateProfileSchema,
+} from "@/modules/auth/schemas"
 import { seo } from "@/modules/seo/head"
 
 export const Route = createFileRoute("/_app/settings")({
@@ -40,69 +44,7 @@ export const Route = createFileRoute("/_app/settings")({
 
 function SettingsPage() {
   const { session } = Route.useRouteContext()
-  const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const [profilePending, setProfilePending] = useState(false)
-  const [profileError, setProfileError] = useState<string | null>(null)
-  const [passwordPending, setPasswordPending] = useState(false)
-  const [passwordError, setPasswordError] = useState<string | null>(null)
-
-  async function updateProfile(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const name = String(
-      new FormData(event.currentTarget).get("name") ?? ""
-    ).trim()
-    if (!name) {
-      setProfileError("Enter your name.")
-      return
-    }
-    setProfilePending(true)
-    setProfileError(null)
-    const result = await authClient.updateUser({ name })
-    setProfilePending(false)
-    if (result.error) {
-      setProfileError(result.error.message ?? "Unable to update your profile")
-      return
-    }
-    await router.invalidate()
-    toast.add({ type: "success", title: "Profile updated" })
-  }
-
-  async function changePassword(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const formElement = event.currentTarget
-    const form = new FormData(formElement)
-    const currentPassword = String(form.get("currentPassword") ?? "")
-    const newPassword = String(form.get("newPassword") ?? "")
-    if (newPassword !== String(form.get("confirmation") ?? "")) {
-      setPasswordError("New passwords do not match.")
-      return
-    }
-    if (newPassword.length < 8) {
-      setPasswordError("Use at least 8 characters for the new password.")
-      return
-    }
-    setPasswordPending(true)
-    setPasswordError(null)
-    const result = await authClient.changePassword({
-      currentPassword,
-      newPassword,
-      revokeOtherSessions: true,
-    })
-    setPasswordPending(false)
-    if (result.error) {
-      setPasswordError(
-        result.error.message ?? "The current password was not accepted."
-      )
-      return
-    }
-    formElement.reset()
-    toast.add({
-      type: "success",
-      title: "Password updated",
-      description: "Other sessions were signed out.",
-    })
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -122,39 +64,12 @@ function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form key={session.user.name} method="post" onSubmit={updateProfile}>
-            <FieldGroup>
-              <Field data-invalid={Boolean(profileError)}>
-                <FieldLabel htmlFor="settings-name">Name</FieldLabel>
-                <Input
-                  id="settings-name"
-                  name="name"
-                  defaultValue={session.user.name}
-                  maxLength={80}
-                  aria-invalid={Boolean(profileError)}
-                  required
-                />
-                {profileError && <FieldError>{profileError}</FieldError>}
-              </Field>
-              <Field data-disabled>
-                <FieldLabel htmlFor="settings-email">Email</FieldLabel>
-                <Input
-                  id="settings-email"
-                  value={session.user.email}
-                  disabled
-                />
-                <FieldDescription>
-                  Email changes are not part of this release.
-                </FieldDescription>
-              </Field>
-              <Field orientation="horizontal">
-                <Button type="submit" disabled={profilePending}>
-                  {profilePending && <Spinner data-icon="inline-start" />}
-                  {profilePending ? "Saving…" : "Save profile"}
-                </Button>
-              </Field>
-            </FieldGroup>
-          </form>
+          {/* A new name from the server starts a fresh form. */}
+          <ProfileForm
+            key={session.user.name}
+            name={session.user.name}
+            email={session.user.email}
+          />
         </CardContent>
       </Card>
 
@@ -166,53 +81,7 @@ function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form method="post" onSubmit={changePassword}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="current-password">
-                  Current password
-                </FieldLabel>
-                <Input
-                  id="current-password"
-                  name="currentPassword"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="new-password">New password</FieldLabel>
-                <Input
-                  id="new-password"
-                  name="newPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="confirm-password">
-                  Confirm new password
-                </FieldLabel>
-                <Input
-                  id="confirm-password"
-                  name="confirmation"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </Field>
-              {passwordError && <FieldError>{passwordError}</FieldError>}
-              <Field orientation="horizontal">
-                <Button type="submit" disabled={passwordPending}>
-                  {passwordPending && <Spinner data-icon="inline-start" />}
-                  {passwordPending ? "Updating…" : "Update password"}
-                </Button>
-              </Field>
-            </FieldGroup>
-          </form>
+          <PasswordForm />
         </CardContent>
       </Card>
 
@@ -252,5 +121,139 @@ function SettingsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function ProfileForm({ name, email }: { name: string; email: string }) {
+  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+
+  const form = useAppForm({
+    defaultValues: { name },
+    validationLogic: validateOnSubmit,
+    validators: { onDynamic: updateProfileSchema },
+    onSubmit: async ({ value }) => {
+      setError(null)
+      const result = await authClient.updateUser(
+        updateProfileSchema.parse(value)
+      )
+      if (result.error) {
+        setError(result.error.message ?? "Unable to update your profile")
+        return
+      }
+      await router.invalidate()
+      toast.add({ type: "success", title: "Profile updated" })
+    },
+  })
+
+  return (
+    <form method="post" onSubmit={submitHandler(form)}>
+      <FieldGroup>
+        <form.AppField name="name">
+          {(field) => (
+            <field.TextField
+              id="settings-name"
+              label="Name"
+              maxLength={80}
+              required
+            />
+          )}
+        </form.AppField>
+        {error && <FieldError>{error}</FieldError>}
+        <Field data-disabled>
+          <FieldLabel htmlFor="settings-email">Email</FieldLabel>
+          <Input id="settings-email" value={email} disabled />
+          <FieldDescription>
+            Email changes are not part of this release.
+          </FieldDescription>
+        </Field>
+        <Field orientation="horizontal">
+          <form.AppForm>
+            <form.SubmitButton pendingLabel="Saving…">
+              Save profile
+            </form.SubmitButton>
+          </form.AppForm>
+        </Field>
+      </FieldGroup>
+    </form>
+  )
+}
+
+function PasswordForm() {
+  const [error, setError] = useState<string | null>(null)
+
+  const form = useAppForm({
+    defaultValues: { currentPassword: "", newPassword: "", confirmation: "" },
+    validationLogic: validateOnSubmit,
+    validators: { onDynamic: changePasswordFormSchema },
+    onSubmit: async ({ value, formApi }) => {
+      setError(null)
+      const result = await authClient.changePassword({
+        ...changePasswordSchema.parse(value),
+        revokeOtherSessions: true,
+      })
+      if (result.error) {
+        setError(
+          result.error.message ?? "The current password was not accepted."
+        )
+        return
+      }
+      formApi.reset()
+      toast.add({
+        type: "success",
+        title: "Password updated",
+        description: "Other sessions were signed out.",
+      })
+    },
+  })
+
+  return (
+    <form method="post" onSubmit={submitHandler(form)}>
+      <FieldGroup>
+        <form.AppField name="currentPassword">
+          {(field) => (
+            <field.TextField
+              id="current-password"
+              label="Current password"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="newPassword">
+          {(field) => (
+            <field.TextField
+              id="new-password"
+              label="New password"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="confirmation">
+          {(field) => (
+            <field.TextField
+              id="confirm-password"
+              label="Confirm new password"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          )}
+        </form.AppField>
+        {error && <FieldError>{error}</FieldError>}
+        <Field orientation="horizontal">
+          <form.AppForm>
+            <form.SubmitButton pendingLabel="Updating…">
+              Update password
+            </form.SubmitButton>
+          </form.AppForm>
+        </Field>
+      </FieldGroup>
+    </form>
   )
 }

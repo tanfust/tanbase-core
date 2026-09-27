@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 
 import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
+import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,16 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Spinner } from "@/components/ui/spinner"
+import { FieldError, FieldGroup } from "@/components/ui/field"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
+import {
+  resetPasswordFormSchema,
+  resetPasswordSchema,
+} from "@/modules/auth/schemas"
 import { seo } from "@/modules/seo/head"
 
 export const Route = createFileRoute("/reset-password")({
@@ -42,28 +40,23 @@ function ResetPasswordPage() {
   const { token, error: tokenError } = Route.useSearch()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [pending, setPending] = useState(false)
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const password = String(form.get("password") ?? "")
-    if (password !== String(form.get("confirmation") ?? "")) {
-      setError("Passwords do not match.")
-      return
-    }
-    if (!token) return
-    setPending(true)
-    setError(null)
-    const result = await authClient.resetPassword({
-      newPassword: password,
-      token,
-    })
-    setPending(false)
-    if (result.error)
-      setError(authErrorMessage(result.error, "Unable to reset the password"))
-    else setSuccess(true)
-  }
+  const form = useAppForm({
+    defaultValues: { newPassword: "", confirmation: "" },
+    validationLogic: validateOnSubmit,
+    validators: { onDynamic: resetPasswordFormSchema },
+    onSubmit: async ({ value }) => {
+      if (!token) return
+      setError(null)
+      const result = await authClient.resetPassword({
+        newPassword: resetPasswordSchema.parse(value).newPassword,
+        token,
+      })
+      if (result.error)
+        setError(authErrorMessage(result.error, "Unable to reset the password"))
+      else setSuccess(true)
+    },
+  })
 
   const invalid = !token || Boolean(tokenError)
 
@@ -103,37 +96,41 @@ function ResetPasswordPage() {
               </Button>
             </div>
           ) : (
-            <form method="post" onSubmit={submit}>
+            <form method="post" onSubmit={submitHandler(form)}>
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="password">New password</FieldLabel>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    required
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="confirmation">
-                    Confirm password
-                  </FieldLabel>
-                  <Input
-                    id="confirmation"
-                    name="confirmation"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    required
-                  />
-                </Field>
+                <form.AppField name="newPassword">
+                  {(field) => (
+                    <field.TextField
+                      id="password"
+                      label="New password"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                    />
+                  )}
+                </form.AppField>
+                <form.AppField name="confirmation">
+                  {(field) => (
+                    <field.TextField
+                      id="confirmation"
+                      label="Confirm password"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                    />
+                  )}
+                </form.AppField>
                 {error && <FieldError>{error}</FieldError>}
-                <Button type="submit" disabled={pending} className="w-full">
-                  {pending && <Spinner data-icon="inline-start" />}
-                  {pending ? "Updating password…" : "Update password"}
-                </Button>
+                <form.AppForm>
+                  <form.SubmitButton
+                    className="w-full"
+                    pendingLabel="Updating password…"
+                  >
+                    Update password
+                  </form.SubmitButton>
+                </form.AppForm>
               </FieldGroup>
             </form>
           )}
