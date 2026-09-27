@@ -146,6 +146,7 @@ first user's rows.
 | `pnpm cf:typegen`                                              | Regenerate Worker binding types                        |
 | `pnpm cf:dry-run:production`                                   | Package the production configuration without deploying |
 | `pnpm smoke -- --environment production --expect-version <id>` | Verify production after a deploy                       |
+| `pnpm perf:bundle`, `pnpm perf:lighthouse`, `pnpm perf:ttfb`   | Check performance budgets (docs/PERFORMANCE.md)        |
 
 The [development guide](docs/DEVELOPMENT.md#commands) lists every command.
 

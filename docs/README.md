@@ -16,6 +16,7 @@ last_verified: 2026-09-20
 | Testers              | [Fresh-account test](FRESH_ACCOUNT_TEST.md) | The timed install test for F-023                  |
 | Contributors         | [Development](DEVELOPMENT.md)               | Setup, commands, tests, and contribution workflow |
 | Operators            | [Deployment](DEPLOYMENT.md)                 | Production deployment, smoke checks, and rollback |
+| Operators            | [Performance](PERFORMANCE.md)               | Budgets, how each is measured, and the results    |
 | Maintainers          | [Overview](OVERVIEW.md)                     | Stable product and architecture truth             |
 | Product planning     | [Features](FEATURES.md)                     | Roadmap, dependencies, and acceptance criteria    |
 | Agents               | [AGENTS](../AGENTS.md)                      | Required reading order and operating contract     |

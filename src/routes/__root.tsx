@@ -11,7 +11,6 @@ import { TanStackDevtools } from "@tanstack/react-devtools"
 import { Analytics } from "@/components/analytics"
 import { ErrorPage, NotFoundPage } from "@/components/status-page"
 import { ThemeProvider, themeScript } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toast"
 import { WebMcpTools } from "@/components/web-mcp"
 import { assetRecoveryScript } from "@/lib/asset-recovery"
 import { siteConfig } from "@/lib/site"
@@ -72,9 +71,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {!import.meta.env.DEV && <ScriptOnce>{assetRecoveryScript}</ScriptOnce>}
       </head>
       <body>
-        <ThemeProvider>
-          <Toaster>{children}</Toaster>
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
         <Analytics config={analytics} />
         <WebMcpTools />
         <TanStackDevtools

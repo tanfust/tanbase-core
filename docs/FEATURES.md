@@ -557,15 +557,22 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-019: Performance budgets
 
-**Module:** platform | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-011, F-016
+**Module:** platform | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-011, F-016
 
 **Acceptance criteria**
 
-- [ ] Lighthouse CI on the production build and canonical production URL
-- [ ] Bundle size check for the landing page
-- [ ] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`
+- [x] Lighthouse CI on the production build and canonical production URL: the
+      CI job audits a local production build on every push, and the
+      Production performance workflow audits `core.tanbase.dev` after each
+      deploy
+- [x] Bundle size check for the landing page: `pnpm perf:bundle` in both
+- [ ] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`:
+      the landing page is measured, and the board waits on signed-in board
+      loads in Workers Logs
 - [x] Placement tested on and off, decision recorded ([ADR-0011](decisions/0011-placement-near-d1.md): server functions through `GIG` fell from 1.7–4.3 s to 24–165 ms)
-- [ ] Budgets in OVERVIEW.md met or updated with a reason
+- [x] Budgets in OVERVIEW.md met or updated with a reason: the landing
+      JavaScript budget rose from 100 KB to 150 KB, since React DOM alone is
+      about 65 KB; the others are met ([Performance](PERFORMANCE.md))
 
 ---
 

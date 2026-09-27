@@ -67,6 +67,10 @@ commit is no longer the tip of `main` skips its deploy.
 
 5. Check the change's own behavior on the live site: the page, endpoint, or
    header it changed.
+6. Check the **Production performance** workflow run for the merge commit. It
+   waits for the Workers Build, then checks the landing JavaScript and
+   Lighthouse on production. It never blocks a merge; a failure means a
+   budget in `docs/PERFORMANCE.md` slipped.
 
 ## Record the evidence
 

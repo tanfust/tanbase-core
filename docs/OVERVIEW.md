@@ -315,15 +315,24 @@ CLAUDE.md
 
 ### Performance budgets
 
-Initial targets. Adjust after the first measurements in F-019.
+Measured in F-019. [Performance](PERFORMANCE.md) says how each budget is
+checked and records the results; `scripts/performance.mjs` holds the numbers
+the checks enforce.
 
-| Metric                                       | Target               |
-| -------------------------------------------- | -------------------- |
-| Landing page Lighthouse performance (mobile) | 95 or higher         |
-| Landing page JavaScript                      | under 100 KB gzipped |
-| Board page TTFB, p75, from Tunis and US East | under 400 ms         |
-| Realtime event between two devices           | under 1 s            |
-| Worker CPU per server-rendered request, p75  | under 50 ms          |
+| Metric                                                   | Target                            |
+| -------------------------------------------------------- | --------------------------------- |
+| Landing page Lighthouse performance (mobile), production | 95 or higher, median of five runs |
+| Landing page JavaScript to render and hydrate            | under 150 KB gzipped              |
+| Landing and board TTFB, p75, from Tunis and US East      | under 400 ms                      |
+| Realtime event between two devices                       | under 1 s                         |
+| Worker CPU per server-rendered request, p75              | under 50 ms                       |
+
+The JavaScript budget started at 100 KB, which this stack cannot reach: React
+DOM alone is about 65 KB gzipped, and TanStack Router and Query add about
+25 KB more. F-019 moved the toast system out of public pages, which took the
+landing page from 159 KB to 145 KB, and set the budget just above it.
+PostHog, when an installation sets its key, loads after hydration and is not
+counted; on `core.tanbase.dev` it adds about 100 KB.
 
 ---
 

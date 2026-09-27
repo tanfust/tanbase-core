@@ -23,24 +23,27 @@ lockfile or supply-chain validation in contributor or CI instructions.
 
 ## Commands
 
-| Command                                            | Purpose                                                                                                                                     |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm run setup`                                   | Guided local and production installation                                                                                                    |
-| `pnpm run setup --local-only`                      | Prepare only isolated local development                                                                                                     |
-| `pnpm dev`                                         | Run TanStack Start inside the Workers runtime on port 3000, with `env.local`                                                                |
-| `pnpm verify`                                      | Format, lint, docs, migration, type, test, boundary, and build gates                                                                        |
-| `pnpm test:e2e`                                    | Run the isolated local-D1 authentication, board, and WebMCP browser journeys                                                                |
-| `pnpm test:dev-client`                             | Load the dev server's client module graph and fail on import-protection errors                                                              |
-| `pnpm docs:check`                                  | Validate frontmatter, required sections, and internal links                                                                                 |
-| `pnpm db:generate`                                 | Generate a migration from the Drizzle schema and format its snapshot                                                                        |
-| `pnpm db:check`                                    | Check generated Drizzle migration history                                                                                                   |
-| `pnpm db:migrate:local`                            | Apply pending migrations to isolated local D1 storage                                                                                       |
-| `pnpm db:seed:local`                               | Idempotently add local-only project and task fixtures                                                                                       |
-| `pnpm cf:typegen`                                  | Regenerate Worker binding types                                                                                                             |
-| `pnpm cf:dry-run:production`                       | Build production configuration and run Wrangler dry run                                                                                     |
-| `pnpm cf:dry-run:default`                          | Build the top-level configuration, which the Deploy button deploys, and run Wrangler dry run                                                |
-| `pnpm cf:deploy:production`                        | Build, migrate, deploy, and smoke production; superseded Workers Builds skip the deploy; changes live remote state                          |
-| `pnpm smoke -- [--url <url>] --environment <name>` | Verify public and protected-route contracts; production defaults to the canonical origin; add `--config default` for a top-level deployment |
+| Command                                              | Purpose                                                                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run setup`                                     | Guided local and production installation                                                                                                    |
+| `pnpm run setup --local-only`                        | Prepare only isolated local development                                                                                                     |
+| `pnpm dev`                                           | Run TanStack Start inside the Workers runtime on port 3000, with `env.local`                                                                |
+| `pnpm verify`                                        | Format, lint, docs, migration, type, test, boundary, and build gates                                                                        |
+| `pnpm test:e2e`                                      | Run the isolated local-D1 authentication, board, and WebMCP browser journeys                                                                |
+| `pnpm test:dev-client`                               | Load the dev server's client module graph and fail on import-protection errors                                                              |
+| `pnpm docs:check`                                    | Validate frontmatter, required sections, and internal links                                                                                 |
+| `pnpm db:generate`                                   | Generate a migration from the Drizzle schema and format its snapshot                                                                        |
+| `pnpm db:check`                                      | Check generated Drizzle migration history                                                                                                   |
+| `pnpm db:migrate:local`                              | Apply pending migrations to isolated local D1 storage                                                                                       |
+| `pnpm db:seed:local`                                 | Idempotently add local-only project and task fixtures                                                                                       |
+| `pnpm cf:typegen`                                    | Regenerate Worker binding types                                                                                                             |
+| `pnpm cf:dry-run:production`                         | Build production configuration and run Wrangler dry run                                                                                     |
+| `pnpm cf:dry-run:default`                            | Build the top-level configuration, which the Deploy button deploys, and run Wrangler dry run                                                |
+| `pnpm cf:deploy:production`                          | Build, migrate, deploy, and smoke production; superseded Workers Builds skip the deploy; changes live remote state                          |
+| `pnpm smoke -- [--url <url>] --environment <name>`   | Verify public and protected-route contracts; production defaults to the canonical origin; add `--config default` for a top-level deployment |
+| `pnpm perf:bundle -- [--url <url>]`                  | Check the landing page's JavaScript against its budget ([Performance](PERFORMANCE.md))                                                      |
+| `pnpm perf:lighthouse -- [--url <url>] [--compress]` | Run Lighthouse mobile several times and check the median score; `--compress` for a local `vite preview`                                     |
+| `pnpm perf:ttfb -- [--url <url>] [--path <path>]`    | Measure time to first byte from Tunis and US East with Globalping probes                                                                    |
 
 ## Generated files
 
