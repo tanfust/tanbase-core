@@ -567,8 +567,10 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
       deploy
 - [x] Bundle size check for the landing page: `pnpm perf:bundle` in both
 - [ ] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`:
-      the landing page is measured, and the board waits on signed-in board
-      loads in Workers Logs
+      the landing page is within budget. The board measured about 540 ms from
+      Tunis and 620 ms from US East on 2026-09-27; its session and
+      Better Auth lookups are being cut, and it is measured again after that
+      deploys
 - [x] Placement tested on and off, decision recorded ([ADR-0011](decisions/0011-placement-near-d1.md): server functions through `GIG` fell from 1.7–4.3 s to 24–165 ms)
 - [x] Budgets in OVERVIEW.md met or updated with a reason: the landing
       JavaScript budget rose from 100 KB to 150 KB, since React DOM alone is

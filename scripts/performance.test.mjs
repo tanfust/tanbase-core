@@ -43,5 +43,6 @@ test("percentiles use the nearest rank", () => {
 test("budgets match the documented targets", () => {
   assert.equal(budgets.landingJavaScriptBytes, 150 * 1024)
   assert.equal(budgets.lighthouseProduction, 95)
+  assert.equal(budgets.lighthouseAlarm, 90)
   assert.equal(budgets.ttfbP75Ms, 400)
 })

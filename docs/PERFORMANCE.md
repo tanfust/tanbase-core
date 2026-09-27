@@ -12,13 +12,13 @@ together. This page says how each budget is measured and records the results.
 
 ## Checks
 
-| Budget                          | Checked                                                                          | Command                                                             |
-| ------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Landing page JavaScript         | CI, on a local build of every push; after each deploy, on production             | `pnpm perf:bundle -- [--url <url>]`                                 |
-| Lighthouse mobile performance   | CI, on the local build, minimum 90; after each deploy, on production, minimum 95 | `pnpm perf:lighthouse -- [--url <url>] [--compress] [--runs <n>]`   |
-| Time to first byte              | By hand, from Tunis and US East                                                  | `pnpm perf:ttfb -- [--url <url>] [--path <path>] [--rounds <n>]`    |
-| Worker CPU per server render    | By hand, in Workers Logs                                                         | See [Worker CPU](#worker-cpu)                                       |
-| Realtime event between two tabs | `pnpm test:e2e`, locally                                                         | The board journey fails when a change takes over a second to arrive |
+| Budget                          | Checked                                                                                                                                | Command                                                             |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Landing page JavaScript         | CI, on a local build of every push; after each deploy, on production                                                                   | `pnpm perf:bundle -- [--url <url>]`                                 |
+| Lighthouse mobile performance   | PageSpeed Insights by hand, for the budget; Lighthouse in CI on the local build and after each deploy on production, alarming below 90 | `pnpm perf:lighthouse -- [--url <url>] [--compress] [--runs <n>]`   |
+| Time to first byte              | By hand, from Tunis and US East                                                                                                        | `pnpm perf:ttfb -- [--url <url>] [--path <path>] [--rounds <n>]`    |
+| Worker CPU per server render    | By hand, in Workers Logs                                                                                                               | See [Worker CPU](#worker-cpu)                                       |
+| Realtime event between two tabs | `pnpm test:e2e`, locally                                                                                                               | The board journey fails when a change takes over a second to arrive |
 
 Without `--url`, the scripts target the canonical origin in `src/lib/site.ts`.
 
@@ -53,6 +53,13 @@ preview` sends files uncompressed, so `--compress` puts a Brotli proxy in
   repository variable to audit their own site. Both jobs upload the report as
   an artifact.
 
+The budget, 95, is the mobile score in
+[PageSpeed Insights](https://pagespeed.web.dev), measured by hand. GitHub's
+runners score the same page a few points lower: the first post-deploy run
+scored a median of 93 while PageSpeed Insights reported 97. So both CI jobs
+fail only below 90, an alarm for real regressions rather than a check of the
+budget.
+
 ### Time to first byte
 
 `pnpm perf:ttfb` measures from [Globalping](https://globalping.io)'s free
@@ -62,9 +69,11 @@ what a first-time visitor waits for: DNS, TCP, TLS, and the server's first
 byte. It reports p50 and p75, and the server wait on its own.
 
 Probes send no cookies, and a measurement account's session must never go to
-third-party probes. So the board, which needs a session, is derived: the
-landing page's TTFB plus the board's extra server time, from Workers Logs of
-real board loads.
+third-party probes. So the board, which needs a session, is derived. Its TTFB
+is the landing page's measured TTFB plus the difference between the board's
+and the landing page's p75 Worker wall time, from Workers Logs of real
+signed-in loads. Both pages run in the same place, so the network part is the
+same.
 
 ### Worker CPU
 
@@ -79,18 +88,32 @@ through the Workers Observability API's `telemetry/query` endpoint.
 
 ### 2026-09-27
 
-| Budget                            | Target               | Measured                                                                                    | Result      |
-| --------------------------------- | -------------------- | ------------------------------------------------------------------------------------------- | ----------- |
-| Landing page JavaScript           | under 150 KB gzipped | 144.6 KB in 10 files, on a local build of this change; production served 159.3 KB before it | Met         |
-| Lighthouse mobile, production     | 95 or higher         | Median 96 of 5 runs on version `3aa997d3`; PageSpeed Insights scored 97 on 2026-09-26       | Met         |
-| Lighthouse mobile, local build    | 90 or higher         | Median 97 of 3 runs                                                                         | Met         |
-| Landing page TTFB, p75, Tunis     | under 400 ms         | 200 ms, 5 samples, through `MRS`; p50 152 ms                                                | Met         |
-| Landing page TTFB, p75, US East   | under 400 ms         | 279 ms, 20 samples, through `IAD`, `ORD`, and `EWR`; p50 223 ms                             | Met         |
-| Board TTFB, p75                   | under 400 ms         | Not measured: Workers Logs held no signed-in board loads to derive it from                  | Pending     |
-| Worker CPU per server render, p75 | under 50 ms          | 40 ms over 272 page loads from 2026-09-20 to 2026-09-27; p50 12 ms, p95 71 ms               | Met         |
-| Realtime event between two tabs   | under 1 s            | 5 ms for a create and 5 ms for a move, in `pnpm test:e2e`                                   | Met locally |
+| Budget                            | Target               | Measured                                                                                              | Result      |
+| --------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------- | ----------- |
+| Landing page JavaScript           | under 150 KB gzipped | 144.6 KB in 10 files, on a local build of this change; production served 159.3 KB before it           | Met         |
+| Lighthouse mobile, production     | 95 or higher         | PageSpeed Insights scored 97 on 2026-09-26; from a Mac, a median of 96 of 5 runs on `3aa997d3`        | Met         |
+| Lighthouse alarm, local build     | 90 or higher         | Median 97 of 3 runs                                                                                   | Met         |
+| Lighthouse alarm, production      | 90 or higher         | Median 93 of 5 runs on GitHub's runner, the first post-deploy run, on `7df1cb2d`                      | Met         |
+| Landing page TTFB, p75, Tunis     | under 400 ms         | 200 ms, 5 samples, through `MRS`; p50 152 ms                                                          | Met         |
+| Landing page TTFB, p75, US East   | under 400 ms         | 279 ms, 20 samples, through `IAD`, `ORD`, and `EWR`; p50 223 ms                                       | Met         |
+| Board TTFB, p75, Tunis            | under 400 ms         | About 540 ms, derived: 200 ms plus 339 ms more Worker wall time than the landing page                 | Over        |
+| Board TTFB, p75, US East          | under 400 ms         | About 620 ms, derived: 279 ms plus the same 339 ms                                                    | Over        |
+| Worker CPU per server render, p75 | under 50 ms          | 40 ms over 272 page loads from 2026-09-20 to 2026-09-27, p50 12 ms, p95 71 ms; the board alone 129 ms | Met overall |
+| Realtime event between two tabs   | under 1 s            | 5 ms for a create and 5 ms for a move, in `pnpm test:e2e`                                             | Met locally |
 
 Notes:
+
+- **The board.** Eight signed-in board loads on version `7df1cb2d` took 298
+  to 853 ms of Worker wall time, p75 407 ms, and 52 to 313 ms of CPU, p75
+  129 ms. The landing page's p75 wall time is 68 ms. One render made about
+  12 sequential D1 queries, where about 4 would do:
+  - the layout, `getProjects`, and `getBoard` each looked up the session
+  - every lookup built a new Better Auth instance, whose OAuth resource seed
+    reads D1
+  - the projects list was read twice
+
+  The next change caches the instance per isolate and the session per
+  request.
 
 - **Where the time goes.** Every request runs in Marseille, next to the D1
   primary ([ADR-0011](decisions/0011-placement-near-d1.md)). From Tunis,

@@ -319,13 +319,13 @@ Measured in F-019. [Performance](PERFORMANCE.md) says how each budget is
 checked and records the results; `scripts/performance.mjs` holds the numbers
 the checks enforce.
 
-| Metric                                                   | Target                            |
-| -------------------------------------------------------- | --------------------------------- |
-| Landing page Lighthouse performance (mobile), production | 95 or higher, median of five runs |
-| Landing page JavaScript to render and hydrate            | under 150 KB gzipped              |
-| Landing and board TTFB, p75, from Tunis and US East      | under 400 ms                      |
-| Realtime event between two devices                       | under 1 s                         |
-| Worker CPU per server-rendered request, p75              | under 50 ms                       |
+| Metric                                                   | Target                             |
+| -------------------------------------------------------- | ---------------------------------- |
+| Landing page Lighthouse performance (mobile), production | 95 or higher in PageSpeed Insights |
+| Landing page JavaScript to render and hydrate            | under 150 KB gzipped               |
+| Landing and board TTFB, p75, from Tunis and US East      | under 400 ms                       |
+| Realtime event between two devices                       | under 1 s                          |
+| Worker CPU per server-rendered request, p75              | under 50 ms                        |
 
 The JavaScript budget started at 100 KB, which this stack cannot reach: React
 DOM alone is about 65 KB gzipped, and TanStack Router and Query add about

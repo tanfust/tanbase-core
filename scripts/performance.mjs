@@ -7,14 +7,17 @@ import { gzipSync } from "node:zlib"
 export const budgets = {
   /** JavaScript the landing page needs to render and hydrate, gzipped. */
   landingJavaScriptBytes: 150 * 1024,
-  /** Lighthouse mobile performance on the canonical production URL. */
+  /**
+   * Mobile performance on the canonical production URL, as PageSpeed
+   * Insights reports it. The budget.
+   */
   lighthouseProduction: 95,
   /**
-   * Lighthouse mobile performance on a local production build. Lower than
-   * production: the build is served without Cloudflare's edge, and CI
-   * machines vary.
+   * The minimum for a Lighthouse run on a CI machine, against production or
+   * a local build. GitHub's runners score a few points below PageSpeed
+   * Insights for the same page, so this is an alarm for real regressions.
    */
-  lighthouseLocalBuild: 90,
+  lighthouseAlarm: 90,
   /** Time to first byte, p75, from Tunis and US East. */
   ttfbP75Ms: 400,
 }

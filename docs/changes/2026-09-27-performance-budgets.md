@@ -93,12 +93,26 @@ The previous deploy, `3d497fc` (#44, Workers Paid in the docs), deployed as
 version `3aa997d3` through Workers Build `0dbf4209`. Its pinned smoke passed,
 and the homepage's Markdown names Workers Paid.
 
+Production, 2026-09-27, merge commit `c957dea`:
+
+- Workers Build `b927aeef` deployed version `7df1cb2d` at 17:45 UTC and passed
+  its post-deploy smoke. The pinned smoke passed at 17:56 UTC.
+- `pnpm perf:bundle`: 144.6 KB gzipped in 10 files, down from 159.3 KB.
+- **First Production performance run:** the JavaScript check passed at
+  144.8 KB. Lighthouse on GitHub's runner scored 80, 96, 96, 93, and 91, a
+  median of 93, so the run failed against 95. The runner scores lower than
+  PageSpeed Insights, which reported 97; the follow-up change makes 90 the
+  CI alarm.
+- **Board:** eight signed-in board loads took a p75 of 407 ms of Worker wall
+  time and 129 ms of CPU. Derived board TTFB is about 540 ms from Tunis and
+  620 ms from US East, over the 400 ms budget.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `3d497fc` | `http://localhost:4391`    | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                                | URL                        | Date       | Result                    |
+| ---------- | ------------------------------------- | -------------------------- | ---------- | ------------------------- |
+| Local      | Working tree based on `3d497fc`       | `http://localhost:4391`    | 2026-09-27 | Passed                    |
+| Production | `c957dea` / Worker version `7df1cb2d` | `https://core.tanbase.dev` | 2026-09-27 | Passed; board over budget |
 
 ## Rollback notes
 

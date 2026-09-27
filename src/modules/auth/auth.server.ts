@@ -238,6 +238,47 @@ export function createAuth(dependencies: AuthDependencies = {}) {
 
 export type Auth = ReturnType<typeof createAuth>
 
-export function getAuth() {
-  return createAuth()
+interface CachedAuth {
+  database: D1Database
+  key: string
+  auth: Auth
+}
+
+const cachedAuth = new Map<string, CachedAuth>()
+// A Worker answers on a handful of origins; the bound only guards memory.
+const maxCachedOrigins = 8
+
+/**
+ * The Better Auth instance for this configuration and origin. Building one
+ * sets up every plugin, and each new instance makes a D1 read to seed the
+ * MCP resource, so an isolate builds one per origin and reuses it.
+ */
+export function authFor(environment: AuthEnvironment, origin: string): Auth {
+  const key = JSON.stringify([
+    origin,
+    environment.APP_ENV,
+    environment.BETTER_AUTH_SECRET,
+    environment.BETTER_AUTH_URL,
+    environment.EMAIL_FROM,
+    Boolean(environment.EMAIL),
+    environment.TURNSTILE_SITE_KEY,
+    environment.TURNSTILE_SECRET_KEY,
+  ])
+  const cached = cachedAuth.get(origin)
+  if (cached?.key === key && cached.database === environment.DB) {
+    return cached.auth
+  }
+
+  const auth = createAuth({ environment, origin })
+  if (!cachedAuth.has(origin) && cachedAuth.size >= maxCachedOrigins) {
+    cachedAuth.clear()
+  }
+  cachedAuth.set(origin, { database: environment.DB, key, auth })
+  return auth
+}
+
+export function getAuth(): Auth {
+  const environment = getAuthEnvironment()
+  validateAuthEnvironment(environment)
+  return authFor(environment, resolveAuthOrigin(environment))
 }

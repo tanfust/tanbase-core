@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 import type { SendEmailInput } from "@/modules/email/types"
 import { listProjects } from "@/modules/tasks/repository.server"
 
-import { createAuth } from "./auth.server"
+import { authFor, createAuth } from "./auth.server"
 
 const baseURL = "http://localhost:3000"
 const testSecret = "test-only-secret-that-is-at-least-32-characters"
@@ -368,5 +368,47 @@ describe("Better Auth D1 core", () => {
       })
     )
     expect(invalidResetResponse.status).toBe(400)
+  })
+})
+
+describe("authFor", () => {
+  const environment = {
+    APP_ENV: "production" as const,
+    BETTER_AUTH_SECRET: testSecret,
+    BETTER_AUTH_URL: "",
+    DB: env.DB,
+  }
+
+  it("reuses one instance per configuration and origin", () => {
+    const origin = "https://reuse.example"
+    const auth = authFor(environment, origin)
+
+    expect(authFor({ ...environment }, origin)).toBe(auth)
+    expect(authFor(environment, "https://other.example")).not.toBe(auth)
+  })
+
+  it("builds a new instance when the configuration changes", async () => {
+    const origin = "https://rotate.example"
+    // Each new instance seeds the MCP resource row when it initializes, so
+    // wait for one before building the next for the same origin.
+    const auth = authFor(environment, origin)
+    await auth.$context
+    const rotated = authFor(
+      { ...environment, BETTER_AUTH_SECRET: `${testSecret}-rotated` },
+      origin
+    )
+    await rotated.$context
+    const challenged = authFor(
+      {
+        ...environment,
+        TURNSTILE_SITE_KEY: "key",
+        TURNSTILE_SECRET_KEY: "secret",
+      },
+      origin
+    )
+    await challenged.$context
+
+    expect(rotated).not.toBe(auth)
+    expect(challenged).not.toBe(rotated)
   })
 })
