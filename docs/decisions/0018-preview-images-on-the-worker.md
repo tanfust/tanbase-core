@@ -61,9 +61,11 @@ Constraints:
   it, a difference within the runs' own spread. The renderer is instantiated
   only on the first image request.
 - Locally, the first render in an isolate took about 56 ms and later renders
-  about 10 ms. With request collapsing and the tiered cache, Cloudflare draws
-  each card about once per deploy. On Workers Free a first render can exceed
-  the 10 ms CPU limit and fail; Workers Paid allows 30 seconds.
+  about 10 ms. In production the first render took 312 ms of CPU. With
+  request collapsing and the tiered cache, Cloudflare draws each card about
+  once per deploy. Workers Paid allows 30 seconds, so the render fits. Workers
+  Free allows 10 ms, so on the Free plan the render is expected to fail and
+  preview images need Workers Paid.
 - Cache hits are billed as requests with no CPU time.
 - Workers Caching serves one image to every origin, which is why cards carry
   no hostname.
