@@ -79,6 +79,13 @@ carries `SoftwareSourceCode` JSON-LD, and every other page is `noindex`. On
 Accessibility, 100 Best Practices, 100 SEO, and 4/4 Agentic Browsing, up from
 95 Accessibility and 3/4 Agentic Browsing before the change.
 
+F-019 performance budgets are measured and checked
+([Performance](PERFORMANCE.md)). CI checks the landing page's JavaScript and
+runs Lighthouse on a local build, and a workflow audits production after each
+deploy. On 2026-09-27 the landing page loaded 144.8 KB of gzipped JavaScript,
+and its time to first byte at p75 was 200 ms from Tunis and 264 ms from US
+East. The board's was about 336 and 400 ms, after its server time was halved.
+
 F-017 preview images are live
 ([ADR-0018](decisions/0018-preview-images-on-the-worker.md)). The homepage
 names `/og/home.png`, a 1200×630 card that Takumi draws on the Worker. Workers
@@ -106,6 +113,7 @@ run the button yet; the first run and the
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `8da5e5a` / Worker version `028967ae` | `https://core.tanbase.dev`             | 2026-09-27 18:11 UTC | Board server time: Workers Build `9b072f3f` deployed at 18:07 UTC and passed its post-deploy smoke; pinned smoke passed; 15 signed-in board loads took a p75 of 204 ms of Worker wall time, down from 407 ms, putting board TTFB at about 336 ms from Tunis and 400 ms from US East; the Production performance run passed, Lighthouse median 96 on GitHub's runner          |
 | Production    | `c957dea` / Worker version `7df1cb2d` | `https://core.tanbase.dev`             | 2026-09-27 17:56 UTC | F-019 performance budgets: Workers Build `b927aeef` deployed at 17:45 UTC and passed its post-deploy smoke; pinned smoke passed; the landing page loads 144.6 KB of gzipped JavaScript, down from 159.3 KB; the first Production performance run passed the JavaScript check and scored a Lighthouse median of 93 on GitHub's runner                                         |
 | Production    | `3d497fc` / Worker version `3aa997d3` | `https://core.tanbase.dev`             | 2026-09-27 17:12 UTC | Workers Paid in the docs (#44): Workers Build `0dbf4209` deployed and passed its post-deploy smoke; pinned smoke passed; the homepage's deploy copy and Markdown name Workers Paid                                                                                                                                                                                           |
 | Production    | `5d055b0` / Worker version `1590a9be` | `https://core.tanbase.dev`             | 2026-09-27 16:57 UTC | F-017 preview images: Workers Build `48697ce9` deployed at 16:56 UTC and passed its post-deploy smoke, which drew `/og/home.png` once in 312 ms of CPU; pinned smoke passed; later requests, including one with a query string, were `Cf-Cache-Status: HIT` without running the entrypoint; `og:image` names the image on the canonical origin                               |
@@ -152,10 +160,13 @@ None.
 
 ## Last known deployed commit
 
-Production runs merge commit `c957dea` as Worker version `7df1cb2d`, deployed
-by Workers Build `b927aeef` at 2026-09-27 17:45 UTC with the F-019 performance
-checks and the toaster moved out of public pages. Its post-deploy smoke
-passed, and a pinned smoke passed at 17:56 UTC.
+Production runs merge commit `8da5e5a` as Worker version `028967ae`, deployed
+by Workers Build `9b072f3f` at 2026-09-27 18:07 UTC with one Better Auth
+instance per isolate and one session lookup per request. Its post-deploy
+smoke passed, and a pinned smoke passed at 18:11 UTC.
+
+The F-019 performance checks shipped in version `7df1cb2d` from `c957dea`,
+deployed by Workers Build `b927aeef` at 17:45 UTC.
 
 The Workers Paid requirement shipped in version `3aa997d3` from `3d497fc`,
 deployed by Workers Build `0dbf4209` at 17:11 UTC.

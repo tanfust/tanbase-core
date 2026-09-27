@@ -6,19 +6,62 @@ last_verified: 2026-09-27
 
 # TanBase Core
 
-TanBase Core is an open-source application foundation for TanStack Start on
-Cloudflare Workers. The current foundation runs server-rendered React and static
-assets in the Workers runtime, with repeatable verification and
-Cloudflare-owned production deployments.
+A task board that proves the whole stack works. TanBase Core is an
+open-source TanStack Start foundation for Cloudflare Workers: auth, data,
+files, realtime, jobs, AI, and an MCP server in one Worker you fork and own.
 
-The repository now includes D1 and Drizzle, ownership-scoped project and task
-repositories, Better Auth's D1 core with its authentication UI and task board,
-Turnstile and rate limits on auth, task attachments on R2, a live board on
-Durable Objects, due-date reminders on Cron Triggers and Queues, AI task
-breakdown on Workflows and Workers AI, an MCP server, typed React Email
-templates, and optional native Cloudflare Email Service delivery. The live
-site at [core.tanbase.dev](https://core.tanbase.dev) maps each Cloudflare
-primitive to the feature it powers and shows the cost model.
+[Live demo](https://core.tanbase.dev) · [Deploy your own](#quick-start) ·
+[Documentation](docs/README.md)
+
+It is not a bare template. Each Cloudflare primitive powers a real feature of
+the board, runs in production on `core.tanbase.dev`, and has tests and docs.
+Keep what you need and [remove the rest](#removing-a-module).
+
+## Primitive map
+
+Every feature runs in the same Worker, `src/server.ts`: server rendering,
+static assets, the cron handler, the queue consumer, the Workflow, and the
+Durable Object ship in one deploy.
+
+| Feature                                 | Cloudflare product                         | Binding or route             |
+| --------------------------------------- | ------------------------------------------ | ---------------------------- |
+| Projects and tasks                      | D1 with Drizzle                            | `DB`                         |
+| Accounts and sessions                   | Better Auth on D1                          | `DB`                         |
+| Bot checks on sign-up and sign-in       | Turnstile                                  | `TURNSTILE_SECRET_KEY`       |
+| Abuse limits on auth and AI             | Rate Limiting                              | `AUTH_LIMITER`, `AI_LIMITER` |
+| Task attachments                        | R2                                         | `FILES`                      |
+| Live board across devices               | Durable Objects with WebSocket Hibernation | `BOARD`                      |
+| Due-date reminders                      | Cron Triggers and Queues                   | `EMAIL_QUEUE`                |
+| Verification and reminder email         | Email Service                              | `EMAIL`                      |
+| Task breakdown into subtasks            | Workflows                                  | `BREAKDOWN`                  |
+| Subtask suggestions                     | Workers AI through AI Gateway              | `AI`                         |
+| Task tools for Claude and other agents  | MCP server with OAuth 2.1                  | `/mcp`                       |
+| Link preview images drawn on the Worker | Workers Caching                            | `exports.OgImage`            |
+| Structured request logs                 | Workers Logs                               | `observability`              |
+
+## Cost
+
+The target: the public demo runs on Workers Paid at $5 a month, with its
+usage inside the plan's included allowances. Static assets and egress are
+free. Every deployment needs Workers Paid, because password sign-in and
+drawing a preview image take more CPU per request than Workers Free allows
+([why](docs/DEPLOYMENT.md#workers-paid-is-required)).
+
+What could push it past $5:
+
+- Workers AI beyond the free daily Neurons
+- Abuse of the public demo: sign-ups, uploads, and AI calls
+
+Guardrails running now:
+
+- Turnstile and per-IP rate limits on auth
+- A per-user daily AI quota and burst limit
+- A 10 MB upload cap with a file type allowlist
+
+The allowances each product includes are on the
+[landing page](https://core.tanbase.dev/#cost-heading) and in the
+[cost model](docs/OVERVIEW.md#cost-model). [Performance](docs/PERFORMANCE.md)
+records the measured budgets.
 
 ## Quick start
 
@@ -115,8 +158,7 @@ pnpm cf:dry-run:production
   `AGENTS.md` and task skills in `.claude/skills/` for adding a table, adding
   or removing a module, and deploying
 
-Local and production use separate D1 databases. Every later Cloudflare binding
-remains deferred until its owning product feature is implemented.
+Local and production use separate D1 databases.
 
 ## Removing a module
 
