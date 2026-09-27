@@ -13,6 +13,10 @@ mirror `projects` and `tasks` (`src/db/schema/projects.ts`,
 Replace `widget` with the real name: singular for the SQL table (`widget`),
 plural for the Drizzle export (`widgets`).
 
+Put the table in the module that owns its feature. A table for a new feature
+gets a new module under `src/modules/<module>/`, laid out as the `add-module`
+skill describes, and a row in the `AGENTS.md` module map.
+
 ## 1. Schema
 
 Create `src/db/schema/widgets.ts`:
@@ -38,8 +42,12 @@ export const widgets = sqliteTable(
   (table) => [
     // Lets child tables reference (id, user_id) so owners cannot disagree.
     uniqueIndex("widget_id_user_id_unique").on(table.id, table.userId),
-    // Every read filters by user first.
-    index("widget_user_created_idx").on(table.userId, table.createdAt),
+    // Every read filters by user first; the ID breaks ties in ordering.
+    index("widget_user_created_idx").on(
+      table.userId,
+      table.createdAt,
+      table.id
+    ),
   ]
 )
 
@@ -58,6 +66,12 @@ Rules:
   child.
 - Put value limits in a `check()` constraint when the database must enforce
   them, as `attachment_size_check` does.
+- A column with a fixed set of values gets a `check()` constraint too, like
+  `task_status_check`. Define the values once in the module's `contracts.ts`,
+  which the UI may import, and import them into the schema, as
+  `attachments.ts` imports its size limit from `src/modules/files/limits.ts`.
+- Length limits on text usually live only in the Zod schema, as task titles
+  and project names do. Add a database check only when other writers exist.
 
 Export it from `src/db/schema/index.ts`:
 
@@ -72,6 +86,9 @@ pnpm db:generate
 pnpm db:check
 pnpm db:migrate:local
 ```
+
+`db:generate` also formats the generated snapshot and journal, which
+`pnpm verify` checks. Commit the SQL, the snapshot, and the journal together.
 
 Read the new SQL in `drizzle/migrations/`. It must only add: a new table,
 nullable or defaulted columns, or indexes. Production applies migrations
@@ -176,18 +193,33 @@ export const createWidgetInputSchema = z.object({
 `contracts.ts` holds the view type the UI receives. Never send `userId` to
 the client.
 
-`functions.server.ts` resolves the user from the session, then calls the
-repository:
+`functions.server.ts` resolves the user from the session, calls the
+repository, and maps each row to its view by copying fields one by one.
+Returning the row itself would leak `userId` and internal columns at runtime,
+even though the view type hides them:
 
 ```ts
 import { getRequestHeaders } from "@tanstack/react-start/server"
 
+import type { Widget } from "@/db/schema"
 import { getSessionFromHeaders } from "@/modules/auth/session.server"
+
+import type { WidgetView } from "./contracts"
+import { renameWidget } from "./repository.server"
 
 async function requireUserId() {
   const session = await getSessionFromHeaders(getRequestHeaders())
   if (!session) throw new Error("Unauthorized")
   return session.user.id
+}
+
+function toWidgetView(widget: Widget): WidgetView {
+  return {
+    id: widget.id,
+    name: widget.name,
+    createdAt: widget.createdAt,
+    updatedAt: widget.updatedAt,
+  }
 }
 
 export async function renameWidgetImpl(input: {
@@ -247,6 +279,18 @@ describe("widget repository", () => {
 
 Also cover each Zod schema's limits in `schemas.test.ts`.
 
+Tests call the repository with `env.DB`. They cannot import `getDb()`, because
+`pnpm test:boundaries` allows it only in `src/db/` and `repository.server.ts`.
+Insert a raw fixture row with D1 itself:
+
+```ts
+await env.DB.prepare(
+  "INSERT INTO widget (id, user_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
+)
+  .bind("w-1", "owner", "Fixed", 1, 1)
+  .run()
+```
+
 Run one file while iterating:
 
 ```sh
@@ -264,7 +308,8 @@ For local fixtures, append to `scripts/seed.sql` with stable IDs and
 
 ## 7. Finish
 
-- Add the table to the core entities in `docs/OVERVIEW.md`.
+- Add the table to the core entities in `docs/OVERVIEW.md`, and a new module
+  to the `AGENTS.md` module map.
 - Add a change record from `docs/changes/TEMPLATE.md` and list it in
   `docs/changes/README.md`.
 - Run `pnpm verify`. It runs `db:check`, the boundary checks, and every test.

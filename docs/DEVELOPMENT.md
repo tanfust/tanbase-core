@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-26
+last_verified: 2026-09-27
 ---
 
 # Development
@@ -32,7 +32,7 @@ lockfile or supply-chain validation in contributor or CI instructions.
 | `pnpm test:e2e`                                    | Run the isolated local-D1 authentication, board, and WebMCP browser journeys                                       |
 | `pnpm test:dev-client`                             | Load the dev server's client module graph and fail on import-protection errors                                     |
 | `pnpm docs:check`                                  | Validate frontmatter, required sections, and internal links                                                        |
-| `pnpm db:generate`                                 | Generate a migration from the Drizzle schema                                                                       |
+| `pnpm db:generate`                                 | Generate a migration from the Drizzle schema and format its snapshot                                               |
 | `pnpm db:check`                                    | Check generated Drizzle migration history                                                                          |
 | `pnpm db:migrate:local`                            | Apply pending migrations to isolated local D1 storage                                                              |
 | `pnpm db:seed:local`                               | Idempotently add local-only project and task fixtures                                                              |
@@ -230,7 +230,9 @@ deliberate forbidden import, and proves that the build rejects it.
 ## Contribution workflow
 
 1. Read [AGENTS.md](../AGENTS.md), [status](STATUS.md), and the relevant feature.
-2. Implement the smallest vertical slice and its tests.
+2. Implement the smallest vertical slice and its tests. For a new table, a new
+   module, removing a module, or a deploy, follow the matching skill in
+   `.claude/skills/`.
 3. Update active docs and add a [change record](changes/TEMPLATE.md).
 4. Run `pnpm cf:typegen` when Worker configuration changed.
 5. Run `pnpm verify` and the relevant deployment dry run.
