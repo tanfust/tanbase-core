@@ -102,12 +102,34 @@ Local, from `0d47e61` and the evidence commit on top of it:
   - `pnpm test:e2e` passed after clearing `.wrangler/e2e-state` left by a
     first run without `.dev.vars`
 
+Production, 2026-09-27, merge commit `5d055b0`:
+
+- Workers Build `48697ce9` deployed version `1590a9be` at 16:56 UTC and
+  passed its post-deploy smoke. That smoke made the first production request
+  for `/og/home.png`.
+- `pnpm smoke -- --environment production --expect-version 1590a9be-d844-4c5e-8989-c90d697ee1c1`
+  passed at 16:57 UTC.
+- Workers Logs show two invocations of the `OgImage` entrypoint since the
+  deploy:
+  - the render of `/og/home.png`, `200`, in 312 ms of CPU and 314 ms of wall
+    time
+  - the smoke's `/og/missing.png`, `404`, in 0 ms of CPU
+- **Cache:** every later request for the image returned `Cf-Cache-Status: HIT`
+  without running the entrypoint, from `GIG` and `MRS`, with `age` counting
+  from the render.
+  - A request with a random query string was also a `HIT`.
+  - Cloudflare stripped `Cloudflare-CDN-Cache-Control` from responses to
+    clients.
+  - The production PNG is byte-for-byte the local render, 54,051 bytes.
+- **CPU:** 312 ms is inside Workers Paid's 30-second limit, and far over
+  Workers Free's 10 ms.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `0d47e61` | `http://localhost:4391`    | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                                | URL                        | Date       | Result |
+| ---------- | ------------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `0d47e61`       | `http://localhost:4391`    | 2026-09-27 | Passed |
+| Production | `5d055b0` / Worker version `1590a9be` | `https://core.tanbase.dev` | 2026-09-27 | Passed |
 
 ## Rollback notes
 
@@ -117,10 +139,6 @@ cache key; sites that already fetched the preview keep their copy.
 
 ## Remaining work
 
-- Production: confirm the image renders on Cloudflare within the CPU limit,
-  that the second request is a cache `HIT`, and the CPU time of the first
-  render, then tick F-017's last criterion. workerd issue
-  [#6865](https://github.com/cloudflare/workerd/issues/6865), where
-  per-entrypoint caching skipped `ctx.exports` calls in Workers with static
-  assets, was fixed on the platform on 2026-07-13; a `HIT` confirms it here.
+- Preview images need Workers Paid. A fork on Workers Free gets a failing
+  `/og/home.png` and a failing smoke check for it.
 - F-019 budgets should count the larger Worker upload.

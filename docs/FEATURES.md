@@ -34,13 +34,11 @@ so app-level features beyond that are left to forks.
 
 Build in this order:
 
-1. F-020: Agent layer
-2. F-021: Module removal
-3. F-023: One-click setup
-4. F-017: OG images on the Worker
-5. F-019: Performance budgets
-6. F-024: Public launch
-7. F-022: Demo guardrails, after launch
+1. F-023: One-click setup, waiting on the first button run and the outside
+   fresh-account test
+2. F-019: Performance budgets
+3. F-024: Public launch
+4. F-022: Demo guardrails, after launch
 
 ---
 
@@ -494,7 +492,7 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-017: OG images on the Worker
 
-**Module:** og | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-016
+**Module:** og | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-016
 
 **Acceptance criteria**
 
@@ -502,7 +500,10 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
       fixed card, and Workers Caching on the `OgImage` entrypoint keeps it
       until the next deploy
       ([ADR-0018](decisions/0018-preview-images-on-the-worker.md))
-- [ ] Runs in production within Worker size and CPU limits
+- [x] Runs in production within Worker size and CPU limits: on 2026-09-27
+      version `1590a9be` drew `/og/home.png` once, in 312 ms of CPU against
+      Workers Paid's 30-second limit, and every later request was a cache
+      `HIT`
 
 **Technical notes**
 
@@ -513,6 +514,8 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 - **Measured locally:** startup active time was 47.5 to 52.5 ms without the
   renderer and 47.7 to 55.3 ms with it, within the runs' spread. The first
   render in an isolate takes about 56 ms, and later renders about 10 ms.
+- **Measured in production:** the first render took 312 ms of CPU. That is
+  far over Workers Free's 10 ms, so preview images need Workers Paid.
 
 ---
 

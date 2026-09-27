@@ -61,6 +61,10 @@ page shows the descriptions from the `cloudflare.bindings` field in
    pnpm smoke -- --url https://<worker>.<subdomain>.workers.dev --environment production --config default
    ```
 
+   On Workers Free, expect the `/og/home.png` check to fail. Drawing a
+   preview image takes more than the plan's 10 ms of CPU, so preview images
+   need Workers Paid ([ADR-0018](decisions/0018-preview-images-on-the-worker.md)).
+
 2. Add a custom domain if you want one, then set `BETTER_AUTH_URL` to it so
    canonical URLs, cookies, and tokens use one origin.
 3. Before a public launch, set up email (below) and Turnstile, so sign-up
