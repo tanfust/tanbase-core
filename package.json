@@ -37,7 +37,10 @@
     "cf:dry-run:default": "pnpm build && wrangler deploy --dry-run",
     "cf:deploy:production": "pnpm cf:build:production && pnpm db:migrate:production && node scripts/deploy-if-current.mjs",
     "deploy": "node scripts/deploy.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "perf:bundle": "node scripts/check-bundle.mjs",
+    "perf:lighthouse": "node scripts/lighthouse.mjs",
+    "perf:ttfb": "node scripts/measure-ttfb.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
@@ -89,11 +92,13 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "chrome-launcher": "1.2.1",
     "cross-env": "10.1.0",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.5",
     "jsdom": "30.0.1",
     "jsonc-parser": "3.3.1",
+    "lighthouse": "13.5.0",
     "prettier": "3.9.7",
     "prettier-plugin-tailwindcss": "0.8.1",
     "typescript": "6.0.3",

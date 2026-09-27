@@ -11,6 +11,7 @@ dist-ssr
 .tanbase
 .wrangler
 output/playwright
+output/lighthouse
 .output
 .vinxi
 __unconfig*

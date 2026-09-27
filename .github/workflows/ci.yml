@@ -47,3 +47,35 @@ jobs:
       - run: pnpm cf:dry-run:default
       # Builds strip dead server-only imports that the dev server still loads.
       - run: pnpm test:dev-client
+
+  performance:
+    name: Performance budgets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.1
+      - uses: actions/setup-node@v4
+        with:
+          # Lighthouse needs Node.js 22.19 or newer.
+          node-version: 24.0.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # env.local serves without Cloudflare credentials: the top level binds
+      # Workers AI, which only runs remotely. The browser bundle is the same.
+      - run: pnpm build
+        env:
+          CLOUDFLARE_ENV: local
+      - name: Serve the build
+        run: |
+          pnpm exec vite preview --port 4391 --strictPort > preview.log 2>&1 &
+          curl --silent --output /dev/null --retry 30 --retry-delay 1 --retry-all-errors http://localhost:4391/
+      - run: pnpm perf:bundle -- --url http://localhost:4391
+      - run: pnpm perf:lighthouse -- --url http://localhost:4391 --compress
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-local-build
+          path: output/lighthouse
+          if-no-files-found: ignore

@@ -106,6 +106,7 @@ run the button yet; the first run and the
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `3d497fc` / Worker version `3aa997d3` | `https://core.tanbase.dev`             | 2026-09-27 17:12 UTC | Workers Paid in the docs (#44): Workers Build `0dbf4209` deployed and passed its post-deploy smoke; pinned smoke passed; the homepage's deploy copy and Markdown name Workers Paid                                                                                                                                                                                           |
 | Production    | `5d055b0` / Worker version `1590a9be` | `https://core.tanbase.dev`             | 2026-09-27 16:57 UTC | F-017 preview images: Workers Build `48697ce9` deployed at 16:56 UTC and passed its post-deploy smoke, which drew `/og/home.png` once in 312 ms of CPU; pinned smoke passed; later requests, including one with a query string, were `Cf-Cache-Status: HIT` without running the entrypoint; `og:image` names the image on the canonical origin                               |
 | Production    | `b84bbfe` / Worker version `e83b7e10` | `https://core.tanbase.dev`             | 2026-09-27 15:52 UTC | F-023 part 2, generic top level and Deploy button: Workers Build `e09bd7f3` deployed `env.production` at 15:51 UTC and passed its post-deploy smoke, and the superseded `85d6338` build uploaded no version; pinned smoke passed; bindings, variables, secrets, placement, cron, and queue consumer unchanged from `8f17bbc6`; Turnstile and verified-email sign-in still on |
 | Production    | `af8a708` / Worker version `8f17bbc6` | `https://core.tanbase.dev`             | 2026-09-27 13:54 UTC | F-023 part 1, runtime origin and email-optional verification: Workers Build `b8a6a35f` deployed at 13:26 UTC and passed its post-deploy smoke; pinned smoke passed; canonical, JSON-LD, and sitemap name the pinned `core.tanbase.dev`; with email delivery configured, login still asks for a verified email and the reset page shows no notice                             |
@@ -150,10 +151,13 @@ None.
 
 ## Last known deployed commit
 
-Production runs merge commit `5d055b0` as Worker version `1590a9be`, deployed
-by Workers Build `48697ce9` at 2026-09-27 16:56 UTC with F-017 preview images
-(ADR-0018). Its post-deploy smoke passed, and a pinned smoke passed at 16:57
-UTC.
+Production runs merge commit `3d497fc` as Worker version `3aa997d3`, deployed
+by Workers Build `0dbf4209` at 2026-09-27 17:11 UTC with the Workers Paid requirement in
+the docs and on the homepage. Its post-deploy smoke passed, and a pinned smoke
+passed at 17:12 UTC.
+
+F-017 preview images (ADR-0018) shipped in version `1590a9be` from `5d055b0`,
+deployed by Workers Build `48697ce9` at 16:56 UTC.
 
 The generic top-level configuration and the Deploy to Cloudflare button
 (ADR-0017) shipped in version `e83b7e10` from `b84bbfe`, deployed by Workers
