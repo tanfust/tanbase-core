@@ -47,7 +47,11 @@ not wanted yet.
 
 The full setup:
 
-1. Authenticates Wrangler and resolves one Cloudflare account.
+1. Asks for the app's name and description and writes them to
+   `src/lib/site.ts`, with the Worker name as the app's machine name. Enter
+   keeps the current values; `--yes` keeps them unless `--app-name` or
+   `--description` is given. Then authenticates Wrangler and resolves one
+   Cloudflare account.
 2. Creates or safely reuses `<worker-name>-production` in D1 and the
    `<worker-name>-files` R2 bucket. When R2 is not enabled for the account, it
    removes the production `FILES` binding so the deployment succeeds with
@@ -89,6 +93,8 @@ Cloudflare again and resumes completed work.
 | ---------------------- | --------------------------------------------------------------- |
 | `--account-id <id>`    | Select an account when the login can access several             |
 | `--name <worker-name>` | Override the directory-derived Worker name                      |
+| `--app-name <name>`    | Name the app in `src/lib/site.ts` without asking                |
+| `--description <text>` | Set the app's description there without asking                  |
 | `--reuse-existing`     | Explicitly authorize same-named Worker and D1 reuse             |
 | `--local-only`         | Prepare local D1, secrets, types, and verification only         |
 | `--yes`, `-y`          | Accept safe defaults; ambiguity and collisions still stop setup |

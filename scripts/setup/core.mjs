@@ -22,6 +22,8 @@ export function deriveWorkerName(value) {
 export function parseArguments(argv, defaultWorkerName = "tanbase-core") {
   const options = {
     accountId: null,
+    appDescription: null,
+    appName: null,
     dryRun: false,
     help: false,
     localOnly: false,
@@ -37,6 +39,12 @@ export function parseArguments(argv, defaultWorkerName = "tanbase-core") {
         break
       case "--account-id":
         options.accountId = argv[++index] ?? null
+        break
+      case "--app-name":
+        options.appName = argv[++index]?.trim() || null
+        break
+      case "--description":
+        options.appDescription = argv[++index]?.trim() || null
         break
       case "--dry-run":
         options.dryRun = true
@@ -84,6 +92,7 @@ export function setupPlan({ localOnly }) {
 
   if (localOnly) {
     return [
+      "Name the app in src/lib/site.ts",
       "Install locked dependencies",
       ...localSteps,
       "Regenerate Worker types and run pnpm verify",
@@ -91,6 +100,7 @@ export function setupPlan({ localOnly }) {
   }
 
   return [
+    "Name the app in src/lib/site.ts",
     "Install locked dependencies",
     "Authorize and select a Cloudflare account",
     "Create or safely reuse the production Worker and D1 database",
@@ -314,26 +324,41 @@ export function normalizeOrigin(value) {
   return url.origin
 }
 
+function quoted(value) {
+  return JSON.stringify(value)
+}
+
+/**
+ * Renames the app in src/lib/site.ts: the name, the short name used in
+ * running text, the machine name, and the description. Unset fields keep
+ * their values.
+ */
+export function updateSiteIdentity(source, { name, description, id }) {
+  const fields = [
+    ["name", name],
+    ["shortName", name],
+    ["id", id],
+    ["description", description],
+  ]
+  let updated = source
+  for (const [field, value] of fields) {
+    if (!value) continue
+    // Top-level siteConfig fields only, not author.name.
+    const pattern = new RegExp(`(^  ${field}:\\s*)"(?:[^"\\\\]|\\\\.)*"`, "m")
+    if (!pattern.test(updated)) {
+      throw new Error(`Could not find siteConfig.${field} in src/lib/site.ts.`)
+    }
+    updated = updated.replace(pattern, `$1${quoted(value)}`)
+  }
+  return updated
+}
+
 export function updateSiteOrigin(source, origin) {
   const pattern = /(\borigin:\s*")[^"]+("\s*,)/
   if (!pattern.test(source)) {
     throw new Error("Could not find siteConfig.origin in src/lib/site.ts.")
   }
   return source.replace(pattern, `$1${normalizeOrigin(origin)}$2`)
-}
-
-/**
- * llms.txt links to the MCP server and discovery documents on the production
- * origin, so every occurrence of the current origin moves to the new one.
- */
-export function updateLlmsOrigin(source, origin) {
-  const current = /^- Production origin: (https?:\/\/[^\s/]+)\/?$/m.exec(
-    source
-  )?.[1]
-  if (!current) {
-    throw new Error("Could not find the production origin in llms.txt.")
-  }
-  return source.replaceAll(current, normalizeOrigin(origin))
 }
 
 /**

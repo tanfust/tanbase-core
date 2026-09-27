@@ -1,10 +1,10 @@
-# TanBase Core
+# {{name}}
 
-> TanBase Core is an open-source TanStack Start application foundation for
+> {{name}} is an open-source TanStack Start application foundation for
 > Cloudflare Workers. A working task board runs auth, data, files, realtime,
 > background jobs, AI, and an MCP server together in one Worker.
 
-- Production origin: https://core.tanbase.dev/
+- Production origin: {{origin}}/
 - License: MIT
 
 The production site runs a personal task board: verified email and password
@@ -16,35 +16,35 @@ server.
 
 ## Docs
 
-- [Homepage](https://core.tanbase.dev/): What TanBase Core is, the map of Cloudflare primitives, the cost model, and how to deploy it. Request it with `Accept: text/markdown` for Markdown.
-- [README](https://github.com/tanfust/tanbase-core/blob/main/README.md): Overview, quick start, and current scope
-- [Architecture](https://github.com/tanfust/tanbase-core/blob/main/docs/OVERVIEW.md): Principles, feature-to-primitive map, performance budgets, and cost model
-- [Guided installation](https://github.com/tanfust/tanbase-core/blob/main/docs/INSTALLING.md): Deploy your own copy with `pnpm run setup`
-- [Feature roadmap](https://github.com/tanfust/tanbase-core/blob/main/docs/FEATURES.md): Done and planned features with acceptance criteria
-- [Current status](https://github.com/tanfust/tanbase-core/blob/main/docs/STATUS.md): What production runs today, with verification evidence
-- [Deployment runbook](https://github.com/tanfust/tanbase-core/blob/main/docs/DEPLOYMENT.md): How production deploys from `main`
-- [Agent discovery](https://github.com/tanfust/tanbase-core/blob/main/docs/AGENT_DISCOVERY.md): The public discovery documents and what each one describes
+- [Homepage]({{origin}}/): What {{name}} is, the map of Cloudflare primitives, the cost model, and how to deploy it. Request it with `Accept: text/markdown` for Markdown.
+- [README]({{repository}}/blob/main/README.md): Overview, quick start, and current scope
+- [Architecture]({{repository}}/blob/main/docs/OVERVIEW.md): Principles, feature-to-primitive map, performance budgets, and cost model
+- [Guided installation]({{repository}}/blob/main/docs/INSTALLING.md): Deploy your own copy with `pnpm run setup`
+- [Feature roadmap]({{repository}}/blob/main/docs/FEATURES.md): Done and planned features with acceptance criteria
+- [Current status]({{repository}}/blob/main/docs/STATUS.md): What production runs today, with verification evidence
+- [Deployment runbook]({{repository}}/blob/main/docs/DEPLOYMENT.md): How production deploys from `main`
+- [Agent discovery]({{repository}}/blob/main/docs/AGENT_DISCOVERY.md): The public discovery documents and what each one describes
 
 ## For agents
 
-- [MCP server](https://core.tanbase.dev/mcp): Streamable HTTP endpoint that lists, creates, and completes the signed-in person's tasks. Clients authorize with OAuth 2.1 through TanBase Core's own authorization server at https://core.tanbase.dev/api/auth, using Dynamic Client Registration. The person signs in and approves the client; there are no API keys.
-- [Protected resource metadata](https://core.tanbase.dev/.well-known/oauth-protected-resource/mcp): OAuth metadata for the MCP server
-- [MCP server card](https://core.tanbase.dev/mcp/server-card): The MCP server's name, transport, and tools
-- [Task skill](https://core.tanbase.dev/.well-known/agent-skills/tanbase-tasks/SKILL.md): How to manage tasks through the MCP server, listed in the [agent skills index](https://core.tanbase.dev/.well-known/agent-skills/index.json)
-- [API catalog](https://core.tanbase.dev/.well-known/api-catalog): RFC 9727 catalog listing the MCP server
-- [AI Catalog](https://core.tanbase.dev/.well-known/ai-catalog.json): Agentic resources: the server card, the skill, and the API catalog
+- [MCP server]({{origin}}/mcp): Streamable HTTP endpoint that lists, creates, and completes the signed-in person's tasks. Clients authorize with OAuth 2.1 through {{name}}'s own authorization server at {{origin}}/api/auth, using Dynamic Client Registration. The person signs in and approves the client; there are no API keys.
+- [Protected resource metadata]({{origin}}/.well-known/oauth-protected-resource/mcp): OAuth metadata for the MCP server
+- [MCP server card]({{origin}}/mcp/server-card): The MCP server's name, transport, and tools
+- [Task skill]({{origin}}/.well-known/agent-skills/{{id}}-tasks/SKILL.md): How to manage tasks through the MCP server, listed in the [agent skills index]({{origin}}/.well-known/agent-skills/index.json)
+- [API catalog]({{origin}}/.well-known/api-catalog): RFC 9727 catalog listing the MCP server
+- [AI Catalog]({{origin}}/.well-known/ai-catalog.json): Agentic resources: the server card, the skill, and the API catalog
 - In the browser, pages register the same task tools through WebMCP.
 
 ## Capabilities not currently offered
 
-TanBase Core does not offer a public REST API, API keys, agent registration
+{{name}} does not offer a public REST API, API keys, agent registration
 without a person signing in, an A2A agent, or payments. The sitemap, robots
 policy, and discovery documents describe only implemented resources.
 
 ## Optional
 
-- [Source repository](https://github.com/tanfust/tanbase-core): The full source, MIT licensed
-- [Sitemap](https://core.tanbase.dev/sitemap.xml): The public pages; only the homepage is indexable
+- [Source repository]({{repository}}): The full source, MIT licensed
+- [Sitemap]({{origin}}/sitemap.xml): The public pages; only the homepage is indexable
 
 Production deployment is not verified until the canonical URL passes the
 repository smoke checks and that evidence is recorded in the status snapshot.

@@ -1,7 +1,7 @@
-import { siteConfig } from "@/lib/site"
+import { fillTemplate, siteConfig } from "@/lib/site"
 import { mcpServerInfo, taskTools } from "@/modules/mcp/tool-definitions"
 
-import tasksSkillSource from "./skills/tanbase-tasks/SKILL.md?raw"
+import tasksSkillTemplate from "./skills/tasks/SKILL.md?raw"
 
 /**
  * Agent discovery documents. Each one describes only what this deployment
@@ -25,36 +25,39 @@ export interface Skill {
   name: string
   description: string
   path: string
-  content: string
+  /** The SKILL.md this deployment serves, naming its own origin. */
+  content: (origin: string) => string
 }
 
-/** Reads `name` and `description` from a SKILL.md's YAML frontmatter. */
-export function parseSkill(content: string, path: string): Skill {
-  const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(content)?.[1] ?? ""
+/**
+ * Reads `name` and `description` from a SKILL.md template's YAML
+ * frontmatter. Neither may name the origin: they are the same everywhere.
+ */
+export function parseSkill(template: string): Skill {
+  const branded = fillTemplate(template, siteConfig.origin)
+  const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(branded)?.[1] ?? ""
   const field = (key: string) => {
     const value = new RegExp(`^${key}:\\s*(.+)$`, "m").exec(frontmatter)?.[1]
-    if (!value) throw new Error(`${path} has no ${key} in its frontmatter`)
+    if (!value) throw new Error(`A SKILL.md has no ${key} in its frontmatter`)
+    if (value.includes(siteConfig.origin)) {
+      throw new Error(`A SKILL.md ${key} names an origin`)
+    }
     return value.trim()
   }
+  const name = field("name")
   return {
-    name: field("name"),
+    name,
     description: field("description"),
-    path,
-    content,
+    path: `/.well-known/agent-skills/${name}/SKILL.md`,
+    content: (origin) => fillTemplate(template, origin),
   }
 }
 
-export const skills: readonly Skill[] = [
-  parseSkill(
-    tasksSkillSource,
-    "/.well-known/agent-skills/tanbase-tasks/SKILL.md"
-  ),
-]
+export const skills: readonly Skill[] = [parseSkill(tasksSkillTemplate)]
 
-const cardDescription =
-  "List, create, and complete tasks on a person's TanBase Core board."
+const cardDescription = `List, create, and complete tasks on a person's ${siteConfig.name} board.`
 
-/** Reverse-DNS namespace for server card names, e.g. `dev.tanbase.core`. */
+/** Reverse-DNS namespace for server card names, e.g. `dev.example.tasks`. */
 function reverseDns(origin: string) {
   return new URL(origin).hostname.split(".").reverse().join(".")
 }
@@ -167,13 +170,13 @@ export function createAiCatalog(origin: string) {
       },
       ...skills.map((skill) => ({
         identifier: urn("skill", skill.name),
-        displayName: "TanBase Core tasks skill",
+        displayName: `${siteConfig.name} tasks skill`,
         type: "application/agent-skills+md",
         url: `${origin}${skill.path}`,
         description: skill.description,
         representativeQueries: [
-          "how do I connect an agent to TanBase Core",
-          "manage my TanBase Core tasks from an agent",
+          `how do I connect an agent to ${siteConfig.name}`,
+          `manage my ${siteConfig.name} tasks from an agent`,
         ],
       })),
       {
@@ -183,8 +186,8 @@ export function createAiCatalog(origin: string) {
         url: `${origin}/.well-known/api-catalog`,
         description: "RFC 9727 catalog of the public APIs on this origin.",
         representativeQueries: [
-          "list the TanBase Core APIs",
-          "find the TanBase Core MCP endpoint",
+          `list the ${siteConfig.name} APIs`,
+          `find the ${siteConfig.name} MCP endpoint`,
         ],
       },
     ],
@@ -202,8 +205,8 @@ export async function sha256Hex(content: string): Promise<string> {
     .join("")
 }
 
-/** Agent Skills Discovery index, v0.2.0. */
-export async function createSkillsIndex() {
+/** Agent Skills Discovery index, v0.2.0, for one deployment's origin. */
+export async function createSkillsIndex(origin: string) {
   return {
     $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
     skills: await Promise.all(
@@ -212,7 +215,7 @@ export async function createSkillsIndex() {
         type: "skill-md",
         description,
         url: path,
-        digest: `sha256:${await sha256Hex(content)}`,
+        digest: `sha256:${await sha256Hex(content(origin))}`,
       }))
     ),
   }

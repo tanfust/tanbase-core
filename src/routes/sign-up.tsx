@@ -2,6 +2,7 @@ import { useState } from "react"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { MailCheckIcon } from "lucide-react"
 
+import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/sign-up")({
   head: () =>
     seo({
       title: "Create your account",
-      description: "Create a TanBase Core account and a private task board.",
+      description: `Create a ${siteConfig.name} account and a private task board.`,
       noindex: true,
     }),
   component: SignUpPage,

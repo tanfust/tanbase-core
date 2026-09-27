@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { CircleAlertIcon, RotateCcwIcon } from "lucide-react"
 
+import { siteConfig } from "@/lib/site"
 import { BoardPage } from "@/components/board/board-page"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/_app/app")({
   head: () =>
     seo({
       title: "Board",
-      description: "Your TanBase Core task board.",
+      description: `Your ${siteConfig.name} task board.`,
       noindex: true,
     }),
   pendingComponent: BoardPending,

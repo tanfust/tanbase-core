@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers"
 import { describe, expect, it } from "vitest"
 
 import { createHealthResponse, normalizeAppEnvironment } from "./health"
+import { siteConfig } from "./site"
 
 function countingDatabase() {
   const state = { queries: 0, failing: false }
@@ -40,7 +41,7 @@ describe("health response", () => {
       expect(response.headers.get("Cache-Control")).toBe("no-store")
       await expect(response.json()).resolves.toEqual({
         status: "ok",
-        service: "tanbase-core",
+        service: siteConfig.id,
         environment,
         version: env.CF_VERSION_METADATA.id,
         checks: { database: "ok", files: "ok", realtime: "ok" },
@@ -87,7 +88,7 @@ describe("health response", () => {
     expect(response.status).toBe(503)
     await expect(response.json()).resolves.toEqual({
       status: "error",
-      service: "tanbase-core",
+      service: siteConfig.id,
       environment: "production",
       version: null,
       checks: { database: "error", files: "error", realtime: "error" },

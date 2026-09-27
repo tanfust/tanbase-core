@@ -6,6 +6,7 @@ import { homepage } from "@/modules/seo/homepage"
 import { ogCards, ogImage, ogImagePath } from "./cards"
 import { ogCardContent, ogCardForPath } from "./content.server"
 import { imageRequest } from "./entrypoint.server"
+import { tintSvg } from "./render.server"
 
 const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 
@@ -110,5 +111,16 @@ describe("the OgImage entrypoint", () => {
     expect(response.status).toBe(405)
     expect(response.headers.get("Allow")).toBe("GET, HEAD")
     expect(response.headers.get("Cache-Control")).toBe("no-store")
+  })
+})
+
+describe("the logo in preview images", () => {
+  it("paints a one-color mark's shapes and leaves unfilled ones alone", () => {
+    const svg =
+      '<svg viewBox="0 0 2 1" fill="none"><path d="M0 0" fill="black"/><path d="M1 0" stroke="#000" fill="none"/></svg>'
+
+    expect(tintSvg(svg, "#fff")).toBe(
+      '<svg viewBox="0 0 2 1" fill="none"><path d="M0 0" fill="#fff"/><path d="M1 0" stroke="#fff" fill="none"/></svg>'
+    )
   })
 })

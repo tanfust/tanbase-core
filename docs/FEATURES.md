@@ -14,17 +14,17 @@ last_verified: 2026-09-27
 
 ## Milestones
 
-| #   | Milestone      | Features       |
-| --- | -------------- | -------------- |
-| 1   | Skeleton       | F-001, F-002   |
-| 2   | Auth and tasks | F-003 to F-007 |
-| 3   | Files          | F-010          |
-| 4   | Realtime       | F-011          |
-| 5   | Jobs           | F-012          |
-| 6   | AI             | F-013, F-014   |
-| 7   | MCP            | F-015          |
-| 8   | Launch         | F-016 to F-024 |
-| 9   | After launch   | F-022          |
+| #   | Milestone      | Features              |
+| --- | -------------- | --------------------- |
+| 1   | Skeleton       | F-001, F-002          |
+| 2   | Auth and tasks | F-003 to F-007        |
+| 3   | Files          | F-010                 |
+| 4   | Realtime       | F-011                 |
+| 5   | Jobs           | F-012                 |
+| 6   | AI             | F-013, F-014          |
+| 7   | MCP            | F-015                 |
+| 8   | Launch         | F-016 to F-024, F-027 |
+| 9   | After launch   | F-022                 |
 
 Dropped: F-008, F-009, F-025, and F-026. The task board exists to exercise
 each Cloudflare primitive a real app needs, not to become a complete product,
@@ -678,6 +678,29 @@ button run confirms what it provisions, then an outside tester runs the
 The launch video and posts are handled outside the repository, and are not
 tracked here (2026-09-27). The launch waits on F-023's first button run and
 outside fresh-account test.
+
+---
+
+### F-027: Branding in one config
+
+**Module:** platform | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-016, F-017
+
+A fork renames the app in one file. Before F-027 the name was written out
+57 times across 27 files.
+
+**Acceptance criteria**
+
+- [x] `src/lib/site.ts` holds the name, short name, tagline, subtitle,
+      description, machine name, logo, icons, and theme color
+- [x] Pages, page titles, emails, Better Auth, the preview image, the MCP
+      server, the discovery documents, the agent skill, and `llms.txt` read
+      it; the skill and `llms.txt` use each deployment's origin
+- [x] The logo and icons in `public/` appear in the header, the favicon, the
+      web manifest, and the preview image
+- [x] A test fails when the app's name is written anywhere in `src/` outside
+      the config
+- [x] The README says how to make the app yours, and `pnpm run setup` asks
+      for the name and description
 
 ---
 

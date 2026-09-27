@@ -6,6 +6,7 @@ import {
 } from "@modelcontextprotocol/server"
 import { describe, expect, it } from "vitest"
 
+import { siteConfig } from "@/lib/site"
 import { createTasksMcpServer } from "@/modules/mcp/server.server"
 
 import {
@@ -21,7 +22,9 @@ import {
 } from "./documents"
 import { discoveryResponse, isDiscoveryPath } from "./well-known"
 
-const origin = "https://core.tanbase.dev"
+// A fork's origin, so each test proves documents follow the deployment.
+const origin = "https://tasks.example.dev"
+const skillPath = `/.well-known/agent-skills/${siteConfig.id}-tasks/SKILL.md`
 
 async function mcp(method: string, params?: unknown) {
   const handler = createMcpHandler(() =>
@@ -56,7 +59,7 @@ describe("MCP server card", () => {
     expect(card.$schema).toBe(
       "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json"
     )
-    expect(card.name).toBe("dev.tanbase.core/tanbase-core")
+    expect(card.name).toBe(`dev.example.tasks/${siteConfig.id}`)
     expect(card.name).toMatch(/^[a-zA-Z0-9.-]+\/[a-zA-Z0-9._-]+$/)
     expect(card.description.length).toBeGreaterThan(0)
     expect(card.description.length).toBeLessThanOrEqual(100)
@@ -118,7 +121,7 @@ describe("API catalog", () => {
         ],
         "service-doc": [
           {
-            href: `${origin}/.well-known/agent-skills/tanbase-tasks/SKILL.md`,
+            href: `${origin}${skillPath}`,
             type: "text/markdown",
           },
         ],
@@ -134,13 +137,13 @@ describe("AI catalog", () => {
 
     expect(catalog.specVersion).toBe("1.0")
     expect(catalog.host).toMatchObject({
-      displayName: "TanBase Core",
-      identifier: "core.tanbase.dev",
+      displayName: siteConfig.name,
+      identifier: "tasks.example.dev",
     })
     expect(catalog.entries.length).toBeGreaterThan(0)
     for (const entry of catalog.entries) {
       expect(entry.identifier).toMatch(
-        /^urn:air:core\.tanbase\.dev:[a-z]+:[a-z-]+$/
+        /^urn:air:tasks\.example\.dev:[a-z]+:[a-z-]+$/
       )
       expect(entry.displayName.length).toBeGreaterThan(0)
       expect(entry.type).toMatch(/^application\/[a-z0-9.+-]+$/)
@@ -162,7 +165,7 @@ describe("AI catalog", () => {
 
 describe("agent skills", () => {
   it("indexes each skill with the digest of the bytes it serves", async () => {
-    const index = await createSkillsIndex()
+    const index = await createSkillsIndex(origin)
 
     expect(index.$schema).toBe(
       "https://schemas.agentskills.io/discovery/0.2.0/schema.json"
@@ -175,7 +178,7 @@ describe("agent skills", () => {
         type: "skill-md",
         description: skill.description,
         url: skill.path,
-        digest: `sha256:${await sha256Hex(skill.content)}`,
+        digest: `sha256:${await sha256Hex(skill.content(origin))}`,
       })
       expect(entry.digest).toMatch(/^sha256:[0-9a-f]{64}$/)
     }
@@ -192,9 +195,18 @@ describe("agent skills", () => {
   })
 
   it("requires name and description frontmatter", () => {
-    expect(() => parseSkill("# No frontmatter\n", "/x/SKILL.md")).toThrow(
-      /no name/
-    )
+    expect(() => parseSkill("# No frontmatter\n")).toThrow(/no name/)
+  })
+
+  it("serves each skill with this app's name and the deployment's origin", () => {
+    for (const skill of skills) {
+      const content = skill.content(origin)
+      expect(skill.name).toBe(`${siteConfig.id}-tasks`)
+      expect(content).toContain(`${siteConfig.name} tasks`)
+      expect(content).toContain(`${origin}/mcp`)
+      expect(content).not.toContain(siteConfig.origin)
+      expect(content).not.toContain("{{")
+    }
   })
 })
 
@@ -212,10 +224,7 @@ describe("discovery responses", () => {
     ["/mcp/server-card", "application/mcp-server-card+json"],
     ["/.well-known/mcp/server-card.json", "application/json"],
     ["/.well-known/agent-skills/index.json", "application/json"],
-    [
-      "/.well-known/agent-skills/tanbase-tasks/SKILL.md",
-      "text/markdown; charset=utf-8",
-    ],
+    [skillPath, "text/markdown; charset=utf-8"],
   ])("serves %s as %s to any origin", async (path, contentType) => {
     const response = await get(path)
 
@@ -229,7 +238,7 @@ describe("discovery responses", () => {
   it("serves each skill's exact bytes", async () => {
     for (const skill of skills) {
       const response = await get(skill.path)
-      await expect(response?.text()).resolves.toBe(skill.content)
+      await expect(response?.text()).resolves.toBe(skill.content(origin))
     }
   })
 

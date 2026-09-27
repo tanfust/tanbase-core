@@ -2,6 +2,7 @@ import { useState } from "react"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { CheckCircle2Icon } from "lucide-react"
 
+import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -50,7 +51,7 @@ export const Route = createFileRoute("/login")({
   head: () =>
     seo({
       title: "Sign in",
-      description: "Sign in to your TanBase Core task board.",
+      description: `Sign in to your ${siteConfig.name} task board.`,
       noindex: true,
     }),
   component: LoginPage,
@@ -206,7 +207,7 @@ function LoginPage() {
                   Resend verification
                 </Button>
                 <FieldDescription className="text-center">
-                  New to TanBase?{" "}
+                  New to {siteConfig.shortName}?{" "}
                   <Link to="/sign-up" search={{ redirect: search.redirect }}>
                     Create an account
                   </Link>

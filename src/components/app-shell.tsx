@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "@/components/ui/toast"
+import { siteConfig } from "@/lib/site"
 import { authClient } from "@/modules/auth/client"
 import type { ProjectView } from "@/modules/tasks/contracts"
 
@@ -103,7 +104,9 @@ export function AppShell({ projects, user }: AppShellProps) {
                 render={<Link to="/app" search={{}} />}
               >
                 <BrandLockup compact />
-                <span className="font-heading font-semibold">TanBase Core</span>
+                <span className="font-heading font-semibold">
+                  {siteConfig.name}
+                </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

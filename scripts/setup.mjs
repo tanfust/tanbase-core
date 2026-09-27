@@ -32,7 +32,7 @@ import {
   selectDatabase,
   sendingDomainEnabled,
   setupPlan,
-  updateLlmsOrigin,
+  updateSiteIdentity,
   updateSiteOrigin,
   updateWranglerInstallation,
 } from "./setup/core.mjs"
@@ -47,7 +47,6 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const configPath = join(root, "wrangler.jsonc")
 const sitePath = join(root, "src/lib/site.ts")
-const llmsPath = join(root, "src/modules/seo/llms.txt")
 const localSecretsPath = join(root, ".dev.vars")
 const stateDirectory = join(root, ".tanbase")
 const statePath = join(stateDirectory, "setup-state.json")
@@ -65,6 +64,9 @@ Usage:
 Options:
   --account-id <id>   Select a Cloudflare account when the login has several
   --name <name>       Worker name (default: repository directory name)
+  --app-name <name>   The app's name, written to src/lib/site.ts
+  --description <text>
+                      The app's one-sentence description, written there too
   --reuse-existing    Reuse same-named Worker and D1 resources intentionally
   --local-only        Prepare local development without Cloudflare changes
   --yes, -y           Accept safe defaults without the initial confirmation
@@ -107,6 +109,56 @@ async function confirm(question, defaultValue, nonInteractive) {
   } finally {
     readline.close()
   }
+}
+
+async function ask(question, defaultValue, nonInteractive) {
+  if (nonInteractive) return defaultValue
+  const readline = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  })
+  try {
+    const answer = (
+      await readline.question(`${question} [${defaultValue}] `)
+    ).trim()
+    return answer || defaultValue
+  } finally {
+    readline.close()
+  }
+}
+
+/**
+ * Names the app in src/lib/site.ts, from the flags or by asking. The
+ * Worker name becomes the app's machine name when the app is renamed.
+ */
+async function nameTheApp(options) {
+  const source = await readFile(sitePath, "utf8")
+  const current = (field) =>
+    new RegExp(`^  ${field}:\\s*"([^"]*)"`, "m").exec(source)?.[1] ?? ""
+  const name = await ask(
+    "App name, for pages and emails:",
+    options.appName ?? current("name"),
+    options.yes || Boolean(options.appName)
+  )
+  const description = await ask(
+    "One-sentence description:",
+    options.appDescription ?? current("description"),
+    options.yes || Boolean(options.appDescription)
+  )
+  if (name === current("name") && description === current("description")) {
+    return
+  }
+  await writeAtomic(
+    sitePath,
+    updateSiteIdentity(source, {
+      name,
+      description,
+      id: name === current("name") ? undefined : options.workerName,
+    })
+  )
+  process.stdout.write(
+    'Named the app in src/lib/site.ts. Put your logo and icons in public/; see "Make it yours" in the README.\n'
+  )
 }
 
 async function chooseAccount(accounts, requestedId, savedId, nonInteractive) {
@@ -481,6 +533,8 @@ async function main() {
     return
   }
 
+  await nameTheApp(options)
+
   const [major, minor] = process.versions.node.split(".").map(Number)
   const supported = (major === 22 && minor >= 13) || major === 23 || major >= 24
   if (!supported) {
@@ -620,10 +674,6 @@ async function main() {
     sitePath,
     updateSiteOrigin(await readFile(sitePath, "utf8"), provisionalOrigin)
   )
-  await writeAtomic(
-    llmsPath,
-    updateLlmsOrigin(await readFile(llmsPath, "utf8"), provisionalOrigin)
-  )
 
   // Checked after the Worker name is written, so the lookups target this
   // installation rather than the template's Worker and sender.
@@ -719,10 +769,6 @@ async function main() {
     await writeAtomic(
       sitePath,
       updateSiteOrigin(await readFile(sitePath, "utf8"), deploymentUrl)
-    )
-    await writeAtomic(
-      llmsPath,
-      updateLlmsOrigin(await readFile(llmsPath, "utf8"), deploymentUrl)
     )
     await runPnpm(manager, ["cf:typegen"], { cwd: root })
     await runPnpm(manager, ["verify"], { cwd: root })

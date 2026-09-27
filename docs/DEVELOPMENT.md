@@ -226,6 +226,16 @@ Entries are structured objects that include the request ID from
 `src/platform/request-context.ts`; never log credentials, tokens, message
 bodies, or recipient addresses.
 
+## Branding
+
+The app's name, logo, icons, and machine name come from `siteConfig` in
+`src/lib/site.ts`; [Make it yours](../README.md#make-it-yours) lists every
+field. Use `siteConfig` in new copy instead of writing the name:
+`src/lib/branding.ui.test.ts` fails when the template's name appears in
+`src/` outside that file. A monochrome logo is drawn through a CSS mask in
+the header and tinted in the preview image, so its SVG's own colors do not
+matter.
+
 ## Page metadata
 
 Give every page route a `head` that calls `seo()` from

@@ -1,3 +1,5 @@
+import { siteConfig } from "./site"
+
 export const appEnvironments = ["local", "production"] as const
 
 export type AppEnvironment = (typeof appEnvironments)[number]
@@ -87,7 +89,7 @@ export async function createHealthResponse(
   return Response.json(
     {
       status: healthy ? "ok" : "error",
-      service: "tanbase-core",
+      service: siteConfig.id,
       environment: normalizeAppEnvironment(environment),
       version: version ?? null,
       checks: {

@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router"
 
 import { BrandLockup } from "@/components/brand-lockup"
+import { siteConfig } from "@/lib/site"
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="grid min-h-svh bg-muted/40 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.75fr)]">
       <section className="hidden flex-col justify-between overflow-hidden bg-primary p-10 text-primary-foreground lg:flex">
-        <Link to="/" aria-label="TanBase Core home">
+        <Link to="/" aria-label={`${siteConfig.name} home`}>
           <BrandLockup className="[&_span]:text-primary-foreground" />
         </Link>
         <div className="flex max-w-lg flex-col gap-5">

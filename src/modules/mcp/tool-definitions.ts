@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { siteConfig } from "@/lib/site"
 import { taskStatuses } from "@/modules/tasks/contracts"
 
 // Neither the Worker nor the page CSP allows eval, so zod's JIT never runs.
@@ -14,13 +15,12 @@ z.config({ jitless: true, ...z.locales.en() })
  * tools, and the published server card.
  */
 export const mcpServerInfo = {
-  name: "tanbase-core",
-  title: "TanBase Core tasks",
+  name: siteConfig.id,
+  title: `${siteConfig.name} tasks`,
   version: "1.0.0",
-} as const
+}
 
-export const mcpInstructions =
-  "Tools for the signed-in user's TanBase Core task board. Dates are calendar days in YYYY-MM-DD form."
+export const mcpInstructions = `Tools for the signed-in user's ${siteConfig.name} task board. Dates are calendar days in YYYY-MM-DD form.`
 
 const calendarDate = z
   .string()

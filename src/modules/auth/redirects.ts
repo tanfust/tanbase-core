@@ -6,8 +6,8 @@ export function safeRedirect(value?: string) {
   }
 
   try {
-    const url = new URL(value, "https://tanbase.local")
-    return url.origin === "https://tanbase.local"
+    const url = new URL(value, "https://redirect.invalid")
+    return url.origin === "https://redirect.invalid"
       ? `${url.pathname}${url.search}${url.hash}`
       : fallbackRedirect
   } catch {

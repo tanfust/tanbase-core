@@ -18,8 +18,11 @@ const siteSource = readFileSync(
   "utf8"
 )
 const canonicalOrigin = siteSource.match(/\borigin:\s*"([^"]+)"/)?.[1]
+// The app's machine name, from siteConfig.id.
+const appId = siteSource.match(/\bid:\s*"([^"]+)"/)?.[1]
 
 assert.ok(canonicalOrigin, "src/lib/site.ts must define siteConfig.origin")
+assert.ok(appId, "src/lib/site.ts must define siteConfig.id")
 
 const environment = option("environment")
 // Production defaults to the canonical origin; local runs must name their URL.
@@ -107,7 +110,7 @@ assert.ok(
 )
 assert.deepEqual(health, {
   status: "ok",
-  service: "tanbase-core",
+  service: appId,
   environment,
   version: health.version,
   checks: {
@@ -225,6 +228,11 @@ assert.match(
   /<meta[^>]+name="twitter:card"[^>]+content="summary_large_image"[^>]*>/i,
   "root must ask for a large preview card"
 )
+assert.match(
+  html,
+  /<link[^>]+rel="manifest"[^>]+href="\/manifest\.webmanifest"/i,
+  "root must link the web app manifest"
+)
 assert.match(html, /<script[\s>]/i, "hydration scripts must render")
 assert.doesNotMatch(html, /Internal Server Error/i)
 assert.equal(
@@ -273,7 +281,7 @@ if (environment === "production") {
   }
   assert.match(
     html,
-    /tanbase:asset-reload/,
+    new RegExp(`${appId}:asset-reload`),
     "production pages must reload once when a fresh deployment's assets are not served yet"
   )
 
@@ -337,6 +345,24 @@ assert.equal(
   404,
   "unknown preview images must return HTTP 404"
 )
+
+// The manifest names the app and its icons, which static assets serve.
+const manifestResponse = await fetchWithTimeout(
+  new URL("/manifest.webmanifest", url)
+)
+assert.equal(manifestResponse.status, 200, "manifest must return HTTP 200")
+assert.equal(
+  manifestResponse.headers.get("content-type"),
+  "application/manifest+json",
+  "manifest must use its media type"
+)
+const manifest = await manifestResponse.json()
+assert.ok(manifest.name && manifest.short_name, "manifest must name the app")
+for (const icon of manifest.icons ?? []) {
+  const iconResponse = await fetchWithTimeout(new URL(icon.src, url))
+  assert.equal(iconResponse.status, 200, `manifest icon ${icon.src} must exist`)
+  await iconResponse.arrayBuffer()
+}
 
 // Only the homepage is indexable: other pages opt out and name no canonical URL.
 const loginResponse = await fetchWithTimeout(new URL("/login", url))

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { createFileRoute, useRouter } from "@tanstack/react-router"
 import { LaptopIcon, MoonIcon, SunIcon } from "lucide-react"
 
+import { siteConfig } from "@/lib/site"
 import { useTheme } from "@/components/theme-provider"
 import type { Theme } from "@/components/theme-provider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_app/settings")({
   head: () =>
     seo({
       title: "Settings",
-      description: "Manage your TanBase Core account.",
+      description: `Manage your ${siteConfig.name} account.`,
       noindex: true,
     }),
   component: SettingsPage,
@@ -108,7 +109,8 @@ function SettingsPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
-          Manage your account and how TanBase looks on this device.
+          Manage your account and how {siteConfig.shortName} looks on this
+          device.
         </p>
       </div>
 

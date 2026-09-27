@@ -530,7 +530,7 @@ hostname was retired on 2026-09-24 by removing it from the Worker; it no longer
 resolves.
 
 Better Auth accepts requests only from `BETTER_AUTH_URL`. When the canonical
-origin changes, update `src/lib/site.ts`, `src/modules/seo/llms.txt`, and the
+origin changes, update `siteConfig.origin` in `src/lib/site.ts` and the
 production `BETTER_AUTH_URL` together, run `pnpm cf:typegen`, and redirect or
 retire the former hostname immediately after that deployment, because it can no
 longer sign users in. Forks keep the installer's `workers.dev` origin until they

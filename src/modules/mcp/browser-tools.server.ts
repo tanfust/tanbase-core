@@ -1,6 +1,7 @@
 import { getRequestHeaders } from "@tanstack/react-start/server"
 import type { z } from "zod"
 
+import { siteConfig } from "@/lib/site"
 import { getSessionFromHeaders } from "@/modules/auth/session.server"
 
 import type {
@@ -17,8 +18,7 @@ import {
 } from "./tools.server"
 import type { McpTask } from "./tools.server"
 
-export const signedOutMessage =
-  "The person is not signed in to TanBase Core. Ask them to sign in at /login, then try again."
+export const signedOutMessage = `The person is not signed in to ${siteConfig.name}. Ask them to sign in at /login, then try again.`
 
 async function run<T>(
   work: (userId: string) => Promise<T>

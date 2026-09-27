@@ -1,4 +1,9 @@
-import { canonicalUrl, siteConfig, sourceFileUrl } from "@/lib/site"
+import {
+  canonicalUrl,
+  repositoryFolder,
+  siteConfig,
+  sourceFileUrl,
+} from "@/lib/site"
 
 interface InternalAction {
   label: string
@@ -72,8 +77,7 @@ export const homepage = {
   signIn: { label: "Sign in", path: "/login" } satisfies InternalAction,
   primitives: {
     heading: "Every primitive powers a real feature",
-    intro:
-      "Each feature below runs in production on core.tanbase.dev, wired to the same Worker. The chips name the binding, secret, route, or config key it uses.",
+    intro: `Each feature below runs in production on ${new URL(siteConfig.origin).host}, wired to the same Worker. The chips name the binding, secret, route, or config key it uses.`,
     worker: {
       name: "One Worker",
       entry: "src/server.ts",
@@ -177,7 +181,7 @@ export const homepage = {
       "Clone the repository and run the guided installer with a Cloudflare account on Workers Paid. It provisions D1, R2, and Queues in your account, generates the auth secret, deploys the Worker, and runs production smoke checks.",
     commands: [
       `git clone ${siteConfig.sourceRepository}.git`,
-      "cd tanbase-core",
+      `cd ${repositoryFolder()}`,
       "pnpm install --frozen-lockfile",
       "pnpm run setup",
     ],

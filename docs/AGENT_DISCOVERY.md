@@ -16,21 +16,21 @@ every document itself
 
 ## Published resources
 
-| Resource                                           | Contract                                                                 |
-| -------------------------------------------------- | ------------------------------------------------------------------------ |
-| `/sitemap.xml`                                     | XML sitemap containing only the canonical public homepage                |
-| `/robots.txt`                                      | Production crawl policy, Content Signals, and canonical sitemap location |
-| `/llms.txt`                                        | llmstxt.org summary with linked docs, agent entry points, and limits     |
-| `/`                                                | HTML by default, Markdown on request, discovery links, Content Signals   |
-| `/.well-known/api-catalog`                         | RFC 9727 API catalog listing `/mcp`                                      |
-| `/.well-known/ai-catalog.json`                     | AI Catalog of the MCP server card, the skill, and the API catalog        |
-| `/.well-known/ard.json`                            | The same catalog under its ARD v0.91 name                                |
-| `/mcp/server-card`                                 | MCP Server Card (SEP-2127)                                               |
-| `/.well-known/mcp/server-card.json`                | The same card with the fields of the earlier SEP-1649 draft              |
-| `/.well-known/agent-skills/index.json`             | Agent Skills Discovery index, v0.2.0                                     |
-| `/.well-known/agent-skills/tanbase-tasks/SKILL.md` | The skill: connecting to `/mcp` and using the task tools                 |
-| `/.well-known/oauth-protected-resource/mcp`        | RFC 9728 protected resource metadata for `/mcp`                          |
-| `/.well-known/oauth-authorization-server/api/auth` | RFC 8414 authorization server metadata for Better Auth                   |
+| Resource                                                | Contract                                                                 |
+| ------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `/sitemap.xml`                                          | XML sitemap containing only the canonical public homepage                |
+| `/robots.txt`                                           | Production crawl policy, Content Signals, and canonical sitemap location |
+| `/llms.txt`                                             | llmstxt.org summary with linked docs, agent entry points, and limits     |
+| `/`                                                     | HTML by default, Markdown on request, discovery links, Content Signals   |
+| `/.well-known/api-catalog`                              | RFC 9727 API catalog listing `/mcp`                                      |
+| `/.well-known/ai-catalog.json`                          | AI Catalog of the MCP server card, the skill, and the API catalog        |
+| `/.well-known/ard.json`                                 | The same catalog under its ARD v0.91 name                                |
+| `/mcp/server-card`                                      | MCP Server Card (SEP-2127)                                               |
+| `/.well-known/mcp/server-card.json`                     | The same card with the fields of the earlier SEP-1649 draft              |
+| `/.well-known/agent-skills/index.json`                  | Agent Skills Discovery index, v0.2.0                                     |
+| `/.well-known/agent-skills/tanbase-core-tasks/SKILL.md` | The skill: connecting to `/mcp` and using the task tools                 |
+| `/.well-known/oauth-protected-resource/mcp`             | RFC 9728 protected resource metadata for `/mcp`                          |
+| `/.well-known/oauth-authorization-server/api/auth`      | RFC 8414 authorization server metadata for Better Auth                   |
 
 `src/modules/discovery/` builds the catalog, card, and skill documents. The
 card's server info and tools come from the definitions `/mcp` registers, and
