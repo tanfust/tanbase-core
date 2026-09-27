@@ -559,14 +559,25 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-020: Agent layer
 
-**Module:** agent | **Priority:** P0 | **Status:** 🔲 Todo | **Depends on:** F-015, F-018
+**Module:** agent | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-015, F-018
 
 **Acceptance criteria**
 
-- [ ] `AGENTS.md`: stack, module map, ownership rule, binding rules, commands
-- [ ] `CLAUDE.md` pointing to `AGENTS.md`
-- [ ] Skills in `.claude/skills/`: `add-module`, `add-table`, `remove-module`, `deploy`
-- [ ] A fresh agent session adds a new table with CRUD using only the repo docs (run once, record the result)
+- [x] `AGENTS.md`: stack, module map, ownership rule, binding rules, commands
+- [x] `CLAUDE.md` pointing to `AGENTS.md`
+- [x] Skills in `.claude/skills/`: `add-module`, `add-table`, `remove-module`, `deploy`
+- [x] A fresh agent session adds a new table with CRUD using only the repo docs (run once, record the result)
+
+**Result of the fresh-agent run (2026-09-27):** an agent with no prior
+context, in its own worktree, added a user-owned `label` table in about nine
+minutes: schema, generated migration, repository, Zod schemas, server
+functions, query options, and 12 tests, including cross-user isolation. The
+final `pnpm verify` passed with 187 Worker tests. It found five gaps, all
+fixed: `db:generate` output failed the format gate, the skill did not say when
+a table needs a new module, its example view mapper was undefined, tests
+could not use `getDb()` and the skill did not say how to insert fixtures, and
+the tasks module it cited returned whole rows to the client. The throwaway
+work was not merged.
 
 ---
 

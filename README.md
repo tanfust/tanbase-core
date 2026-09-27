@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-26
+last_verified: 2026-09-27
 ---
 
 # TanBase Core
@@ -81,7 +81,9 @@ pnpm cf:dry-run:production
 - Agent discovery: an API catalog, AI Catalog, MCP server card, agent skills index, and WebMCP tools
 - CI verification, generated binding-type drift detection, and deploy dry run
 - Automatic production deployment from `main`; branch previews are optional
-- Maintained human and AI documentation
+- Maintained human and AI documentation, with an agent contract in
+  `AGENTS.md` and task skills in `.claude/skills/` for adding a table, adding
+  or removing a module, and deploying
 
 Local and production use separate D1 databases. Every later Cloudflare binding
 remains deferred until its owning product feature is implemented.

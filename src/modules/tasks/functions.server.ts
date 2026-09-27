@@ -1,5 +1,6 @@
 import { getRequestHeaders } from "@tanstack/react-start/server"
 
+import type { Project, Task } from "@/db/schema"
 import { getSessionFromHeaders } from "@/modules/auth/session.server"
 import {
   listAttachmentKeysForProject,
@@ -40,27 +41,25 @@ async function requireUserId() {
   return session.user.id
 }
 
-function toProjectView(project: {
-  id: string
-  name: string
-  createdAt: number
-}): ProjectView {
-  return project
+// Views copy fields explicitly, so owner IDs and internal columns such as
+// reminder_sent_at never reach the client or board events.
+function toProjectView(project: Project): ProjectView {
+  return { id: project.id, name: project.name, createdAt: project.createdAt }
 }
 
-function toTaskView(task: {
-  id: string
-  projectId: string
-  parentId: string | null
-  title: string
-  notes: string | null
-  status: "todo" | "doing" | "done"
-  position: number
-  dueAt: number | null
-  createdAt: number
-  updatedAt: number
-}): TaskView {
-  return task
+function toTaskView(task: Task): TaskView {
+  return {
+    id: task.id,
+    projectId: task.projectId,
+    parentId: task.parentId,
+    title: task.title,
+    notes: task.notes,
+    status: task.status,
+    position: task.position,
+    dueAt: task.dueAt,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+  }
 }
 
 export async function getProjectsImpl(): Promise<ProjectView[]> {

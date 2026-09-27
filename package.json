@@ -25,7 +25,7 @@
     "docs:check": "node scripts/check-docs.mjs",
     "typecheck": "tsc --noEmit",
     "verify": "pnpm format:check && pnpm lint && pnpm docs:check && pnpm db:check && pnpm typecheck && pnpm test && pnpm test:ui && pnpm test:setup && pnpm test:scripts && pnpm test:boundaries && pnpm build",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "drizzle-kit generate && prettier --write drizzle/migrations/meta",
     "db:check": "drizzle-kit check",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrate:e2e": "wrangler d1 migrations apply DB --local --config wrangler.e2e.jsonc --persist-to .wrangler/e2e-state",
