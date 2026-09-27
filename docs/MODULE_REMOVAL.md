@@ -304,7 +304,8 @@ already fetched a preview keep their own copy.
 
 Each branch was cut from `1e385f6`, pushed, and never merged or deployed.
 All four CI jobs passed on each: the three Node verify jobs and the Cloudflare
-types and dry run.
+types and dry run. The branches were deleted on 2026-09-27; the CI runs stay
+linked below.
 
 | Module     | Branch                      | Commit    | CI run                                                                          |
 | ---------- | --------------------------- | --------- | ------------------------------------------------------------------------------- |

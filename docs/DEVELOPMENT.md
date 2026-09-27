@@ -42,7 +42,7 @@ lockfile or supply-chain validation in contributor or CI instructions.
 | `pnpm cf:deploy:production`                          | Build, migrate, deploy, and smoke production; superseded Workers Builds skip the deploy; changes live remote state                          |
 | `pnpm smoke -- [--url <url>] --environment <name>`   | Verify public and protected-route contracts; production defaults to the canonical origin; add `--config default` for a top-level deployment |
 | `pnpm perf:bundle -- [--url <url>]`                  | Check the landing page's JavaScript against its budget ([Performance](PERFORMANCE.md))                                                      |
-| `pnpm perf:lighthouse -- [--url <url>] [--compress]` | Run Lighthouse mobile several times and check the median score; `--compress` for a local `vite preview`                                     |
+| `pnpm perf:lighthouse -- [--url <url>] [--compress]` | Run Lighthouse mobile several times and check the median score; `--compress` for a local `vite preview`; needs Node.js 22.19 or newer       |
 | `pnpm perf:ttfb -- [--url <url>] [--path <path>]`    | Measure time to first byte from Tunis and US East with Globalping probes                                                                    |
 
 ## Generated files
@@ -147,11 +147,11 @@ the registered tools signed out and signed in.
 `sendEmail()` defaults to a metadata-only log when `EMAIL_FROM` is empty. The
 log contains only the template name and recipient count; it never contains
 addresses, message bodies, verification links, reset tokens, or credentials.
-The native `EMAIL` binding is intentionally absent from the default template so
-Email Service onboarding cannot block a fresh account.
+The native `EMAIL` binding exists only in `env.production`, so Email Service
+onboarding cannot block a fresh account or local development.
 
-To exercise the native binding locally, first add `send_email` to the base
-Wrangler configuration, regenerate types, and set `EMAIL_FROM` in ignored
+To exercise the native binding locally, first add `send_email` to `env.local`
+in `wrangler.jsonc`, regenerate types, and set `EMAIL_FROM` in ignored
 `.dev.vars` to a bare address on an onboarded sender domain; the site name is
 used as the display name. Wrangler simulates
 delivery unless the binding explicitly uses `remote: true`. Templates render

@@ -658,7 +658,11 @@ Workers Paid: password sign-in and a preview image render each use over
 100 ms of CPU in production, past Workers Free's 10 ms
 ([Deploying](DEPLOYMENT.md#workers-paid-is-required)). Next, the first real
 button run confirms what it provisions, then an outside tester runs the
-[fresh-account test](FRESH_ACCOUNT_TEST.md).
+[fresh-account test](FRESH_ACCOUNT_TEST.md). On 2026-09-27 an outside tester
+reached the setup page: it offers the D1 database, R2 bucket, and queue by
+name and runs `pnpm run deploy`, and it ticks **Protect with Cloudflare
+Access** by default, which the README now covers. The tester stopped before
+deploying, on Workers Free.
 
 ---
 
