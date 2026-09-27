@@ -53,6 +53,7 @@ Records:
 - [2026-09-27: One Better Auth instance per isolate, one session lookup per request](2026-09-27-board-server-time.md)
 - [2026-09-27: The README ready for launch](2026-09-27-launch-readme.md)
 - [2026-09-27: Branding in one config](2026-09-27-branding-config.md)
+- [2026-09-27: Deploy button setup notes and repository cleanup](2026-09-27-button-setup-notes.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

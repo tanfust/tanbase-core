@@ -54,22 +54,40 @@ creates the resources it names, and configures Workers Builds with the
 repository's `build` and `deploy` scripts. `pnpm run deploy` applies D1
 migrations, then runs `wrangler deploy`.
 
-| Resource                      | Created by                                                       |
-| ----------------------------- | ---------------------------------------------------------------- |
-| D1 database `DB`              | The button, which records the new database ID in your copy       |
-| R2 bucket `FILES`             | The button; R2 must be enabled on the account first              |
-| Queue `EMAIL_QUEUE`           | The button                                                       |
-| Dead-letter queue             | `wrangler deploy`, which creates a missing dead-letter queue     |
-| Durable Object `BOARD`        | Deploy, from its `v1` migration                                  |
-| Workflow `BREAKDOWN`          | Deploy                                                           |
-| Workers AI `AI`               | Needs no resource; AI Gateway `default` is created on first use  |
-| Rate limits, version metadata | Need no resource                                                 |
-| `BETTER_AUTH_SECRET`          | You, when the button asks for the secrets in `.dev.vars.example` |
+| Resource                      | Created by                                                                                                     |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| D1 database `DB`              | The button, which records the new database ID in your copy; named `tanbase-core`, renameable on the setup page |
+| R2 bucket `FILES`             | The button; R2 must be enabled on the account first; named `tanbase-core-files`, renameable                    |
+| Queue `EMAIL_QUEUE`           | The button; named `tanbase-core-email`, renameable                                                             |
+| Dead-letter queue             | `wrangler deploy`, which creates a missing dead-letter queue, as `tanbase-core-email-dlq`                      |
+| Durable Object `BOARD`        | Deploy, from its `v1` migration                                                                                |
+| Workflow `BREAKDOWN`          | Deploy, as `tanbase-core-task-breakdown`; Workflow names are unique per account                                |
+| Workers AI `AI`               | Needs no resource; AI Gateway `default` is created on first use                                                |
+| Rate limits, version metadata | Need no resource                                                                                               |
+| `BETTER_AUTH_SECRET`          | You, when the button asks for the secrets in `.dev.vars.example`                                               |
 
-This table follows Cloudflare's documentation; the F-023 record in
-[FEATURES](FEATURES.md) notes what the first real run did. The button's setup
-page shows the descriptions from the `cloudflare.bindings` field in
-`package.json`. After the first deploy:
+On 2026-09-27 an outside tester reached the setup page. It showed:
+
+- a Git connection, and **Create private Git repository**, unticked
+- the project name, `tanbase-core`
+- the D1 database with a location hint and read replication, off
+- the R2 bucket with a location hint
+- the queue
+- `BETTER_AUTH_SECRET` and every variable in the top level, with the
+  descriptions from the `cloudflare.bindings` field in `package.json`
+- the build command `pnpm run build` and the deploy command
+  `pnpm run deploy`, which is the repository's script, not pnpm's built-in
+  `pnpm deploy`
+- **Enable Preview builds**, and **Protect with Cloudflare Access**, ticked
+
+The tester stopped before deploying, since the account was on Workers Free,
+so the dead-letter queue, Durable Object, and Workflow rows still follow
+Cloudflare's documentation. The README lists what to choose on each field.
+Cloudflare Access can protect preview URLs only or all traffic, and the setup
+page does not say which. If the `workers.dev` URL asks for a Cloudflare
+sign-in, turn Access off in the Worker's **Access** tab for a public app.
+
+After the first deploy:
 
 1. Smoke-test the deployment with its own URL and the top-level configuration:
 

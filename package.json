@@ -118,7 +118,7 @@
         "description": "Leave empty: email is logged, not sent, and sign-up needs no verification. To send, set up [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) and add an `EMAIL` binding first."
       },
       "TURNSTILE_SITE_KEY": {
-        "description": "Leave empty to turn the sign-up challenge off. To use [Turnstile](https://developers.cloudflare.com/turnstile/), set the widget's site key here and its secret as `TURNSTILE_SECRET_KEY`."
+        "description": "Leave empty for the first deploy: the sign-up challenge stays off. To use [Turnstile](https://developers.cloudflare.com/turnstile/), add its secret as the `TURNSTILE_SECRET_KEY` Worker secret, then set the widget's site key here. A site key without the secret stops sign-in."
       },
       "POSTHOG_HOST": {
         "description": "Optional. Analytics stay off unless the `POSTHOG_KEY` secret is set."

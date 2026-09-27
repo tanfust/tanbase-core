@@ -77,15 +77,27 @@ You need:
 - R2 enabled on that account (**R2 Object Storage** in the dashboard).
 - A GitHub or GitLab account.
 
-The button:
+The button copies this repository into your GitHub or GitLab account, creates
+the D1 database, R2 bucket, and queue, then builds and deploys with Workers
+Builds, and redeploys on every push. On its setup page:
 
-1. Copies this repository into your GitHub or GitLab account.
-2. Creates the D1 database, R2 bucket, and queue.
-3. Asks for `BETTER_AUTH_SECRET`: paste a random string of at least 32
-   characters, such as the output of `openssl rand -base64 32`.
-4. Builds and deploys with Workers Builds, and redeploys on every push.
+- **Git:** tick **Create private Git repository** unless you want the copy to
+  be public.
+- **Project and resource names:** keep them or rename them. The Workflow and
+  the dead-letter queue keep the names in `wrangler.jsonc`, and Workflow names
+  are unique per account, so deploy one copy per account.
+- **`BETTER_AUTH_SECRET`:** paste a random string of at least 32 characters,
+  such as the output of `openssl rand -base64 32`. A shorter one stops sign-in.
+- **Variables:** leave `BETTER_AUTH_URL`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`,
+  and `POSTHOG_HOST` empty for the first deploy. A Turnstile site key without
+  its secret stops sign-in.
+- **Protect with Cloudflare Access:** untick it for a public app. It can put
+  the whole app behind a Cloudflare sign-in, which also blocks sign-up for
+  everyone else, MCP clients, and link previews.
+- **Preview builds:** leave them off; the configuration turns preview URLs off.
 
-Open the `workers.dev` URL it gives you and create an account. Until you set
+Open the `workers.dev` URL it gives you and create an account. Then
+[make it yours](#make-it-yours) in `src/lib/site.ts`. Until you set
 up email, new accounts sign in without verifying their address; until you set
 up Turnstile, sign-up has no bot challenge.
 [Deploying](docs/DEPLOYMENT.md#deploy-to-cloudflare-button) covers both, and a
@@ -266,6 +278,8 @@ code removal before the migration that drops its data.
 - [Guided installation](docs/INSTALLING.md)
 - [Module removal](docs/MODULE_REMOVAL.md)
 - [Deployment runbook](docs/DEPLOYMENT.md)
+- [Performance budgets](docs/PERFORMANCE.md)
+- [Fresh-account test](docs/FRESH_ACCOUNT_TEST.md)
 - [AI agent contract](AGENTS.md)
 
 ## License

@@ -51,8 +51,9 @@ minutes.
 2. Every place you hesitated, guessed, or hit an error, with the step number
    and what the screen said. Screenshots help.
 3. The deployed URL.
-4. What the setup page asked you for, and which resources it said it would
-   create.
+4. What the setup page asked you for, which resources it said it would
+   create, and whether you left **Protect with Cloudflare Access** ticked.
+   If the deployed URL asked you to sign in to Cloudflare, say so.
 5. Whether you had to add a payment method at any point, and for what.
 
 ## For the maintainer
