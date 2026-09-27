@@ -103,7 +103,7 @@ Production, 2026-09-27, merge commit `c957dea`:
   median of 93, so the run failed against 95. The runner scores lower than
   PageSpeed Insights, which reported 97; the follow-up change makes 90 the
   CI alarm.
-- **Board:** eight signed-in board loads took a p75 of 407 ms of Worker wall
+- **Board:** ten signed-in board loads took a p75 of 407 ms of Worker wall
   time and 129 ms of CPU. Derived board TTFB is about 540 ms from Tunis and
   620 ms from US East, over the 400 ms budget.
 

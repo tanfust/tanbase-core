@@ -15,7 +15,7 @@ below 90, and the 95 budget is measured with PageSpeed Insights.
 
 ## Motivation
 
-Eight signed-in board loads on version `7df1cb2d` took a p75 of 407 ms of
+Ten signed-in board loads on version `7df1cb2d` took a p75 of 407 ms of
 Worker wall time and 129 ms of CPU. That derives to a board TTFB of about
 540 ms from Tunis and 620 ms from US East
 ([Performance](../PERFORMANCE.md)). One render made about 12 sequential D1
@@ -83,12 +83,26 @@ Local:
   test waits for each instance's `$context` before building the next, and
   caching means production now builds one instance per origin per isolate.
 
+Production, 2026-09-27, merge commit `8da5e5a`:
+
+- Workers Build `9b072f3f` deployed version `028967ae` at 18:07 UTC and passed
+  its post-deploy smoke. The pinned smoke passed at 18:11 UTC.
+- **Production performance run:** the landing JavaScript check passed at
+  144.8 KB. Lighthouse scored 71, 96, 96, 96, and 96 on GitHub's runner,
+  median 96, against the minimum of 90.
+- **Board:** fifteen signed-in board loads took a p50 of 145 ms and a p75 of
+  204 ms of Worker wall time, down from a p75 of 407 ms. CPU was p50 54 ms and
+  p75 76 ms, down from a p75 of 129 ms.
+- `pnpm perf:ttfb -- --rounds 5`: landing page p75 200 ms from Tunis and
+  264 ms from US East. Derived board TTFB is about 336 ms from Tunis and
+  400 ms from US East, within the 400 ms budget and at its limit for US East.
+
 ## Deployment state
 
-| Target     | Commit                          | URL                        | Date       | Result       |
-| ---------- | ------------------------------- | -------------------------- | ---------- | ------------ |
-| Local      | Working tree based on `c957dea` | —                          | 2026-09-27 | Passed       |
-| Production | —                               | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit                                | URL                        | Date       | Result |
+| ---------- | ------------------------------------- | -------------------------- | ---------- | ------ |
+| Local      | Working tree based on `c957dea`       | —                          | 2026-09-27 | Passed |
+| Production | `8da5e5a` / Worker version `028967ae` | `https://core.tanbase.dev` | 2026-09-27 | Passed |
 
 ## Rollback notes
 

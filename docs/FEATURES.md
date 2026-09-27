@@ -36,9 +36,8 @@ Build in this order:
 
 1. F-023: One-click setup, waiting on the first button run and the outside
    fresh-account test
-2. F-019: Performance budgets
-3. F-024: Public launch
-4. F-022: Demo guardrails, after launch
+2. F-024: Public launch
+3. F-022: Demo guardrails, after launch
 
 ---
 
@@ -557,7 +556,7 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 
 ### F-019: Performance budgets
 
-**Module:** platform | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** F-011, F-016
+**Module:** platform | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** F-011, F-016
 
 **Acceptance criteria**
 
@@ -566,11 +565,10 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
       Production performance workflow audits `core.tanbase.dev` after each
       deploy
 - [x] Bundle size check for the landing page: `pnpm perf:bundle` in both
-- [ ] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`:
-      the landing page is within budget. The board measured about 540 ms from
-      Tunis and 620 ms from US East on 2026-09-27; its session and
-      Better Auth lookups are being cut, and it is measured again after that
-      deploys
+- [x] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`:
+      on 2026-09-27 the landing page's p75 was 200 ms from Tunis and 264 ms
+      from US East. The board was about 540 and 620 ms, then about 336 and
+      400 ms once Better Auth and the session were cached
 - [x] Placement tested on and off, decision recorded ([ADR-0011](decisions/0011-placement-near-d1.md): server functions through `GIG` fell from 1.7–4.3 s to 24–165 ms)
 - [x] Budgets in OVERVIEW.md met or updated with a reason: the landing
       JavaScript budget rose from 100 KB to 150 KB, since React DOM alone is

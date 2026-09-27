@@ -86,7 +86,29 @@ through the Workers Observability API's `telemetry/query` endpoint.
 
 ## Results
 
-### 2026-09-27
+### 2026-09-27, after the board fix
+
+On version `028967ae`, from `8da5e5a`, which caches the Better Auth instance
+per isolate and the session per request.
+
+| Budget                            | Target               | Measured                                                                                        | Result            |
+| --------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------- | ----------------- |
+| Landing page JavaScript           | under 150 KB gzipped | 144.8 KB in 10 files, in the Production performance run                                         | Met               |
+| Lighthouse alarm, production      | 90 or higher         | Median 96 of 5 runs on GitHub's runner; the first run scored 71, with 1,060 ms of blocking time | Met               |
+| Landing page TTFB, p75, Tunis     | under 400 ms         | 200 ms, 5 samples, through `MRS`; p50 144 ms                                                    | Met               |
+| Landing page TTFB, p75, US East   | under 400 ms         | 264 ms, 20 samples, through `IAD`, `ORD`, and `EWR`; p50 212 ms                                 | Met               |
+| Board TTFB, p75, Tunis            | under 400 ms         | About 336 ms, derived: 200 ms plus 136 ms more Worker wall time than the landing page           | Met               |
+| Board TTFB, p75, US East          | under 400 ms         | About 400 ms, derived: 264 ms plus the same 136 ms                                              | Met, at the limit |
+| Worker CPU per server render, p75 | under 50 ms          | Unchanged overall at 40 ms; the board alone 76 ms                                               | Met overall       |
+
+Fifteen signed-in board loads took 126 to 324 ms of Worker wall time, p50
+145 ms and p75 204 ms, and 33 to 209 ms of CPU, p50 54 ms and p75 76 ms. The
+first three, in new isolates, were the slowest; later loads took 126 to
+170 ms. Before the fix, the p75 was 407 ms of wall time and 129 ms of CPU.
+The board still reads the projects list twice, in the layout and in its own
+loader; removing the second read is the next step if US East needs margin.
+
+### 2026-09-27, first measurement
 
 | Budget                            | Target               | Measured                                                                                              | Result      |
 | --------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------- | ----------- |
@@ -96,14 +118,14 @@ through the Workers Observability API's `telemetry/query` endpoint.
 | Lighthouse alarm, production      | 90 or higher         | Median 93 of 5 runs on GitHub's runner, the first post-deploy run, on `7df1cb2d`                      | Met         |
 | Landing page TTFB, p75, Tunis     | under 400 ms         | 200 ms, 5 samples, through `MRS`; p50 152 ms                                                          | Met         |
 | Landing page TTFB, p75, US East   | under 400 ms         | 279 ms, 20 samples, through `IAD`, `ORD`, and `EWR`; p50 223 ms                                       | Met         |
-| Board TTFB, p75, Tunis            | under 400 ms         | About 540 ms, derived: 200 ms plus 339 ms more Worker wall time than the landing page                 | Over        |
-| Board TTFB, p75, US East          | under 400 ms         | About 620 ms, derived: 279 ms plus the same 339 ms                                                    | Over        |
+| Board TTFB, p75, Tunis            | under 400 ms         | About 540 ms, derived: 200 ms plus 339 ms more Worker wall time than the landing page                 | Over, fixed |
+| Board TTFB, p75, US East          | under 400 ms         | About 620 ms, derived: 279 ms plus the same 339 ms                                                    | Over, fixed |
 | Worker CPU per server render, p75 | under 50 ms          | 40 ms over 272 page loads from 2026-09-20 to 2026-09-27, p50 12 ms, p95 71 ms; the board alone 129 ms | Met overall |
 | Realtime event between two tabs   | under 1 s            | 5 ms for a create and 5 ms for a move, in `pnpm test:e2e`                                             | Met locally |
 
 Notes:
 
-- **The board.** Eight signed-in board loads on version `7df1cb2d` took 298
+- **The board.** Ten signed-in board loads on version `7df1cb2d` took 264
   to 853 ms of Worker wall time, p75 407 ms, and 52 to 313 ms of CPU, p75
   129 ms. The landing page's p75 wall time is 68 ms. One render made about
   12 sequential D1 queries, where about 4 would do:
@@ -112,17 +134,18 @@ Notes:
     reads D1
   - the projects list was read twice
 
-  The next change caches the instance per isolate and the session per
-  request.
+  Version `028967ae` caches the instance per isolate and the session per
+  request; see the results above.
 
 - **Where the time goes.** Every request runs in Marseille, next to the D1
   primary ([ADR-0011](decisions/0011-placement-near-d1.md)). From Tunis,
   Cloudflare's Marseille location is also the nearest. US East requests enter
   at `IAD`, `ORD`, or `EWR` and cross the Atlantic, which is why their server
   wait is about 170 ms at p75 against about 80 ms from Tunis.
-- **Lighthouse outliers.** One run in five sometimes scores about 79, with LCP
-  near 3.8 s. The production workflow takes the median of five for that
-  reason.
+- **Lighthouse outliers.** One run in five sometimes scores 71 to 80. On
+  GitHub's runner it is the first run, with 600 to 1,060 ms of blocking time
+  while the browser warms up. The production workflow takes the median of
+  five for that reason.
 - **CPU and the plan.** Password sign-in and the first preview image render
   use over 100 ms of CPU each, which is why deployments need Workers Paid
   ([Deploying](DEPLOYMENT.md#workers-paid-is-required)).
