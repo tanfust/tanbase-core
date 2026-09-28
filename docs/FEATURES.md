@@ -690,6 +690,16 @@ also formats the files it rewrites before running `pnpm verify`: a renamed
 resource could change where Prettier wraps a line in `wrangler.jsonc`, and
 the formatting check then stopped setup.
 
+Later on 2026-09-28 an outside tester imported the repository from the
+dashboard rather than using the button. The build passed; the deploy failed
+with `R2 bucket 'tanbase-core-files' not found`. R2 was not enabled, so
+Wrangler skipped creating the bucket, and Workers Builds' default deploy
+command, `npx wrangler deploy`, would also have skipped the D1 migrations.
+`pnpm run deploy` now creates a missing database and bucket before the
+migrations, or stops and says to enable R2, and the README and
+[Deploying](DEPLOYMENT.md#importing-the-repository-from-the-dashboard) name
+the deploy command a dashboard import needs.
+
 ---
 
 ### F-024: Public launch

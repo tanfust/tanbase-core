@@ -53,6 +53,12 @@ Builds, and redeploys on every push. On its setup page:
   everyone else, MCP clients, and link previews.
 - **Preview builds:** leave them off; the configuration turns preview URLs off.
 
+Connecting your copy from the dashboard instead, under **Workers & Pages →
+Create → Import a repository**? Enable R2 first, and set the build command
+to `pnpm run build` and the deploy command to `pnpm run deploy`: Cloudflare's
+default, `npx wrangler deploy`, never creates the database's tables
+([Deploying](docs/DEPLOYMENT.md#importing-the-repository-from-the-dashboard)).
+
 Open the `workers.dev` URL it gives you and create an account. Then
 [make it yours](#make-it-yours) in `src/lib/site.ts`. Until you set
 up email, new accounts sign in without verifying their address; until you set

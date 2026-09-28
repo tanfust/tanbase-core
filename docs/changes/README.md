@@ -57,6 +57,7 @@ Records:
 - [2026-09-27: TanStack Form, Table, Charts, and Markdown](2026-09-27-tanstack-libraries.md)
 - [2026-09-28: Search params by hand, and signed-in visitors skip sign-in](2026-09-28-search-parser-and-signed-in-redirect.md)
 - [2026-09-28: Launch readiness](2026-09-28-launch-readiness.md)
+- [2026-09-28: Deploying a repository imported from the dashboard](2026-09-28-dashboard-import-deploy.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

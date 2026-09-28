@@ -105,8 +105,13 @@ fresh-account, under-15-minute acceptance test is still pending.
 Since 2026-09-27 the README has a Deploy to Cloudflare button for the generic
 top-level configuration ([ADR-0017](decisions/0017-wrangler-configuration-layout.md)),
 and a deployment works with no origin or email configured
-([ADR-0016](decisions/0016-deploy-without-personalization.md)). No one has
-run the button yet; the first run and the
+([ADR-0016](decisions/0016-deploy-without-personalization.md)). On
+2026-09-28 an outside tester imported the repository from the dashboard
+instead of using the button. Its build passed, but the deploy failed: R2 was
+not enabled on the account, and Workers Builds' default deploy command skips
+D1 migrations. `pnpm run deploy` now creates the database and the bucket, or
+says to enable R2, and the README names the deploy command to set. The
+tester's retry, the first button run, and the
 [fresh-account test](FRESH_ACCOUNT_TEST.md) are pending.
 
 F-028 to F-031 are live: forms on TanStack Form, the board's list and stats
