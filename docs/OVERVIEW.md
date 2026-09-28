@@ -107,7 +107,7 @@ beyond exercising each primitive are left to forks.
 | Sign in, sessions                          | Better Auth with authoritative D1 storage         | `DB`                            |
 | Bot protection on auth forms               | Turnstile                                         | `TURNSTILE_SECRET_KEY` (secret) |
 | Abuse limits on auth and AI                | Rate Limiting                                     | `AUTH_LIMITER`, `AI_LIMITER`    |
-| Attachments                                | R2                                                | `FILES`                         |
+| Attachments, when the account has R2       | R2                                                | `FILES`                         |
 | Live board                                 | Durable Object per project, WebSocket Hibernation | `BOARD`                         |
 | Task breakdown                             | Workflows                                         | `BREAKDOWN`                     |
 | AI inference                               | Workers AI through AI Gateway                     | `AI`                            |
@@ -274,6 +274,14 @@ CLAUDE.md
 - Better Auth's `captcha` plugin requires a Turnstile token on sign-up, sign-in,
   password-reset requests, and verification resends. A configured site key
   without its secret fails closed.
+- An unfinished deployment, one whose database has no tables or whose Worker
+  has no usable `BETTER_AUTH_SECRET`, renders the sign-in pages signed out
+  with a notice naming the missing step, instead of an error page
+  ([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
+  The check reads the schema once per isolate until the tables exist.
+- The auth forms turn Cloudflare's error page for a Worker over its CPU
+  limit, error 1102, into a message that the account likely needs Workers
+  Paid.
 - The auth route applies `AUTH_LIMITER` per client IP and endpoint before Better
   Auth runs. Client IPs come from `cf-connecting-ip`, and Better Auth's
   in-memory limiter is disabled because Worker isolates do not share memory.
@@ -374,7 +382,7 @@ Exact versions are pinned in F-001.
 
 Target: the public demo runs on the Workers Paid plan at $5 a month, with usage inside included allowances.
 
-Every deployment needs Workers Paid: password sign-in and drawing a preview image each take over 100 ms of CPU, and Workers Free allows 10 ms per request ([Deploying](DEPLOYMENT.md#workers-paid-is-required)).
+Every deployment needs Workers Paid: password sign-in and drawing a preview image each take over 100 ms of CPU, and Workers Free allows 10 ms per request ([Deploying](DEPLOYMENT.md#workers-paid-is-required)). R2 is optional: a deployment without it runs with attachments off.
 
 Included in Workers Paid (checked against Cloudflare's pricing pages on
 2026-09-26; the landing page publishes the same table from

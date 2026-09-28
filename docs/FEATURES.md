@@ -700,6 +700,22 @@ migrations, or stops and says to enable R2, and the README and
 [Deploying](DEPLOYMENT.md#importing-the-repository-from-the-dashboard) name
 the deploy command a dashboard import needs.
 
+Then a first deploy stopped needing any setup beyond Workers Paid
+([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)):
+
+- R2 is optional. The top level names no bucket, and `pnpm run deploy` binds
+  `<worker>-files` on each deploy while the account has R2, so attachments
+  turn on once the owner enables it.
+- The first deploy creates `BETTER_AUTH_SECRET`, and the button no longer
+  asks for it.
+- `pnpm run deploy` builds when the build command is blank, as on a dashboard
+  import.
+- A deployment made with `npx wrangler deploy` says on its sign-in page what
+  is missing.
+- The auth forms name error 1102 on Workers Free.
+- The landing page offers the Deploy to Cloudflare button, which it had
+  called "on the roadmap".
+
 ---
 
 ### F-024: Public launch

@@ -29,22 +29,26 @@ PageSpeed Insights on mobile and the isitagentready.com scan, both on
 The button above deploys your own copy. You need:
 
 - A Cloudflare account on **Workers Paid**, $5 a month (upgrade under
-  **Workers & Pages** in the dashboard). Signing in and drawing link preview images take
-  more CPU per request than Workers Free allows.
-- R2 enabled on that account (**R2 Object Storage** in the dashboard).
+  **Workers & Pages** in the dashboard). Signing in and drawing link preview
+  images take more CPU per request than Workers Free allows; on Workers Free,
+  the sign-in form says so (error 1102).
 - A GitHub or GitLab account.
 
+R2 is optional. Without it, the site works and task attachments stay off;
+enable **R2 Object Storage** in the dashboard later and redeploy, and they
+turn on by themselves.
+
 The button copies this repository into your GitHub or GitLab account, creates
-the D1 database, R2 bucket, and queue, then builds and deploys with Workers
-Builds, and redeploys on every push. On its setup page:
+the D1 database and the queue, then builds and deploys with Workers Builds,
+and redeploys on every push. The first deploy creates the auth secret,
+`BETTER_AUTH_SECRET`, and binds an R2 bucket named `<worker>-files` when the
+account has R2. On its setup page:
 
 - **Git:** tick **Create private Git repository** unless you want the copy to
   be public.
 - **Project and resource names:** keep them or rename them. The Workflow and
   the dead-letter queue keep the names in `wrangler.jsonc`, and Workflow names
   are unique per account, so deploy one copy per account.
-- **`BETTER_AUTH_SECRET`:** paste a random string of at least 32 characters,
-  such as the output of `openssl rand -base64 32`. A shorter one stops sign-in.
 - **Variables:** leave `BETTER_AUTH_URL`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`,
   and `POSTHOG_HOST` empty for the first deploy. A Turnstile site key without
   its secret stops sign-in.
@@ -54,9 +58,10 @@ Builds, and redeploys on every push. On its setup page:
 - **Preview builds:** leave them off; the configuration turns preview URLs off.
 
 Connecting your copy from the dashboard instead, under **Workers & Pages →
-Create → Import a repository**? Enable R2 first, and set the build command
-to `pnpm run build` and the deploy command to `pnpm run deploy`: Cloudflare's
-default, `npx wrangler deploy`, never creates the database's tables
+Create → Import a repository**? Set the deploy command to `pnpm run deploy`
+before the first build. Cloudflare's default, `npx wrangler deploy`, creates
+neither the database's tables nor the auth secret; if it ran, the sign-in page
+says what is missing
 ([Deploying](docs/DEPLOYMENT.md#importing-the-repository-from-the-dashboard)).
 
 Open the `workers.dev` URL it gives you and create an account. Then

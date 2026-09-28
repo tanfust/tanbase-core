@@ -191,7 +191,15 @@ export const homepage = {
       label: "Read the install guide",
       href: sourceFileUrl("docs/INSTALLING.md"),
     } satisfies ExternalAction,
-    oneClick: "A one-click Deploy to Cloudflare button is on the roadmap.",
+    // The Deploy to Cloudflare button copies the repository into the
+    // visitor's GitHub or GitLab account and deploys the top level.
+    oneClick: {
+      intro: "Or deploy your own copy without a terminal:",
+      action: {
+        label: "Deploy to Cloudflare",
+        href: `https://deploy.workers.cloudflare.com/?url=${siteConfig.sourceRepository}`,
+      } satisfies ExternalAction,
+    },
   },
   footer: {
     license: { label: "MIT license", href: sourceFileUrl("LICENSE") },
@@ -268,7 +276,7 @@ export function createHomepageMarkdown(origin: string): string {
     ...deploy.commands,
     "```",
     "",
-    `${deploy.requirements} ${external(deploy.guide)}. ${deploy.oneClick}`,
+    `${deploy.requirements} ${external(deploy.guide)}. ${deploy.oneClick.intro} ${external(deploy.oneClick.action)}.`,
     "",
   ].join("\n")
 }

@@ -9,6 +9,7 @@ import { MailCheckIcon } from "lucide-react"
 
 import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
+import { SetupNotice } from "@/components/auth/setup-notice"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -65,7 +66,8 @@ export const Route = createFileRoute("/sign-up")({
 
 function SignUpPage() {
   const { redirect: redirectPath } = Route.useSearch()
-  const { turnstileSiteKey, emailDelivery } = Route.useLoaderData()
+  const { turnstileSiteKey, emailDelivery, installationProblem } =
+    Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const navigate = useNavigate()
   const [submitted, setSubmitted] = useState(false)
@@ -105,6 +107,7 @@ function SignUpPage() {
 
   return (
     <AuthShell>
+      <SetupNotice problem={installationProblem} />
       {submitted ? (
         <Card>
           <CardHeader>

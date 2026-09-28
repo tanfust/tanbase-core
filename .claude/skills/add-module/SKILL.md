@@ -53,22 +53,32 @@ the Deploy to Cloudflare button deploys to any account; `env.local` for local
 development and the Worker tests; and `env.production`. Environments inherit
 nothing from the top level. Declare it in `wrangler.e2e.jsonc` too when the
 browser tests use the feature. Name local resources with a `-local` suffix,
-as `tanbase-core-files-local` is, and give the top level a default name that
+as `tanbase-core-email-local` is, and give the top level a default name that
 works on a fresh account, since the button creates resources from it. For
-example, an R2 bucket:
+example, a queue producer:
 
 ```jsonc
 // top level
-"r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files" }],
+"queues": { "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" }] },
 "env": {
   "local": {
-    "r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files-local" }],
+    "queues": { "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email-local" }] },
   },
   "production": {
-    "r2_buckets": [{ "binding": "FILES", "bucket_name": "tanbase-core-files" }],
+    "queues": { "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" }] },
   },
 },
 ```
+
+A binding that needs an account feature the owner may not have turned on,
+as R2 must be enabled for `FILES`, stays out of the top level so the first
+deploy cannot fail on it. Declare it in `env.local`, `env.production`, and
+the e2e config, and have `scripts/deploy.mjs` add it to a top-level build
+when the account has the feature, as `prepareFiles` in
+`scripts/deploy-resources.mjs` does for R2
+([ADR-0021](../../../docs/decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
+The generated type then marks it optional, so tests read it through a helper
+that throws when it is missing.
 
 Then:
 
@@ -87,7 +97,7 @@ of crashing:
 import { env } from "cloudflare:workers"
 
 export function getFilesBucket(): R2Bucket | null {
-  return (env as { FILES?: R2Bucket }).FILES ?? null
+  return env.FILES ?? null
 }
 ```
 

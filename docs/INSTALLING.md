@@ -12,7 +12,9 @@ in the selected Cloudflare account. It pins `env.production` in
 `wrangler.jsonc` to that account and personalizes `env.local`.
 
 To deploy without a local checkout, use the Deploy to Cloudflare button in
-the README instead; it deploys the top-level configuration
+the README instead. It deploys the top-level configuration, asks for no
+secret, and needs no R2: its first deploy creates `BETTER_AUTH_SECRET`, and
+attachments turn on once the account has R2
 ([Deploying](DEPLOYMENT.md#deploy-to-cloudflare-button)).
 
 ## Fast path

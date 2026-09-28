@@ -20,7 +20,7 @@ import {
 
 /** The FILES bucket, or null when the installation has no R2 binding. */
 export function getFilesBucket(): R2Bucket | null {
-  return (env as { FILES?: R2Bucket }).FILES ?? null
+  return env.FILES ?? null
 }
 
 export function attachmentKey(

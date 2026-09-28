@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { canonicalUrl } from "@/lib/site"
+import { canonicalUrl, siteConfig } from "@/lib/site"
 
 import { contentSignal, discoveryCacheControl } from "./discovery"
 import { createHomepageMarkdown, homepage } from "./homepage"
@@ -150,5 +150,8 @@ describe("Markdown pages", () => {
       `\`\`\`sh\n${deploy.commands.join("\n")}\n\`\`\``
     )
     expect(markdown).toContain(`[${deploy.guide.label}](${deploy.guide.href})`)
+    expect(markdown).toContain(
+      `[Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=${siteConfig.sourceRepository})`
+    )
   })
 })

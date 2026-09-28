@@ -34,16 +34,17 @@ Start a timer when you open the README. Write down the time at each step.
 | Step | Do this                                                                             | Time |
 | ---- | ----------------------------------------------------------------------------------- | ---- |
 | 1    | Open the README and find how to deploy                                              |      |
-| 2    | Do whatever the README says is needed first, such as Workers Paid and R2            |      |
+| 2    | Do whatever the README says is needed first, such as Workers Paid                   |      |
 | 3    | Click **Deploy to Cloudflare** and finish the setup page                            |      |
 | 4    | Wait for the first deploy to finish                                                 |      |
 | 5    | Open the deployed `workers.dev` URL; the landing page loads                         |      |
 | 6    | Create an account; you land on your board                                           |      |
-| 7    | Create a task, move it to Doing, and attach a small image to it                     |      |
+| 7    | Create a task, move it to Doing, and attach a small image if the task allows it     |      |
 | 8    | Open the board in a second tab, change the task there, and see the first tab update |      |
 
 Stop the timer at step 8. The test passes when step 8 is done in under 15
-minutes.
+minutes. R2 is optional: without it, the task says attachments are off, and
+step 7 passes without the image.
 
 ## Send back
 
@@ -58,12 +59,14 @@ minutes.
 6. Whether you used the **Deploy to Cloudflare** button or imported the
    repository from the dashboard, and the Workers Build log if a build
    failed.
+7. The `Attachments:` and `BETTER_AUTH_SECRET:` lines at the end of the
+   first build's log, and whether your account had R2 enabled.
 
 ## For the maintainer
 
 After a run, record the result in the F-023 section of
 [FEATURES](FEATURES.md) and fix what the tester hit. From the tester's
 account, or the tester's report, confirm what the button created: the D1
-database, R2 bucket, queue, dead-letter queue, Durable Object namespace, and
-Workflow. Then compare it with the table in
+database, queue, dead-letter queue, Durable Object namespace, and Workflow,
+and the R2 bucket when the account had R2. Then compare it with the table in
 [Deploying](DEPLOYMENT.md#deploy-to-cloudflare-button).

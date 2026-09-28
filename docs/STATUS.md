@@ -109,9 +109,12 @@ and a deployment works with no origin or email configured
 2026-09-28 an outside tester imported the repository from the dashboard
 instead of using the button. Its build passed, but the deploy failed: R2 was
 not enabled on the account, and Workers Builds' default deploy command skips
-D1 migrations. `pnpm run deploy` now creates the database and the bucket, or
-says to enable R2, and the README names the deploy command to set. The
-tester's retry, the first button run, and the
+D1 migrations. A first deploy now needs nothing set up beyond Workers Paid:
+R2 is optional and turns attachments on once enabled, the first deploy
+creates `BETTER_AUTH_SECRET`, and an unfinished deployment says on its
+sign-in page what is missing
+([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
+The tester's retry, the first button run, and the
 [fresh-account test](FRESH_ACCOUNT_TEST.md) are pending.
 
 F-028 to F-031 are live: forms on TanStack Form, the board's list and stats

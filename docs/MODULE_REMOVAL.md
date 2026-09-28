@@ -54,7 +54,7 @@ Task attachments on R2.
 | What              | Remove                                                                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Folders and files | `src/modules/files/`, `src/routes/api/attachments/`, `src/routes/api/tasks/`, `src/components/board/task-attachments.tsx`, `src/db/schema/attachments.ts` |
-| Bindings          | `r2_buckets` with `FILES` in the base configuration, `env.production`, and `wrangler.e2e.jsonc`                                                           |
+| Bindings          | `r2_buckets` with `FILES` in `env.local`, `env.production`, and `wrangler.e2e.jsonc`; the top level has none since ADR-0021                               |
 | Exports           | None                                                                                                                                                      |
 | Migration         | Drops the `attachment` table and its indexes                                                                                                              |
 | Packages          | None                                                                                                                                                      |
@@ -69,6 +69,12 @@ Edit:
   the `files` check. The health response becomes
   `checks: { database, realtime }`.
 - `scripts/smoke.mjs`: the `files` health assertion.
+- `scripts/deploy-resources.mjs` and its tests: `prepareFiles`,
+  `filesBucketName`, `withFilesBinding`, `bucketStatus`, and the attachments
+  messages; `scripts/deploy.mjs`: the R2 step and the `Attachments:` line.
+- `src/modules/files/storage.server.test.ts` goes with the folder; the
+  generated `src/worker-configuration.d.ts` drops `FILES` after
+  `pnpm cf:typegen`.
 - `scripts/setup.mjs`, `scripts/setup/core.mjs`, `scripts/setup/core.test.mjs`:
   the R2 bucket step, its state key, and its tests.
 - `e2e/app.spec.ts`: the upload, download, and delete journey.
