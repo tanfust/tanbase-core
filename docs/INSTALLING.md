@@ -73,7 +73,9 @@ The full setup:
    them so email is logged as metadata and the deployment succeeds.
 4. Creates an ignored local Better Auth secret and adds Cloudflare's Turnstile
    test secret, applies local migrations, and runs the idempotent local seed.
-5. Regenerates Worker types and runs `pnpm verify` plus the production dry run.
+5. Regenerates Worker types, formats `wrangler.jsonc` and `src/lib/site.ts`
+   with Prettier, since a new name can change where a line wraps, and runs
+   `pnpm verify` plus the production dry run.
 6. Applies production D1 migrations before deploying application code.
 7. Generates `BETTER_AUTH_SECRET` when the Worker does not already have it and
    uploads it from a temporary permission-restricted file.

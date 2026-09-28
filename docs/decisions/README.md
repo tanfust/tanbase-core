@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-25
+last_verified: 2026-09-28
 ---
 
 # Architecture decision records
@@ -22,7 +22,7 @@ Accepted decisions:
 - [ADR-0008: Canonical production domain](0008-canonical-production-domain.md)
 - [ADR-0009: Public health endpoint with a cached database check](0009-public-health-endpoint.md)
 - [ADR-0010: Optional, privacy-first PostHog analytics](0010-privacy-first-analytics.md)
-- [ADR-0011: Place the production Worker next to its D1 primary](0011-placement-near-d1.md)
+- [ADR-0011: Place the production Worker next to its D1 primary](0011-placement-near-d1.md) — installer part replaced by ADR-0020
 - [ADR-0012: At-most-once due-date reminders](0012-at-most-once-reminders.md)
 - [ADR-0013: Workers AI model and gateway for task breakdown](0013-workers-ai-model-and-gateway.md)
 - [ADR-0014: MCP over OAuth 2.1 with Better Auth and the official MCP SDK](0014-mcp-oauth-with-better-auth.md)
@@ -31,6 +31,7 @@ Accepted decisions:
 - [ADR-0017: A generic top-level Wrangler configuration](0017-wrangler-configuration-layout.md)
 - [ADR-0018: Preview images drawn on the Worker and kept in Workers Caching](0018-preview-images-on-the-worker.md)
 - [ADR-0019: Blog posts are repository Markdown rendered on the Worker](0019-blog-from-repository-markdown.md)
+- [ADR-0020: The installer places each installation next to its D1 primary](0020-installer-chooses-placement.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

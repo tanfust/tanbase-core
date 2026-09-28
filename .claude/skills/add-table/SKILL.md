@@ -190,6 +190,10 @@ export const createWidgetInputSchema = z.object({
 })
 ```
 
+When a form in the browser loads the schema too, write it with `zod/mini`,
+as `src/modules/tasks/schemas.ts` does:
+`z.string().check(z.trim(), z.minLength(1), z.maxLength(80))`.
+
 `contracts.ts` holds the view type the UI receives. Never send `userId` to
 the client.
 

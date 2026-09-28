@@ -192,7 +192,8 @@ environment sets:
 ```
 
 The guided installer chooses the hint for its installation
-([Placement](INSTALLING.md#placement)). For a deployment made another way,
+([Placement](INSTALLING.md#placement),
+[ADR-0020](decisions/0020-installer-chooses-placement.md)). For a deployment made another way,
 run `pnpm run placement`. It runs one read-only query, `select 1`, against the
 `DB` database of one section of `wrangler.jsonc`. It prints the primary's colo
 and location hint, the recommended `placement` block, and the section it

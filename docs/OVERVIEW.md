@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # TanBase Core
@@ -342,7 +342,10 @@ landing page from 159 KB to 145 KB, and set the budget just above it.
 Route options, which the router loads with the first page, must stay small:
 a Zod schema for `/app`'s search params once added 14 KB to the landing page
 and cost it its Lighthouse score, so those params are parsed by hand
-([Performance](PERFORMANCE.md#2026-09-28-search-params-by-hand)).
+([Performance](PERFORMANCE.md#2026-09-28-search-params-by-hand)). For the
+same reason the forms' schemas use `zod/mini` and the WebMCP tools leave
+validation to the server, so no page loads full Zod
+([Performance](PERFORMANCE.md#2026-09-28-launch-readiness)).
 
 ---
 
@@ -351,12 +354,12 @@ and cost it its Lighthouse score, so those params are parsed by hand
 | Layer           | Choice                                                             |
 | --------------- | ------------------------------------------------------------------ |
 | Framework       | TanStack Start (React), TanStack Router, TanStack Query            |
-| Forms           | TanStack Form, validated with the server's Zod schemas             |
+| Forms           | TanStack Form, validated with the server's Zod schemas, `zod/mini` |
 | Tables, charts  | TanStack Table, TanStack Charts                                    |
 | Blog            | TanStack Markdown, rendered on the Worker                          |
 | Runtime         | Cloudflare Workers, `@cloudflare/vite-plugin`, Wrangler            |
 | UI              | Tailwind CSS v4, shadcn/ui                                         |
-| Validation      | Zod                                                                |
+| Validation      | Zod; `zod/mini` in the browser                                     |
 | Database        | Cloudflare D1, Drizzle ORM                                         |
 | Auth            | Better Auth                                                        |
 | Email           | React Email, Cloudflare Email Service                              |

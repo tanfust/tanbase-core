@@ -37,10 +37,10 @@ New tables follow the `add-table` skill.
 
 Two rules for code the browser loads:
 
-- A module that builds a Zod schema the browser loads imports
-  `@/lib/zod-config` first, or Zod's eval probe reports a CSP violation.
-  Forms validate with the server function's own schema through
-  `useAppForm()`.
+- A module that builds a Zod schema the browser loads uses `zod/mini` and
+  imports `@/lib/zod-config` first, or Zod's eval probe reports a CSP
+  violation; full `zod` brings all of Zod to the page. Forms validate with
+  the server function's own schema through `useAppForm()`.
 - Route options, such as `validateSearch`, `loader`, and `head`, load with
   every page, the landing page included; only components are split per
   route. Keep them small, build heavy head data in a server function, and

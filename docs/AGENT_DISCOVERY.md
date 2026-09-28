@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, maintainers, operators, agents
-last_verified: 2026-09-26
+last_verified: 2026-09-28
 ---
 
 # Agent discovery
@@ -131,11 +131,15 @@ document that names the origin would promise tokens the server cannot issue.
 
 Every page registers the three task tools with the browser's WebMCP API,
 `document.modelContext`, or `navigator.modelContext` in earlier builds. The
-tools share their schemas with `/mcp` and call server functions that act as
-the signed-in session; signed out, they return a message asking the person to
-sign in. `list_tasks` is marked read-only and as returning untrusted content.
-The tool code loads only in browsers that expose WebMCP, and aborting its
-signal unregisters the tools. Chrome currently exposes WebMCP behind an origin
+tools share their names and schemas with `/mcp` and call server functions
+that act as the signed-in session; signed out, they return a message asking
+the person to sign in. The page describes each input with a fixed JSON
+Schema from `src/modules/mcp/tool-descriptions.ts`, and the server function
+validates it with the tool's Zod schema, so the tool code carries no Zod; a
+test keeps the two schemas equal. An invalid input comes back as Zod's
+message. `list_tasks` is marked read-only and as returning untrusted content.
+The tool code, 1.2 KB gzipped, loads only in browsers that expose WebMCP, and
+aborting its signal unregisters the tools. Chrome currently exposes WebMCP behind an origin
 trial or the `#enable-webmcp-testing` flag.
 
 ## Not published

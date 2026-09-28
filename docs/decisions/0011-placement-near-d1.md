@@ -6,6 +6,10 @@ last_verified: 2026-09-25
 
 # ADR-0011: Place the production Worker next to its D1 primary
 
+The installer's part of this decision is replaced by
+[ADR-0020](0020-installer-chooses-placement.md): the installer now sets the
+hint from where each installation's primary is.
+
 ## Context
 
 By default a Worker runs in the Cloudflare location that receives the request.
