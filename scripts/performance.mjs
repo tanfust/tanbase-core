@@ -5,12 +5,8 @@ import { gzipSync } from "node:zlib"
  * scripts enforce. Change both together.
  */
 export const budgets = {
-  /**
-   * JavaScript the landing page needs to render and hydrate, gzipped. It
-   * rose from 150 KB when Zod began validating /app's search params: the
-   * router loads every route's options with the first page (docs/OVERVIEW.md).
-   */
-  landingJavaScriptBytes: 160 * 1024,
+  /** JavaScript the landing page needs to render and hydrate, gzipped. */
+  landingJavaScriptBytes: 150 * 1024,
   /**
    * Mobile performance on the canonical production URL, as PageSpeed
    * Insights reports it. The budget.

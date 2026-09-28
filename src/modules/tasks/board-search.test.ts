@@ -2,13 +2,18 @@ import { describe, expect, it } from "vitest"
 
 import {
   boardSearchDefaults,
-  boardSearchSchema,
   maxTaskSearchLength,
+  parseBoardSearch,
 } from "./board-search"
+
+// The router hands the parser whatever the URL held.
+function parse(raw: Record<string, unknown>) {
+  return parseBoardSearch(raw as Parameters<typeof parseBoardSearch>[0])
+}
 
 describe("board search params", () => {
   it("fills every default when the URL names none", () => {
-    expect(boardSearchSchema.parse({})).toEqual({
+    expect(parse({})).toEqual({
       ...boardSearchDefaults,
       project: undefined,
       sort: undefined,
@@ -17,7 +22,7 @@ describe("board search params", () => {
 
   it("keeps a shared list view", () => {
     expect(
-      boardSearchSchema.parse({
+      parse({
         project: "project-1",
         view: "list",
         q: "guide",
@@ -39,13 +44,13 @@ describe("board search params", () => {
 
   it("keeps a search up to the search box's limit", () => {
     const longest = "x".repeat(maxTaskSearchLength)
-    expect(boardSearchSchema.parse({ q: longest }).q).toBe(longest)
-    expect(boardSearchSchema.parse({ q: `${longest}x` }).q).toBe("")
+    expect(parse({ q: longest }).q).toBe(longest)
+    expect(parse({ q: `${longest}x` }).q).toBe("")
   })
 
   it("falls back per param instead of failing on a malformed link", () => {
     expect(
-      boardSearchSchema.parse({
+      parse({
         project: "",
         view: "grid",
         q: 42,
@@ -59,5 +64,12 @@ describe("board search params", () => {
       project: undefined,
       sort: undefined,
     })
+  })
+
+  it("keeps a list only when every item is valid", () => {
+    expect(parse({ status: ["done", "todo"] }).status).toEqual(["done", "todo"])
+    expect(parse({ status: ["done", "blocked"] }).status).toEqual([])
+    expect(parse({ hide: "notes" }).hide).toEqual([])
+    expect(parse({ desc: "true" }).desc).toBe(false)
   })
 })
