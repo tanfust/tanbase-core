@@ -93,7 +93,8 @@ export function TaskAttachments({ taskId }: { taskId: string }) {
   if (!query.data.enabled) {
     return (
       <FieldDescription>
-        File attachments are not enabled on this installation.
+        File attachments are off on this installation. Enable R2 in the
+        Cloudflare dashboard and redeploy to turn them on.
       </FieldDescription>
     )
   }

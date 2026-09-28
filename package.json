@@ -112,9 +112,6 @@
   },
   "cloudflare": {
     "bindings": {
-      "BETTER_AUTH_SECRET": {
-        "description": "Signs sessions and tokens. Use a random string of at least 32 characters, such as the output of `openssl rand -base64 32`, and keep it secret."
-      },
       "BETTER_AUTH_URL": {
         "description": "Leave empty to use the deployment's own URL. Set it to your canonical origin, such as `https://app.example.com`, once you add a custom domain or enable email reminders."
       },
@@ -129,9 +126,6 @@
       },
       "DB": {
         "description": "Projects, tasks, and accounts. Migrations run on every deploy."
-      },
-      "FILES": {
-        "description": "Task attachments. R2 must be enabled on the account."
       }
     }
   }

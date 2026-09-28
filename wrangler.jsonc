@@ -13,8 +13,9 @@
   },
   // The top level is a production configuration any Cloudflare account can
   // deploy as committed: the Deploy to Cloudflare button and
-  // `pnpm run deploy` use it. The public origin comes from each request, and
-  // email, Turnstile, and analytics stay off until configured. `env.local`
+  // `pnpm run deploy` use it. The public origin comes from each request;
+  // email, Turnstile, and analytics stay off until configured; and the first
+  // deploy creates BETTER_AUTH_SECRET. `env.local`
   // is local development; `env.production` is the TanBase demo, which the
   // guided installer rewrites into your own pinned installation. ADR-0017.
   "vars": {
@@ -86,15 +87,12 @@
     ],
   },
   "triggers": { "crons": ["0 * * * *"] },
-  // Task attachments. R2 must be enabled on the account.
-  "r2_buckets": [
-    {
-      "binding": "FILES",
-      "bucket_name": "tanbase-core-files",
-    },
-  ],
-  // No database_id: the Deploy to Cloudflare button and `wrangler deploy`
-  // create the database and record it.
+  // Task attachments have no binding here: enabling R2 is an account opt-in,
+  // so `pnpm run deploy` binds FILES, as <worker>-files, only when the account
+  // has R2, and deploys without attachments until it does. ADR-0021.
+  //
+  // No database_id: `pnpm run deploy` creates the database when it is missing,
+  // and the Deploy to Cloudflare button records the one it creates.
   "d1_databases": [
     {
       "binding": "DB",

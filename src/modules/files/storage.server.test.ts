@@ -24,6 +24,13 @@ import {
 
 const appOrigin = "http://localhost:3000"
 
+// Only the top level may leave FILES out (ADR-0021); the tests run env.local,
+// which binds it.
+function testBucket(): R2Bucket {
+  if (!env.FILES) throw new Error("The Worker tests need env.local's FILES.")
+  return env.FILES
+}
+
 async function ownedTask(parentId?: string) {
   const userId = `user-${crypto.randomUUID()}`
   const project = await createProject(userId, { name: "Files" }, env.DB)
@@ -60,7 +67,7 @@ function upload(
   request: Request,
   taskId: string,
   userId: string | null,
-  bucket: R2Bucket | null = env.FILES
+  bucket: R2Bucket | null = testBucket()
 ) {
   return handleAttachmentUpload(request, taskId, {
     appOrigin,
@@ -71,7 +78,7 @@ function upload(
 }
 
 async function storedKeys(userId: string) {
-  const listed = await env.FILES.list({ prefix: `u/${userId}/` })
+  const listed = await testBucket().list({ prefix: `u/${userId}/` })
   return listed.objects.map((object) => object.key)
 }
 
@@ -96,7 +103,7 @@ describe("attachment uploads", () => {
     expect(await storedKeys(userId)).toEqual([
       `u/${userId}/t/${taskId}/${view.id}`,
     ])
-    const object = await env.FILES.get(`u/${userId}/t/${taskId}/${view.id}`)
+    const object = await testBucket().get(`u/${userId}/t/${taskId}/${view.id}`)
     expect(await object?.text()).toBe("hello attachments")
   })
 
@@ -108,34 +115,34 @@ describe("attachment uploads", () => {
         uploadRequest("x", { origin: "https://evil.example" }),
         taskId,
         userId,
-        env.FILES,
+        testBucket(),
         403,
       ],
-      [uploadRequest("x"), taskId, null, env.FILES, 401],
+      [uploadRequest("x"), taskId, null, testBucket(), 401],
       [uploadRequest("x"), taskId, userId, null, 503],
       [
         uploadRequest("x", { length: String(maxAttachmentBytes + 1) }),
         taskId,
         userId,
-        env.FILES,
+        testBucket(),
         413,
       ],
       [
         uploadRequest("<svg/>", { type: "image/svg+xml" }),
         taskId,
         userId,
-        env.FILES,
+        testBucket(),
         415,
       ],
       [
         uploadRequest("<p>", { type: "text/html" }),
         taskId,
         userId,
-        env.FILES,
+        testBucket(),
         415,
       ],
-      [uploadRequest("x", { name: "../" }), taskId, userId, env.FILES, 400],
-      [uploadRequest("x"), other.taskId, userId, env.FILES, 404],
+      [uploadRequest("x", { name: "../" }), taskId, userId, testBucket(), 400],
+      [uploadRequest("x"), other.taskId, userId, testBucket(), 404],
     ]
 
     for (const [request, target, user, bucket, status] of cases) {
@@ -177,7 +184,7 @@ describe("attachment downloads", () => {
     const { id } = await created.json<{ id: string }>()
 
     const response = await handleAttachmentDownload(id, {
-      bucket: env.FILES,
+      bucket: testBucket(),
       database: env.DB,
       userId,
     })
@@ -200,12 +207,12 @@ describe("attachment downloads", () => {
     const { id } = await created.json<{ id: string }>()
 
     const otherUser = await handleAttachmentDownload(id, {
-      bucket: env.FILES,
+      bucket: testBucket(),
       database: env.DB,
       userId: `user-${crypto.randomUUID()}`,
     })
     const anonymous = await handleAttachmentDownload(id, {
-      bucket: env.FILES,
+      bucket: testBucket(),
       database: env.DB,
       userId: null,
     })
@@ -234,7 +241,7 @@ describe("attachment cleanup", () => {
     )
     expect(keys).toHaveLength(2)
     expect(await deleteTask(parent.userId, parent.taskId, env.DB)).toBe(true)
-    await removeStoredObjects(env.FILES, keys)
+    await removeStoredObjects(testBucket(), keys)
 
     expect(await listTaskAttachments(parent.userId, child.id, env.DB)).toEqual(
       []
@@ -250,7 +257,7 @@ describe("attachment cleanup", () => {
     const keys = await listAttachmentKeysForProject(userId, projectId, env.DB)
     expect(keys).toHaveLength(2)
     expect(await deleteProject(userId, projectId, env.DB)).toBe(true)
-    await removeStoredObjects(env.FILES, keys)
+    await removeStoredObjects(testBucket(), keys)
 
     expect(await listTaskAttachments(userId, taskId, env.DB)).toEqual([])
     expect(await storedKeys(userId)).toEqual([])

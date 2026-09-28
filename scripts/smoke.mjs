@@ -108,6 +108,19 @@ assert.ok(
     : health.version === null,
   "health endpoint must report the running Worker version"
 )
+// The top level declares no FILES: `pnpm run deploy` binds it only when the
+// account has R2 (ADR-0021), so either answer is right there.
+const declaresFiles = environmentConfig(configSection).r2_buckets?.some(
+  (bucket) => bucket.binding === "FILES"
+)
+const filesCheck =
+  !declaresFiles &&
+  configSection === "default" &&
+  ["ok", "disabled"].includes(health.checks?.files)
+    ? health.checks.files
+    : declaresFiles
+      ? "ok"
+      : "disabled"
 assert.deepEqual(health, {
   status: "ok",
   service: appId,
@@ -115,11 +128,7 @@ assert.deepEqual(health, {
   version: health.version,
   checks: {
     database: "ok",
-    files: environmentConfig(configSection).r2_buckets?.some(
-      (bucket) => bucket.binding === "FILES"
-    )
-      ? "ok"
-      : "disabled",
+    files: filesCheck,
     realtime: environmentConfig(configSection).durable_objects?.bindings?.some(
       (binding) => binding.name === "BOARD"
     )
