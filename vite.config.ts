@@ -63,6 +63,29 @@ const config = defineConfig(({ command, isPreview, mode }) => {
     optimizeDeps: { include: routeDependencies },
     environments: {
       ssr: { optimizeDeps: { include: routeDependencies } },
+      // Small helpers that route options and route components share, such
+      // as server function stubs, would each become a chunk that every page
+      // preloads, and Lighthouse's simulation counts every request before the
+      // first paint. Keep them in one chunk. Only leaf modules belong here:
+      // grouping the router's own modules broke the order it initializes in.
+      client: {
+        build: {
+          rolldownOptions: {
+            output: {
+              codeSplitting: {
+                groups: [
+                  {
+                    name: "app-shared",
+                    test: /[\\/]src[\\/](lib[\\/]site|modules[\\/](seo[\\/]head|og[\\/]cards|[a-z]+[\\/](functions|session|challenge|redirects)))\.ts$/,
+                    includeDependenciesRecursively: false,
+                    priority: 20,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
     },
     plugins: [
       devtools(),

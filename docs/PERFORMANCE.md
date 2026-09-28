@@ -31,14 +31,13 @@ gzipped at level 9; Cloudflare serves Brotli, which is smaller. `--path`
 measures another public page against the same budget; CI measures `/blog`
 too, since the blog's pages are public and indexable.
 
-The budget is 160 KB. It rose from 150 KB when Zod began validating `/app`'s
-search params (F-029). The router loads every route's options with the first
-page, so the schema ships with the landing page. Zod Mini keeps the schema
-itself to about 5.5 KB, but Zod's core is shared with the browser's WebMCP
-tools, which need full Zod because the MCP SDK reads each tool's JSON Schema
-from it. The landing page therefore carries about 13 KB more than before.
-Moving the WebMCP tools' validation to the server would take full Zod out of
-the browser and give about 7 KB back.
+The router loads every route's options, such as `validateSearch`, `loader`,
+and `head`, with the first page, so they count here even for routes the
+landing page never shows. A Zod schema for `/app`'s search params added
+14 KB and six more files, and the budget briefly rose to 160 KB; the params
+are now parsed by hand. `vite.config.ts` also keeps the small helpers that
+route options and route components share in one chunk, `app-shared`,
+instead of a file each.
 
 PostHog is not counted. It loads after hydration, and only when an
 installation sets `POSTHOG_KEY`; on `core.tanbase.dev` it adds about 100 KB
@@ -48,7 +47,11 @@ gzipped.
 
 `pnpm perf:lighthouse` runs Lighthouse 13.5's default mobile audit, a Moto G
 Power on simulated slow 4G, several times and fails when the median
-performance score is under the minimum. It writes the median run's report and
+performance score is under the minimum. Every pass runs in the same browser.
+On production, passes after the first often score lower than the first: on
+2026-09-28 they did so by up to 14 points, while the Lighthouse CLI, which
+starts a fresh browser each time as PageSpeed Insights does, scored 95 to 100. The simulation caps concurrent requests at 10, so the number of files
+a page preloads matters as well as their size. It writes the median run's report and
 a summary of every run to `output/lighthouse/`.
 
 - **CI** builds with `CLOUDFLARE_ENV=local` and serves the build with
@@ -96,6 +99,35 @@ open the Worker's **Observability** tab and filter `GET` requests with status
 through the Workers Observability API's `telemetry/query` endpoint.
 
 ## Results
+
+### 2026-09-28, search params by hand
+
+On a local build of the change that parses `/app`'s search params by hand
+and groups the shared helpers, served by `vite preview`, and on production
+before it.
+
+| Budget                       | Target               | Measured                                                                                                        | Result       |
+| ---------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------- | ------------ |
+| Landing page JavaScript      | under 150 KB gzipped | 147.6 KB in 14 files; production, version `d6c5a2f5`, served 159.1 KB in 16 files; before F-028, 145.1 KB in 10 | Met          |
+| Blog JavaScript              | under 150 KB gzipped | `/blog` 144.4 KB and the post 144.5 KB, in 15 files each                                                        | Met          |
+| Lighthouse alarm, production | 90 or higher         | Version `d6c5a2f5`: median 88 on GitHub's runner, 89 from a Mac; this change is not deployed yet                | After deploy |
+
+Notes:
+
+- **Why Zod left the route.** On `d6c5a2f5` the landing page loaded 42.8 KB
+  of minified Zod. Zod Mini keeps a schema to about 5.5 KB, but Zod's core
+  is one set of modules for the whole client, and the browser's WebMCP tools
+  use full Zod, since the MCP SDK reads each tool's JSON Schema from it. So a
+  schema in a route option carried the core that full Zod needs.
+- **Grouping only leaf modules.** A group that also took the router's own
+  modules brought the landing page to 5 files, but the page threw
+  `t is not a function` before hydrating: the router's modules have to
+  initialize in their own order. The `app-shared` group takes only small
+  helpers, and all five browser journeys passed against a production build
+  with it.
+- **Real paint time was never the problem.** On `d6c5a2f5`, with mobile
+  throttling in Chrome, the landing page's headline painted at about 1.2 s,
+  before its scripts finished at about 2.6 s.
 
 ### 2026-09-27, TanStack libraries
 

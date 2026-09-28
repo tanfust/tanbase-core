@@ -1,5 +1,10 @@
 import { useState } from "react"
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router"
 import { MailCheckIcon } from "lucide-react"
 
 import { siteConfig } from "@/lib/site"
@@ -24,8 +29,13 @@ import {
 import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
-import { authHref, safeRedirect } from "@/modules/auth/redirects"
+import {
+  authHref,
+  safeRedirect,
+  signedInDestination,
+} from "@/modules/auth/redirects"
 import { signUpFormSchema, signUpSchema } from "@/modules/auth/schemas"
+import { getSession } from "@/modules/auth/session"
 import { seo } from "@/modules/seo/head"
 
 interface SignUpSearch {
@@ -36,6 +46,13 @@ export const Route = createFileRoute("/sign-up")({
   validateSearch: (search): SignUpSearch => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
+  // Someone already signed in goes where they were headed.
+  beforeLoad: async ({ search, location }) => {
+    const destination = signedInDestination(search.redirect, location.searchStr)
+    if (destination && (await getSession())) {
+      throw redirect({ href: destination })
+    }
+  },
   loader: () => getAuthChallengeConfig(),
   head: () =>
     seo({
@@ -47,7 +64,7 @@ export const Route = createFileRoute("/sign-up")({
 })
 
 function SignUpPage() {
-  const { redirect } = Route.useSearch()
+  const { redirect: redirectPath } = Route.useSearch()
   const { turnstileSiteKey, emailDelivery } = Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const navigate = useNavigate()
@@ -64,7 +81,7 @@ function SignUpPage() {
         return
       }
       setError(null)
-      const redirectTarget = safeRedirect(redirect)
+      const redirectTarget = safeRedirect(redirectPath)
       const account = signUpSchema.parse(value)
       const result = await authClient.signUp.email({
         ...account,
@@ -109,7 +126,7 @@ function SignUpPage() {
               render={
                 <Link
                   to="/login"
-                  search={{ redirect: safeRedirect(redirect) }}
+                  search={{ redirect: safeRedirect(redirectPath) }}
                 />
               }
               nativeButton={false}
@@ -190,7 +207,7 @@ function SignUpPage() {
                   </form.AppForm>
                   <FieldDescription className="text-center">
                     Already have an account?{" "}
-                    <Link to={authHref("/login", redirect)}>Sign in</Link>
+                    <Link to={authHref("/login", redirectPath)}>Sign in</Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

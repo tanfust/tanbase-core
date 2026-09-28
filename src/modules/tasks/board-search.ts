@@ -1,10 +1,11 @@
-// The router loads every route's options with the first page, so this
-// schema ships with the landing page. Zod Mini keeps its share small.
-import * as z from "zod/mini"
-
-import "@/lib/zod-config"
+// The router loads every route's options with the first page, the landing
+// page included, so `/app`'s search params are parsed here by hand. A Zod
+// schema here put Zod's core on the landing page and cost it about 14 KB and
+// its Lighthouse score.
+import type { SearchSchemaInput } from "@tanstack/react-router"
 
 import { taskStatuses } from "./contracts"
+import type { TaskStatus } from "./contracts"
 
 /** The longest list search the URL keeps; the search box stops there too. */
 export const maxTaskSearchLength = 100
@@ -40,27 +41,57 @@ export type HideableTaskColumn = (typeof hideableTaskColumns)[number]
 export const boardSearchDefaults = {
   view: "board" as BoardView,
   q: "",
-  status: [] as Array<(typeof taskStatuses)[number]>,
+  status: [] as TaskStatus[],
   desc: false,
   hide: [] as HideableTaskColumn[],
+}
+
+/** `/app`'s search params, parsed. */
+export interface BoardSearch {
+  project?: string
+  view: BoardView
+  q: string
+  status: TaskStatus[]
+  sort?: SortableTaskColumn
+  desc: boolean
+  hide: HideableTaskColumn[]
+}
+
+/** What a link to `/app` may set; every param is optional. */
+export type BoardSearchInput = Partial<BoardSearch>
+
+function oneOf<T extends string>(
+  values: readonly T[],
+  value: unknown
+): T | undefined {
+  return values.find((candidate) => candidate === value)
+}
+
+/** Every item is one of `values`, or the list is not kept at all. */
+function allOf<T extends string>(values: readonly T[], value: unknown): T[] {
+  if (!Array.isArray(value)) return []
+  const kept = value.flatMap((item) => oneOf(values, item) ?? [])
+  return kept.length === value.length ? kept : []
 }
 
 /**
  * `/app`'s search params: the project, the view, and the list view's search,
  * status filter, sort, and hidden columns. A malformed value falls back to
  * its default instead of failing the page, so an edited link still opens.
+ * The router has already decoded JSON values, such as arrays and booleans.
  */
-export const boardSearchSchema = z.object({
-  project: z.catch(z.optional(z.string().check(z.minLength(1))), undefined),
-  view: z.catch(z._default(z.enum(boardViews), "board"), "board"),
-  q: z.catch(
-    z._default(z.string().check(z.maxLength(maxTaskSearchLength)), ""),
-    ""
-  ),
-  status: z.catch(z._default(z.array(z.enum(taskStatuses)), []), []),
-  sort: z.catch(z.optional(z.enum(sortableTaskColumns)), undefined),
-  desc: z.catch(z._default(z.boolean(), false), false),
-  hide: z.catch(z._default(z.array(z.enum(hideableTaskColumns)), []), []),
-})
-
-export type BoardSearch = z.output<typeof boardSearchSchema>
+export function parseBoardSearch(
+  search: BoardSearchInput & SearchSchemaInput
+): BoardSearch {
+  const raw = search as Record<string, unknown>
+  const { project, q } = raw
+  return {
+    project: typeof project === "string" && project ? project : undefined,
+    view: oneOf(boardViews, raw.view) ?? boardSearchDefaults.view,
+    q: typeof q === "string" && q.length <= maxTaskSearchLength ? q : "",
+    status: allOf(taskStatuses, raw.status),
+    sort: oneOf(sortableTaskColumns, raw.sort),
+    desc: raw.desc === true,
+    hide: allOf(hideableTaskColumns, raw.hide),
+  }
+}

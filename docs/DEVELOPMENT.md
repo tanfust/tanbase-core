@@ -216,6 +216,13 @@ verification resend, forgot password, and reset password. Protected routes use
 the responsive application shell, while `/settings` manages the display name,
 password, and persisted light, dark, or system appearance.
 
+A signed-in visitor to `/login` or `/sign-up` goes straight to its
+`redirect` target, or `/app`, through `signedInDestination()` in
+`src/modules/auth/redirects.ts`. The sign-in page stays while an OAuth
+client, such as an MCP client, waits on it, so the authorization can
+continue. The password reset pages stay open, since an emailed reset link
+must work while signed in.
+
 ## Security headers and logging
 
 The Worker entry adds security headers to every response and a nonce-based CSP
@@ -294,10 +301,11 @@ endpoint's body, so every client gets the same rules and messages.
 ## Board views
 
 `/app` shows a project as a board, a list, or stats. The view and the list's
-search, status filter, sort, and hidden columns are search params, validated
-by `boardSearchSchema` in `src/modules/tasks/board-search.ts`, with Zod Mini
-because route options load with every page. A malformed param falls back to
-its default, and the route strips defaults from links. The list
+search, status filter, sort, and hidden columns are search params, parsed by
+`parseBoardSearch()` in `src/modules/tasks/board-search.ts`. It is written by
+hand: route options load with every page, and a Zod schema there put Zod's
+core on the landing page. A malformed param falls back to its default, and
+the route strips defaults from links. The list
 (`src/components/board/task-table.tsx`, TanStack Table) and the stats
 (`src/components/board/project-stats.tsx`, TanStack Charts) read the board's
 query data; changing the view never fetches. The stats panel loads only when

@@ -1,5 +1,10 @@
 import { useState } from "react"
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router"
 import { CheckCircle2Icon } from "lucide-react"
 
 import { siteConfig } from "@/lib/site"
@@ -30,8 +35,10 @@ import {
   hasOAuthQuery,
   oauthContinuation,
   safeRedirect,
+  signedInDestination,
 } from "@/modules/auth/redirects"
 import { emailRequestSchema, signInSchema } from "@/modules/auth/schemas"
+import { getSession } from "@/modules/auth/session"
 import { seo } from "@/modules/seo/head"
 
 interface LoginSearch {
@@ -47,6 +54,13 @@ export const Route = createFileRoute("/login")({
       search.verified === true || search.verified === "true" ? true : undefined,
     error: typeof search.error === "string" ? search.error : undefined,
   }),
+  // Someone already signed in goes where they were headed.
+  beforeLoad: async ({ search, location }) => {
+    const destination = signedInDestination(search.redirect, location.searchStr)
+    if (destination && (await getSession())) {
+      throw redirect({ href: destination })
+    }
+  },
   loader: () => getAuthChallengeConfig(),
   head: () =>
     seo({

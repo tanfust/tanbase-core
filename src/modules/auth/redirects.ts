@@ -31,6 +31,19 @@ export function hasOAuthQuery(search: string) {
 }
 
 /**
+ * Where a signed-in visitor to the sign-in or sign-up page goes instead: the
+ * page they were sent here from, or the board. Null while an OAuth client,
+ * such as an MCP client, waits on the page: it stays, so the authorization
+ * can continue.
+ */
+export function signedInDestination(
+  redirect: string | undefined,
+  search: string
+): string | null {
+  return hasOAuthQuery(search) ? null : safeRedirect(redirect)
+}
+
+/**
  * The URL an OAuth-aware auth response asks the browser to open next, or null.
  * The OAuth provider returns `{ redirect: true, url }` to continue an
  * authorization, and `{ redirect_uri }` from consent.

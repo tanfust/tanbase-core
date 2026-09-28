@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { seo } from "@/modules/seo/head"
 import {
   boardSearchDefaults,
-  boardSearchSchema,
+  parseBoardSearch,
 } from "@/modules/tasks/board-search"
 import type { BoardSearch } from "@/modules/tasks/board-search"
 import { boardQueryOptions } from "@/modules/tasks/queries"
@@ -17,7 +17,7 @@ import { boardQueryOptions } from "@/modules/tasks/queries"
 export const Route = createFileRoute("/_app/app")({
   // The view and the list's search, filters, sort, and columns live in the
   // URL, so a link opens the same view. Only the project reloads data.
-  validateSearch: boardSearchSchema,
+  validateSearch: parseBoardSearch,
   search: { middlewares: [stripSearchParams(boardSearchDefaults)] },
   loaderDeps: ({ search }) => ({ projectId: search.project }),
   loader: ({ context, deps }) =>
