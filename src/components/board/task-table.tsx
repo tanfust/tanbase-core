@@ -15,14 +15,12 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table"
-import { useHydrated } from "@tanstack/react-router"
 import type {
   ColumnFiltersState,
   ColumnVisibilityState,
   SortingState,
   Updater,
 } from "@tanstack/react-table"
-import { format } from "date-fns"
 import {
   ArrowDownIcon,
   ArrowUpDownIcon,
@@ -33,6 +31,7 @@ import {
   SearchIcon,
 } from "lucide-react"
 
+import { TaskDate } from "@/components/board/task-date"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -95,31 +94,6 @@ const features = tableFeatures({
 })
 
 const helper = createColumnHelper<typeof features, TaskRow>()
-
-const utcDay = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-})
-
-/**
- * A timestamp's calendar day. The Worker renders in UTC, so the server's
- * HTML and the first client render show the UTC day; once hydrated, the
- * table shows the day in the browser's time zone.
- */
-function TaskDate({ timestamp }: { timestamp: number | undefined }) {
-  const hydrated = useHydrated()
-  if (!timestamp) return <span>—</span>
-  return (
-    <time
-      dateTime={new Date(timestamp).toISOString()}
-      className="whitespace-nowrap"
-    >
-      {hydrated ? format(timestamp, "MMM d, yyyy") : utcDay.format(timestamp)}
-    </time>
-  )
-}
 
 const columns = helper.columns([
   helper.accessor("title", {

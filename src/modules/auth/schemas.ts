@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod/mini"
 
 import "@/lib/zod-config"
 
@@ -6,25 +6,31 @@ import "@/lib/zod-config"
 const minPasswordLength = 8
 const maxPasswordLength = 128
 
-const email = z
-  .string()
-  .trim()
-  .min(1, "Enter your email.")
-  .pipe(z.email("Enter a valid email address."))
+// The forms load these schemas, so they use `zod/mini`: the browser then
+// carries only the checks below, not all of Zod.
+
+const email = z.pipe(
+  z.string().check(z.trim(), z.minLength(1, "Enter your email.")),
+  z.email("Enter a valid email address.")
+)
 
 const name = z
   .string()
-  .trim()
-  .min(1, "Enter your name.")
-  .max(80, "Use at most 80 characters for your name.")
+  .check(
+    z.trim(),
+    z.minLength(1, "Enter your name."),
+    z.maxLength(80, "Use at most 80 characters for your name.")
+  )
 
 function newPassword(tooShort: string) {
   return z
     .string()
-    .min(minPasswordLength, tooShort)
-    .max(
-      maxPasswordLength,
-      `Use at most ${maxPasswordLength} characters for your password.`
+    .check(
+      z.minLength(minPasswordLength, tooShort),
+      z.maxLength(
+        maxPasswordLength,
+        `Use at most ${maxPasswordLength} characters for your password.`
+      )
     )
 }
 
@@ -34,7 +40,7 @@ function newPassword(tooShort: string) {
 
 export const signInSchema = z.object({
   email,
-  password: z.string().min(1, "Enter your password."),
+  password: z.string().check(z.minLength(1, "Enter your password.")),
 })
 
 export const signUpSchema = z.object({
@@ -45,12 +51,14 @@ export const signUpSchema = z.object({
   ),
 })
 
-export const signUpFormSchema = signUpSchema
-  .extend({ confirmation: z.string() })
-  .refine((value) => value.password === value.confirmation, {
-    message: "Passwords do not match.",
-    path: ["confirmation"],
-  })
+export const signUpFormSchema = z
+  .extend(signUpSchema, { confirmation: z.string() })
+  .check(
+    z.refine((value) => value.password === value.confirmation, {
+      message: "Passwords do not match.",
+      path: ["confirmation"],
+    })
+  )
 
 export const emailRequestSchema = z.object({ email })
 
@@ -60,41 +68,47 @@ export const resetPasswordSchema = z.object({
   ),
 })
 
-export const resetPasswordFormSchema = resetPasswordSchema
-  .extend({ confirmation: z.string() })
-  .refine((value) => value.newPassword === value.confirmation, {
-    message: "Passwords do not match.",
-    path: ["confirmation"],
-  })
+export const resetPasswordFormSchema = z
+  .extend(resetPasswordSchema, { confirmation: z.string() })
+  .check(
+    z.refine((value) => value.newPassword === value.confirmation, {
+      message: "Passwords do not match.",
+      path: ["confirmation"],
+    })
+  )
 
 export const updateProfileSchema = z.object({ name })
 
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Enter your current password."),
+  currentPassword: z
+    .string()
+    .check(z.minLength(1, "Enter your current password.")),
   newPassword: newPassword(
     `Use at least ${minPasswordLength} characters for the new password.`
   ),
 })
 
-export const changePasswordFormSchema = changePasswordSchema
-  .extend({ confirmation: z.string() })
-  .refine((value) => value.newPassword === value.confirmation, {
-    message: "New passwords do not match.",
-    path: ["confirmation"],
-  })
+export const changePasswordFormSchema = z
+  .extend(changePasswordSchema, { confirmation: z.string() })
+  .check(
+    z.refine((value) => value.newPassword === value.confirmation, {
+      message: "New passwords do not match.",
+      path: ["confirmation"],
+    })
+  )
 
 /**
  * The request body each Better Auth endpoint must satisfy, by path. Extra
  * fields, such as `callbackURL`, pass through untouched.
  */
-export const authBodySchemas: Readonly<Record<string, z.ZodType>> = {
+export const authBodySchemas: Readonly<Record<string, z.ZodMiniType>> = {
   "/sign-in/email": signInSchema,
   "/sign-up/email": signUpSchema,
   "/request-password-reset": emailRequestSchema,
   "/send-verification-email": emailRequestSchema,
   "/reset-password": resetPasswordSchema,
   // A profile update may change other fields; a name it sends must be valid.
-  "/update-user": updateProfileSchema.partial(),
+  "/update-user": z.partial(updateProfileSchema),
   "/change-password": changePasswordSchema,
 }
 

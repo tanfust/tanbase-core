@@ -3,16 +3,24 @@ import { z } from "zod"
 import { siteConfig } from "@/lib/site"
 import { taskStatuses } from "@/modules/tasks/contracts"
 
-// Neither the Worker nor the page CSP allows eval, so zod's JIT never runs.
-// Opting out before the first object schema also skips zod's eval probe,
-// which the browser would report as a CSP violation. zod declares itself
-// side-effect free, so client builds drop its default English messages;
-// set them here so browser tools report readable errors.
+import {
+  completeTaskDescription,
+  createTaskDescription,
+  listTasksDescription,
+} from "./tool-descriptions"
+import type { BrowserToolResult } from "./tool-descriptions"
+
+// The Worker does not allow eval, so zod's JIT never runs; opting out before
+// the first object schema also skips zod's eval probe. zod declares itself
+// side-effect free, so set its English messages here too, for the errors
+// the tools return.
 z.config({ jitless: true, ...z.locales.en() })
 
 /**
  * The task tools, defined once for the `/mcp` server, the browser's WebMCP
- * tools, and the published server card.
+ * tools, and the published server card. Their names, descriptions, and
+ * JSON Schemas live in tool-descriptions.ts, which the browser loads; the
+ * Zod schemas here stay on the Worker.
  */
 export const mcpServerInfo = {
   name: siteConfig.id,
@@ -37,10 +45,9 @@ export const taskOutput = z.object({
 })
 
 export const listTasksTool = {
-  name: "list_tasks",
-  title: "List tasks",
-  description:
-    "List the user's tasks across projects, optionally filtered by project, status, or due date. Returns each task's ID, title, notes, status, due date, and project.",
+  name: listTasksDescription.name,
+  title: listTasksDescription.title,
+  description: listTasksDescription.description,
   inputSchema: z.object({
     projectId: z.string().min(1).optional(),
     status: z.enum(taskStatuses).optional(),
@@ -54,10 +61,9 @@ export const listTasksTool = {
 } as const
 
 export const createTaskTool = {
-  name: "create_task",
-  title: "Create a task",
-  description:
-    "Create a task on the user's board. Without a projectId it goes to the user's first project. The task appears live on every open board.",
+  name: createTaskDescription.name,
+  title: createTaskDescription.title,
+  description: createTaskDescription.description,
   inputSchema: z.object({
     title: z.string().trim().min(1).max(200),
     notes: z.string().trim().max(10_000).optional(),
@@ -70,10 +76,9 @@ export const createTaskTool = {
 } as const
 
 export const completeTaskTool = {
-  name: "complete_task",
-  title: "Complete a task",
-  description:
-    "Mark one of the user's tasks as done by its ID, as returned by list_tasks.",
+  name: completeTaskDescription.name,
+  title: completeTaskDescription.title,
+  description: completeTaskDescription.description,
   inputSchema: z.object({ taskId: z.string().min(1) }),
   outputSchema: taskOutput,
   annotations: {
@@ -85,9 +90,18 @@ export const completeTaskTool = {
 
 export const taskTools = [listTasksTool, createTaskTool, completeTaskTool]
 
+export type { BrowserToolResult } from "./tool-descriptions"
+
 /**
- * A browser tool's result: the value, or a message the agent can act on.
- * Messages survive the RPC boundary, unlike thrown errors.
+ * An agent's input checked against a tool's schema, or Zod's message for it.
+ * The browser sends WebMCP input unchecked, so its server functions call this.
  */
-export type BrowserToolResult<T> =
-  { ok: true; value: T } | { ok: false; error: string }
+export function parseToolInput<TSchema extends z.ZodType>(
+  schema: TSchema,
+  input: unknown
+): BrowserToolResult<z.output<TSchema>> {
+  const parsed = schema.safeParse(input ?? {})
+  return parsed.success
+    ? { ok: true, value: parsed.data }
+    : { ok: false, error: z.prettifyError(parsed.error) }
+}

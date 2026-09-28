@@ -1,40 +1,39 @@
-import { z } from "zod"
-
 import {
   completeTaskInBrowser,
   createTaskInBrowser,
   listTasksInBrowser,
 } from "./browser-tools"
 import {
-  completeTaskTool,
-  createTaskTool,
-  listTasksTool,
-} from "./tool-definitions"
+  completeTaskDescription,
+  createTaskDescription,
+  listTasksDescription,
+} from "./tool-descriptions"
 import type { ModelContext, WebMcpTool } from "./model-context"
-import type { BrowserToolResult } from "./tool-definitions"
+import type { BrowserToolResult } from "./tool-descriptions"
 
-interface Definition<TSchema extends z.ZodType> {
+interface Description {
   name: string
   title: string
   description: string
-  inputSchema: TSchema
+  inputJsonSchema: Record<string, unknown>
 }
 
-function browserTool<TSchema extends z.ZodType, T>(
-  definition: Definition<TSchema>,
-  call: (input: z.output<TSchema>) => Promise<BrowserToolResult<T>>,
+// The server functions validate each call with the tool's Zod schema and
+// return a readable message, so this module, which every page with WebMCP
+// loads, carries no Zod.
+function browserTool<T>(
+  definition: Description,
+  call: (input: unknown) => Promise<BrowserToolResult<T>>,
   annotations: WebMcpTool["annotations"] = {}
 ): WebMcpTool {
   return {
     name: definition.name,
     title: definition.title,
     description: `${definition.description} Acts as the person signed in to this tab.`,
-    inputSchema: z.toJSONSchema(definition.inputSchema, { io: "input" }),
+    inputSchema: definition.inputJsonSchema,
     annotations,
     async execute(input) {
-      const parsed = definition.inputSchema.safeParse(input ?? {})
-      if (!parsed.success) throw new Error(z.prettifyError(parsed.error))
-      const result = await call(parsed.data)
+      const result = await call(input ?? {})
       if (!result.ok) throw new Error(result.error)
       return result.value
     },
@@ -44,13 +43,15 @@ function browserTool<TSchema extends z.ZodType, T>(
 export function taskWebMcpTools(): WebMcpTool[] {
   return [
     browserTool(
-      listTasksTool,
+      listTasksDescription,
       (data) => listTasksInBrowser({ data }),
       // Titles and notes are free text, some written by AI breakdowns.
       { readOnlyHint: true, untrustedContentHint: true }
     ),
-    browserTool(createTaskTool, (data) => createTaskInBrowser({ data })),
-    browserTool(completeTaskTool, (data) => completeTaskInBrowser({ data })),
+    browserTool(createTaskDescription, (data) => createTaskInBrowser({ data })),
+    browserTool(completeTaskDescription, (data) =>
+      completeTaskInBrowser({ data })
+    ),
   ]
 }
 

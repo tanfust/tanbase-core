@@ -48,6 +48,9 @@ const routeDependencies = [
   "@tanstack/markdown/parser",
   "@tanstack/react-form",
   "@tanstack/react-table",
+  "zod/mini",
+  "zod/v4/core",
+  "zod/v4/locales/en.js",
 ]
 
 const config = defineConfig(({ command, isPreview, mode }) => {
@@ -66,8 +69,11 @@ const config = defineConfig(({ command, isPreview, mode }) => {
       // Small helpers that route options and route components share, such
       // as server function stubs, would each become a chunk that every page
       // preloads, and Lighthouse's simulation counts every request before the
-      // first paint. Keep them in one chunk. Only leaf modules belong here:
-      // grouping the router's own modules broke the order it initializes in.
+      // first paint. Keep them in one chunk, with the task statuses, the
+      // skeleton, and TanStack Store's selector hook, which the landing page
+      // and the lazily loaded views share.
+      // Only leaf modules belong here: grouping the router's own modules
+      // broke the order it initializes in.
       client: {
         build: {
           rolldownOptions: {
@@ -76,7 +82,7 @@ const config = defineConfig(({ command, isPreview, mode }) => {
                 groups: [
                   {
                     name: "app-shared",
-                    test: /[\\/]src[\\/](lib[\\/]site|modules[\\/](seo[\\/]head|og[\\/]cards|[a-z]+[\\/](functions|session|challenge|redirects)))\.ts$/,
+                    test: /[\\/](src[\\/](lib[\\/]site|components[\\/]ui[\\/]skeleton|modules[\\/](seo[\\/]head|og[\\/]cards|tasks[\\/]contracts|[a-z]+[\\/](functions|session|challenge|redirects)))\.tsx?|@tanstack[\\/]react-store[\\/]dist[\\/]useSelector\.js)$/,
                     includeDependenciesRecursively: false,
                     priority: 20,
                   },
