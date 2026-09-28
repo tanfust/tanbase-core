@@ -126,6 +126,7 @@ signed-in visitor from `/login` and `/sign-up` to the board
 
 | Target        | Commit                                | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | ------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `8fb0168` / Worker version `2b301e37` | `https://core.tanbase.dev`             | 2026-09-28 11:19 UTC | Launch readiness: Workers Build `6dbc0970` deployed at 11:13 UTC and passed its post-deploy smoke; pinned smoke passed; the Production performance run passed with 148.1 KB of landing JavaScript in 14 files and a Lighthouse median of 94 on GitHub's runner, up from 91; no page loads full Zod, the WebMCP tool code is 1.1 KB, `/login` preloads 184.2 KB and fetches no Zod after it; `cf-placement` is still `remote-MRS`; signed out, `/app` still redirects with its list params                                                                                    |
 | Production    | `c812a1a` / Worker version `010905a2` | `https://core.tanbase.dev`             | 2026-09-28 09:11 UTC | Search params by hand and signed-in redirects: Workers Build `220c33a0` deployed at 09:06 UTC and passed its post-deploy smoke; pinned smoke passed at 09:07 UTC; the landing page loads 147.6 KB of JavaScript in 14 files and the post 144.6 KB; the Production performance run passed with a Lighthouse median of 91 on GitHub's runner, up from 88; PageSpeed Insights mobile scored 97/100/100/100 and Agentic Browsing 4/4 on `/` and `/blog/why-tanbase-core`; signed out, `/login` and `/sign-up` return `200` and `/app` redirects to `/login` with its list params |
 | Production    | `946d08c` / Worker version `d6c5a2f5` | `https://core.tanbase.dev`             | 2026-09-28 08:15 UTC | F-028 to F-031, TanStack Form, Table, Charts, and Markdown: Workers Build `47d6a595` deployed at 08:10 UTC and passed its post-deploy smoke, now with blog checks; pinned smoke passed; `/blog`, the post, `/blog/rss.xml`, the sitemap's three URLs, and both new preview images (`Cf-Cache-Status: HIT`) served, and a missing post returned `404`; the Production performance run failed its Lighthouse alarm, median 88, with 159.1 KB of landing JavaScript in 16 files                                                                                                 |
 | Production    | `4ccfb71` / Worker version `bd9b1421` | `https://core.tanbase.dev`             | 2026-09-27 20:22 UTC | F-027 branding in one config: Workers Build `73cc108f` deployed at 20:17 UTC and passed its post-deploy smoke; pinned smoke passed; the header draws the Tanfust mark from `/logo.svg`, the preview image carries it, and the favicon, icons, and `/manifest.webmanifest` are served; the agent skill moved to `/.well-known/agent-skills/tanbase-core-tasks/SKILL.md`; the Production performance run passed at 145.2 KB with a Lighthouse median of 94 on GitHub's runner                                                                                                  |
@@ -176,10 +177,15 @@ None.
 
 ## Last known deployed commit
 
-Production runs merge commit `c812a1a` as Worker version `010905a2`, deployed
-by Workers Build `220c33a0` at 2026-09-28 09:06 UTC with `/app`'s search params
-parsed by hand and signed-in visitors sent past the sign-in forms. Its
-post-deploy smoke passed, and a pinned smoke passed at 09:07 UTC.
+Production runs merge commit `8fb0168` as Worker version `2b301e37`, deployed
+by Workers Build `6dbc0970` at 2026-09-28 11:13 UTC with the launch-readiness
+changes: no full Zod in the browser, the lazy list view, and the installer's
+placement and formatting fixes. Its post-deploy smoke passed, and a pinned
+smoke passed at 11:19 UTC.
+
+`/app`'s search params parsed by hand and signed-in visitors sent past the
+sign-in forms shipped in version `010905a2` from `c812a1a`, deployed by
+Workers Build `220c33a0` at 09:06 UTC.
 
 TanStack Form, Table, Charts, and Markdown (F-028 to F-031) shipped in version
 `d6c5a2f5` from `946d08c`, deployed by Workers Build `47d6a595` at 08:10 UTC.

@@ -144,12 +144,31 @@ Local, on this branch, with the system Chrome:
   `aws:us-west-1` into the top level, which then passed Prettier.
 - `pnpm cf:dry-run:production` passed.
 
+Production, 2026-09-28, merge commit `8fb0168`:
+
+- Workers Build `6dbc0970` deployed version `2b301e37` at 11:13 UTC and passed
+  its post-deploy smoke. The pinned smoke passed at 11:19 UTC.
+- **Production performance run:** 148.1 KB of landing JavaScript in 14
+  files. Lighthouse scored 94, 94, 96, 94, and 94 on GitHub's runner, a
+  median of 94, up from 91, with 100 for accessibility, best practices, and
+  SEO in every run.
+- `pnpm perf:bundle` on production: the landing page 147.9 KB in 14 files,
+  the post 144.9 KB, and `/login` 184.2 KB.
+- No page, from the landing page to sign-in, sign-up, and the post, loads
+  full Zod, and none fetches a Zod chunk after its preloads. The WebMCP tool
+  chunk is 1.1 KB and imports only the server function client and the shared
+  chunk.
+- Dynamic responses still carry `cf-placement: remote-MRS`, and signed out,
+  `/app?view=list&q=ship` redirects to `/login` with its params.
+- `/app` had only three requests on the new version by 11:20 UTC, too few to
+  compare its CPU with the 68 ms p75 before.
+
 ## Deployment state
 
-| Target     | Commit | URL                        | Date       | Result       |
-| ---------- | ------ | -------------------------- | ---------- | ------------ |
-| Local      | branch | `http://localhost:3110`    | 2026-09-28 | Passed       |
-| Production | —      | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit    | URL                        | Date       | Result |
+| ---------- | --------- | -------------------------- | ---------- | ------ |
+| Local      | branch    | `http://localhost:3110`    | 2026-09-28 | Passed |
+| Production | `8fb0168` | `https://core.tanbase.dev` | 2026-09-28 | Passed |
 
 ## Rollback notes
 

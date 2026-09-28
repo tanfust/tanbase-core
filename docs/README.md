@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-20
+last_verified: 2026-09-28
 ---
 
 # Documentation index
@@ -36,4 +36,8 @@ last_verified: 2026-09-20
   not override current code or active guides.
 
 All maintained Markdown documents carry `status`, `audience`, and
-`last_verified` frontmatter. Run `pnpm docs:check` after editing documentation.
+`last_verified` frontmatter, except the root [README](../README.md): GitHub
+shows it as the repository's front page and would render frontmatter as a
+table. The README is active, written for users, contributors, maintainers,
+and agents, and last verified on 2026-09-28. Run `pnpm docs:check` after
+editing documentation.
