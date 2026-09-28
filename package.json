@@ -124,6 +124,15 @@
       "POSTHOG_HOST": {
         "description": "Optional. Analytics stay off unless the `POSTHOG_KEY` secret is set."
       },
+      "AI_MODEL": {
+        "description": "The Workers AI model that breaks a task into subtasks. It runs on your Cloudflare account: Workers AI includes 10,000 Neurons a day on every plan, then costs $0.011 per 1,000 Neurons. One breakdown in the TanBase demo cost $0.000086."
+      },
+      "AI_GATEWAY_ID": {
+        "description": "The AI Gateway that logs each AI request, with its cost. Cloudflare creates `default` on first use."
+      },
+      "AI_DAILY_LIMIT": {
+        "description": "How many task breakdowns each person may start per day. Set it to 0 to turn AI off."
+      },
       "DB": {
         "description": "Projects, tasks, and accounts. Migrations run on every deploy."
       }

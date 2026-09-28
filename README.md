@@ -38,6 +38,15 @@ R2 is optional. Without it, the site works and task attachments stay off;
 enable **R2 Object Storage** in the dashboard later and redeploy, and they
 turn on by themselves.
 
+Task breakdown, which splits a task into subtasks, runs on Workers AI in your
+account and is billed there: the model
+`@cf/mistralai/mistral-small-3.1-24b-instruct`, through an AI Gateway named
+`default` that logs each request's cost. Each person can start 20 breakdowns
+a day. Workers AI includes 10,000 Neurons a day on every plan, then costs
+$0.011 per 1,000; one breakdown in the demo cost $0.000086. Set
+`AI_DAILY_LIMIT` to `0` in `wrangler.jsonc` to turn it off. The build log's
+last lines say what the deploy turned on.
+
 The button copies this repository into your GitHub or GitLab account, creates
 the D1 database and the queue, then builds and deploys with Workers Builds,
 and redeploys on every push. The first deploy creates the auth secret,

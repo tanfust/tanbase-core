@@ -244,3 +244,16 @@ export function shouldCreateSecret(status) {
 
 export const secretCheckWarning =
   "Could not check whether the Worker has BETTER_AUTH_SECRET, so none is created. If the sign-in page says the site is not set up, redeploy."
+
+/**
+ * The build log's line about task breakdown, which runs on Workers AI in the
+ * deploying account and is billed there, so its owner sees what is on.
+ */
+export function aiSummary(config) {
+  const vars = config.vars ?? {}
+  const limit = Number(vars.AI_DAILY_LIMIT ?? 0)
+  if (!config.ai || !vars.AI_MODEL || !Number.isInteger(limit) || limit <= 0) {
+    return "AI task breakdown: off."
+  }
+  return `AI task breakdown: on, with ${vars.AI_MODEL} on Workers AI through the AI Gateway "${vars.AI_GATEWAY_ID}", up to ${limit} a day per person, billed to this Cloudflare account after its free daily Neurons. Set AI_DAILY_LIMIT to 0 in wrangler.jsonc to turn it off.`
+}
