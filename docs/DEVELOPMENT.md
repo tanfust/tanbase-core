@@ -65,15 +65,19 @@ Wrangler. Do not use Drizzle's migration runner against D1.
 
 `wrangler.jsonc` has three sections ([ADR-0017](decisions/0017-wrangler-configuration-layout.md)):
 
-| Section          | Used by                                                                                                                 |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Top level        | `pnpm build`, the Deploy to Cloudflare button, and `pnpm run deploy`: a production configuration any account can deploy |
-| `env.local`      | `pnpm dev`, the local database scripts, and the Worker tests                                                            |
-| `env.production` | `pnpm cf:build:production`: the TanBase demo, or your pinned installation after `pnpm run setup`                        |
+| Section          | Used by                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Top level        | `pnpm build`, the Deploy to Cloudflare button, and `pnpm run deploy`: a production configuration any account can deploy, without R2 |
+| `env.local`      | `pnpm dev`, the local database scripts, and the Worker tests                                                                        |
+| `env.production` | `pnpm cf:build:production`: the TanBase demo, or your pinned installation after `pnpm run setup`                                    |
 
 `vite dev` selects `env.local` on its own, however it is started. Browser
 tests use the separate `wrangler.e2e.jsonc`. A new binding goes in each
-section that uses it; environments inherit nothing from the top level.
+section that uses it; environments inherit nothing from the top level. A
+binding that needs an account feature the owner may not have turned on, as
+`FILES` needs R2, stays out of the top level: `pnpm run deploy` adds it when
+the account has the feature
+([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
 
 ## Local database workflow
 

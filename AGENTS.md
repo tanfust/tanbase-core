@@ -154,6 +154,12 @@ first user's rows.
   `env.production`. Environments inherit nothing from the top level. Local
   resource names end in `-local`. Add it to `wrangler.e2e.jsonc` when the
   browser tests use it ([ADR-0017](docs/decisions/0017-wrangler-configuration-layout.md)).
+- Leave a binding out of the top level when it needs an account feature the
+  owner may not have turned on, as `FILES` needs R2: `pnpm run deploy` adds it
+  to a top-level build only when the account has the feature, so a first
+  deploy never fails on it ([ADR-0021](docs/decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
+- Never make a deployment ask for a secret the Worker can create itself:
+  `pnpm run deploy` creates `BETTER_AUTH_SECRET` on the first deploy.
 - Read it from `env` in a `.server.ts` getter that returns `null` when the
   binding is absent, so an installation without it degrades instead of
   failing.

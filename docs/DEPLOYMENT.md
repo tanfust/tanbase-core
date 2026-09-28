@@ -44,29 +44,52 @@ Builds, needs an account on Workers Paid, $5 a month. Workers Free allows
 | Sign-in rejected before hashing | 6 to 10 ms                     |
 
 On Workers Free, sign-up and sign-in are expected to fail with Cloudflare's
-error 1102. Workers Paid allows 30 seconds of CPU per request by default. The
-[cost model](OVERVIEW.md#cost-model) covers what the plan includes.
+error 1102. The auth forms recognize Cloudflare's error page for it and say
+the account likely needs Workers Paid; a full page load over the limit shows
+Cloudflare's own error page. Workers Paid allows 30 seconds of CPU per
+request by default. The [cost model](OVERVIEW.md#cost-model) covers what the
+plan includes.
 
 ## Deploy to Cloudflare button
 
 The README's button deploys the top level. Cloudflare reads `wrangler.jsonc`,
 creates the resources it names, and configures Workers Builds with the
-repository's `build` and `deploy` scripts. `pnpm run deploy` creates the D1
-database and the R2 bucket when they are missing, applies D1 migrations,
-then runs `wrangler deploy`. It stops with what to do when R2 is not
-enabled on the account.
+repository's `build` and `deploy` scripts. The top level names no R2 bucket
+and the repository no secret to ask for, so a first try needs nothing set up
+beyond Workers Paid ([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
+
+`pnpm run deploy`, on every deploy:
+
+1. Builds the top level when there is no top-level build, as after a
+   dashboard import whose build command is blank.
+2. Creates the D1 database when it is missing, so the migrations can run.
+3. Checks R2. When the account has it, it creates the bucket
+   `<worker>-files` if needed and binds it as `FILES`, by writing it into the
+   configuration the build generated. When R2 is not enabled, it deploys
+   without the binding and prints `Attachments are off: enable R2 …`; the
+   next deploy after enabling R2 turns attachments on. A copy that still
+   declares `FILES` at its top level keeps that bucket name.
+4. Applies D1 migrations.
+5. Deploys. When the Worker does not exist yet or has no
+   `BETTER_AUTH_SECRET`, it creates one, 32 random bytes that never leave
+   Cloudflare, and uploads it with the deploy. It never replaces an existing
+   secret, and when it cannot tell whether one exists, it creates none and
+   says so.
+
+The build log ends with an `Attachments:` line and a `BETTER_AUTH_SECRET:`
+line saying what the deploy did.
 
 | Resource                      | Created by                                                                                                     |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | D1 database `DB`              | The button, which records the new database ID in your copy; named `tanbase-core`, renameable on the setup page |
-| R2 bucket `FILES`             | The button; R2 must be enabled on the account first; named `tanbase-core-files`, renameable                    |
+| R2 bucket `FILES`             | `pnpm run deploy`, on each deploy while the account has R2; named `<worker>-files`                             |
 | Queue `EMAIL_QUEUE`           | The button; named `tanbase-core-email`, renameable                                                             |
 | Dead-letter queue             | `wrangler deploy`, which creates a missing dead-letter queue, as `tanbase-core-email-dlq`                      |
 | Durable Object `BOARD`        | Deploy, from its `v1` migration                                                                                |
 | Workflow `BREAKDOWN`          | Deploy, as `tanbase-core-task-breakdown`; Workflow names are unique per account                                |
 | Workers AI `AI`               | Needs no resource; AI Gateway `default` is created on first use                                                |
 | Rate limits, version metadata | Need no resource                                                                                               |
-| `BETTER_AUTH_SECRET`          | You, when the button asks for the secrets in `.dev.vars.example`                                               |
+| `BETTER_AUTH_SECRET`          | `pnpm run deploy`, on the first deploy; never replaced                                                         |
 
 On 2026-09-27 an outside tester reached the setup page. It showed:
 
@@ -84,7 +107,9 @@ On 2026-09-27 an outside tester reached the setup page. It showed:
 
 The tester stopped before deploying, since the account was on Workers Free,
 so the dead-letter queue, Durable Object, and Workflow rows still follow
-Cloudflare's documentation. The README lists what to choose on each field.
+Cloudflare's documentation. That page listed the R2 bucket and
+`BETTER_AUTH_SECRET` too; since the top level stopped naming either, it
+should list neither, which no run has confirmed yet. The README lists what to choose on each field.
 Cloudflare Access can protect preview URLs only or all traffic, and the setup
 page does not say which. If the `workers.dev` URL asks for a Cloudflare
 sign-in, turn Access off in the Worker's **Access** tab for a public app.
@@ -112,25 +137,26 @@ After the first deploy:
 
 A copy of the repository can also be connected from the dashboard, under
 **Workers & Pages → Create → Import a repository**, instead of through the
-button. Workers Builds then defaults to `npx wrangler deploy` as the deploy
-command, which never applies D1 migrations: the site deploys with an empty
-database, and signing up fails. Before the first build:
+button. Workers Builds then leaves the build command blank and defaults the
+deploy command to `npx wrangler deploy`, which applies no D1 migrations and
+creates no auth secret. Before the first build, under the Worker's
+**Settings → Build**, set the deploy command to `pnpm run deploy`; it builds
+the site itself when the build command is blank. R2 is optional, as with the
+button.
 
-1. Enable R2 under **R2 Object Storage**.
-2. Under the Worker's **Settings → Build**, set the build command to
-   `pnpm run build` and the deploy command to `pnpm run deploy`.
-
-`pnpm run deploy` then creates the database and the bucket, and applies the
-migrations before it deploys. Wrangler would create the database and the
-queue during `npx wrangler deploy` too, but after the point where migrations
-run, and it skips an R2 bucket without saying so when R2 is not enabled; the
-deploy then fails with `R2 bucket 'tanbase-core-files' not found [code:
-10085]`. Workers Builds names the Worker after the project, so a warning says
-the config's `tanbase-core` does not match, and Cloudflare opens a pull
-request in your copy to rename it; merging it is harmless.
+If a copy was deployed with `npx wrangler deploy` anyway, its sign-in and
+sign-up pages say what is missing: a database without tables, or no usable
+`BETTER_AUTH_SECRET`. Set the deploy command and retry the latest build.
+Workers Builds names the Worker after the project, so a warning says the
+config's `tanbase-core` does not match, and Cloudflare opens a pull request
+in your copy to rename it; merging it is harmless.
 
 On 2026-09-28 an outside tester imported the repository this way, with the
-default deploy command and R2 not enabled, and hit that error.
+default deploy command and R2 not enabled. The deploy failed with
+`R2 bucket 'tanbase-core-files' not found [code: 10085]`: Wrangler skips an R2
+bucket without saying so when R2 is not enabled, and the top level then named
+one. Had it deployed, the database would have had no tables and the Worker no
+secret.
 
 `pnpm run deploy` refuses to run in the upstream `tanfust/tanbase-core`
 checkout, where the top level would replace the TanBase demo's production
@@ -286,7 +312,14 @@ a cleanup failure is logged as `attachment.cleanup_failed`.
 
 `GET /api/health` reports `checks.files` by probing the bucket through the
 binding, cached like the database check. Installations without the binding
-report `disabled`, and the attachment UI says attachments are off.
+report `disabled`, and the attachment UI says attachments are off and how to
+turn them on.
+
+A deployment of the top level, from the button or `pnpm run deploy`, binds
+its bucket only while the account has R2, as `<worker>-files`
+([Deploy to Cloudflare button](#deploy-to-cloudflare-button)). Without R2, a
+deploy leaves the binding out, and deleting a task or project then leaves its
+objects in the bucket.
 
 ### Durable Objects
 
@@ -396,8 +429,10 @@ works on its `workers.dev` URL. Set it once the installation has one
 canonical hostname, such as a custom domain, and before enabling due-date
 reminders, which run without a request ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
 
-The secret is never committed. Create a unique production secret of at least
-32 characters and store it as the Worker secret `BETTER_AUTH_SECRET` in
+The secret is never committed. A deployment of the top level gets one from
+`pnpm run deploy` on its first deploy, and the guided installer creates one
+for its installation. Otherwise, create a unique production secret of at
+least 32 characters and store it as the Worker secret `BETTER_AUTH_SECRET` in
 Cloudflare. For a manual setup:
 
 ```sh
@@ -689,8 +724,11 @@ pnpm cf:deploy:production
 
 It ends with the same post-deploy production smoke check as Workers Builds.
 
-Environment selection belongs in the build command. Do not build once and
-attempt to retarget the generated configuration during deployment.
+Environment selection belongs in the build command. Never deploy one
+environment's build as another's. The one edit to generated configuration is
+`pnpm run deploy` setting the optional `FILES` binding of a top-level build,
+through Wrangler's redirect
+([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
 
 ## Production smoke checks
 
@@ -703,7 +741,9 @@ The script checks the database-aware health contract, SSR document, canonical
 metadata, discovery headers, sitemap, robots policy, truthful `llms.txt`,
 Markdown negotiation, the agent discovery documents, the blog (its index, the
 newest post in the sitemap with its preview image, the RSS feed, and a 404
-for a missing post), and absence of a server-error page. Record the commit, URL, UTC date, Worker version,
+for a missing post), and absence of a server-error page. With `--config default`,
+`checks.files` may be `ok` or `disabled`, since the deploy binds R2 only when
+the account has it. Record the commit, URL, UTC date, Worker version,
 and result in [status](STATUS.md) and the active change record.
 
 ## Rollback and recovery
