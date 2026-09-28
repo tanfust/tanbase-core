@@ -6,7 +6,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { useNavigate, useRouter } from "@tanstack/react-router"
-import { format } from "date-fns"
 import {
   CalendarIcon,
   ChartColumnIcon,
@@ -22,8 +21,8 @@ import {
   Trash2Icon,
 } from "lucide-react"
 
+import { TaskDate } from "@/components/board/task-date"
 import { TaskDialog } from "@/components/board/task-dialog"
-import { TaskTable } from "@/components/board/task-table"
 import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import {
   AlertDialog,
@@ -144,7 +143,14 @@ const viewLabels: Record<BoardView, { label: string; icon: typeof ListIcon }> =
     stats: { label: "Stats", icon: ChartColumnIcon },
   }
 
-// The charts load only when someone opens the Stats view.
+// The list and the charts load only when someone opens their view, so the
+// board view, the default, neither downloads nor server-renders TanStack
+// Table or TanStack Charts.
+const TaskTable = lazy(() =>
+  import("@/components/board/task-table").then((module) => ({
+    default: module.TaskTable,
+  }))
+)
 const ProjectStats = lazy(() => import("@/components/board/project-stats"))
 
 export function BoardPage({
@@ -642,7 +648,7 @@ export function BoardPage({
                             {task.dueAt && (
                               <Badge variant="outline">
                                 <CalendarIcon />
-                                {format(task.dueAt, "MMM d, yyyy")}
+                                <TaskDate timestamp={task.dueAt} />
                               </Badge>
                             )}
                             {subtaskCounts.has(task.id) && (
@@ -670,13 +676,17 @@ export function BoardPage({
           </div>
         </TabsContent>
         <TabsContent value="list" className="pt-2">
-          <TaskTable
-            tasks={snapshot.tasks}
-            projectName={snapshot.activeProject.name}
-            search={search}
-            onSearchChange={onSearchChange}
-            renderActions={taskMenu}
-          />
+          <Suspense
+            fallback={<Skeleton className="h-96 w-full" aria-busy="true" />}
+          >
+            <TaskTable
+              tasks={snapshot.tasks}
+              projectName={snapshot.activeProject.name}
+              search={search}
+              onSearchChange={onSearchChange}
+              renderActions={taskMenu}
+            />
+          </Suspense>
         </TabsContent>
         <TabsContent value="stats" className="pt-2">
           <Suspense

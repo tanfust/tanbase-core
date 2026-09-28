@@ -17,28 +17,13 @@ function section(heading: string) {
   return readme.slice(start, end === -1 ? undefined : end)
 }
 
-function tableRows(markdown: string) {
-  return markdown
-    .split("\n")
-    .filter((line) => line.startsWith("|") && !/^\|\s*-/.test(line))
-    .slice(1)
-    .map((line) =>
-      line
-        .split("|")
-        .slice(1, -1)
-        .map((cell) => cell.trim())
-    )
-}
-
 describe("the README", () => {
-  it("lists the homepage's primitive map, row for row", () => {
-    expect(tableRows(section("Primitive map"))).toEqual(
-      homepage.primitives.items.map(({ feature, product, bindings }) => [
-        feature,
-        product,
-        bindings.map((binding) => `\`${binding}\``).join(", "),
-      ])
-    )
+  it("names every product on the homepage's primitive map", () => {
+    const builtWith = section("Built with")
+    for (const { feature, product, bindings } of homepage.primitives.items) {
+      const uses = bindings.map((binding) => `\`${binding}\``).join(", ")
+      expect(builtWith).toContain(`- **${product}**: ${feature} (${uses})\n`)
+    }
   })
 
   it("repeats the homepage's cost risks and guardrails", () => {

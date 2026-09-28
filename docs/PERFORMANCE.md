@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, operators
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # Performance
@@ -99,6 +99,53 @@ open the Worker's **Observability** tab and filter `GET` requests with status
 through the Workers Observability API's `telemetry/query` endpoint.
 
 ## Results
+
+### 2026-09-28, launch readiness
+
+In production on version `010905a2`, from `c812a1a`, and on a local build of
+this change: the e2e Worker under `vite preview`, measured from a Mac.
+
+| Budget                            | Target               | Measured                                                                                                                               | Result      |
+| --------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Landing page JavaScript           | under 150 KB gzipped | Production 147.6 KB in 14 files; this change 147.9 KB in 14                                                                            | Met         |
+| Blog JavaScript                   | under 150 KB gzipped | Production, the post 144.6 KB; this change 144.9 KB, and `/blog` 144.8 KB                                                              | Met         |
+| Lighthouse mobile, production     | 95 or higher         | PageSpeed Insights at 09:11 UTC: 97 on `/` and 97 on `/blog/why-tanbase-core`, each with 100 for accessibility, best practices, SEO    | Met         |
+| Lighthouse alarm, production      | 90 or higher         | Median 91 of 5 runs on GitHub's runner: 77, 91, 94, 86, 91                                                                             | Met         |
+| Blog TTFB, p75, Tunis             | under 400 ms         | The post 128 ms and `/blog` 136 ms, 10 samples each, through `MRS`; a first run of the post measured 610 ms, see below                 | Met         |
+| Blog TTFB, p75, US East           | under 400 ms         | The post 253 ms and `/blog` 227 ms, 40 samples each                                                                                    | Met         |
+| Worker CPU per server render, p75 | under 50 ms          | Since 2026-09-27: `/` 17 ms over 775 loads, the post 15 ms over 26, `/blog` 16 ms over 7, `/login` 65 ms over 44, `/app` 68 ms over 55 | Met overall |
+
+The pages that change, as the gzipped JavaScript each preloads before it
+hydrates, on `main` and on this change:
+
+| Page        | `main`                        | This change         |
+| ----------- | ----------------------------- | ------------------- |
+| `/login`    | 177.4 KB, then 18.2 KB of Zod | 184.2 KB, then none |
+| `/sign-up`  | 176.8 KB, then 18.2 KB of Zod | 183.6 KB, then none |
+| `/app`      | 306.7 KB in 30 files          | 275.3 KB in 29      |
+| `/settings` | 244.0 KB, then 18.2 KB of Zod | 250.8 KB, then none |
+| WebMCP      | 2.2 KB, then 18.2 KB of Zod   | 1.2 KB              |
+
+Notes:
+
+- **Zod in the browser.** On `main` the form chunk imported an 18.2 KB chunk
+  of full Zod that no page preloaded, so the browser fetched it after the
+  form chunk. The forms' schemas now use `zod/mini`, and the WebMCP tools
+  describe their inputs with fixed JSON Schemas and leave validation to the
+  server functions. The form chunk grew from 16.8 to 23.3 KB with the checks
+  it uses and Zod's English messages, and no page loads full Zod.
+- **The board's server render.** The `/app` route's server chunk fell from
+  429 KB to 181 KB: the list view, with TanStack Table, is its own chunk,
+  loaded only for that view, and the cards format dates with `Intl` instead
+  of date-fns. Over five new isolates each, the first render of an 18-task
+  board took a median of 132 ms on `main` and 121 ms with this change; warm
+  renders stayed at about 10 ms. Most of `/app`'s production p75 is the
+  first request in a new isolate: in a local profile of one, loading and
+  building Better Auth took about 21 ms and tailwind-merge's first call
+  about 8 ms.
+- **The first blog TTFB run.** Ten rounds from Tunis to the post measured a
+  p75 of 610 ms, with 477 ms of server wait; a second run minutes later
+  measured 128 ms, and the post's Worker CPU p75 in Workers Logs is 15 ms.
 
 ### 2026-09-28, search params by hand
 

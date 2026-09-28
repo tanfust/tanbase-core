@@ -2,6 +2,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server"
 
 import type { Project, Task } from "@/db/schema"
 import { getSessionFromHeaders } from "@/modules/auth/session.server"
+import { memoizeForRequest } from "@/platform/request-context"
 import {
   listAttachmentKeysForProject,
   listAttachmentKeysForTaskTree,
@@ -62,16 +63,23 @@ function toTaskView(task: Task): TaskView {
   }
 }
 
+// A board render lists projects twice, in the `_app` layout and in the
+// board's loader; both reads share one query. Only these read paths use it,
+// so a mutation never sees a list from before it.
+function projectsFor(userId: string) {
+  return memoizeForRequest(`projects:${userId}`, () => listProjects(userId))
+}
+
 export async function getProjectsImpl(): Promise<ProjectView[]> {
   const userId = await requireUserId()
-  return (await listProjects(userId)).map(toProjectView)
+  return (await projectsFor(userId)).map(toProjectView)
 }
 
 export async function getBoardImpl(input: {
   projectId?: string
 }): Promise<BoardSnapshot> {
   const userId = await requireUserId()
-  const projects = await listProjects(userId)
+  const projects = await projectsFor(userId)
   const activeProject = input.projectId
     ? await getProject(userId, input.projectId)
     : (projects[0] ?? null)

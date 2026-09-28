@@ -104,11 +104,25 @@ describe("task tools", () => {
     ).rejects.toThrow("Task not found.")
   })
 
-  it("reject invalid input before calling the server", async () => {
+  it("leave validation to the server", async () => {
+    rpc.listTasksInBrowser.mockResolvedValue({
+      ok: false,
+      error: "✖ Too big: expected number to be <=100\n  → at limit",
+    })
+
     await expect(tool("list_tasks").execute({ limit: 500 })).rejects.toThrow(
       /limit/
     )
-    expect(rpc.listTasksInBrowser).not.toHaveBeenCalled()
+    expect(rpc.listTasksInBrowser).toHaveBeenCalledWith({
+      data: { limit: 500 },
+    })
+  })
+
+  it("send an empty object when the agent passes no input", async () => {
+    rpc.listTasksInBrowser.mockResolvedValue({ ok: true, value: { tasks: [] } })
+
+    await tool("list_tasks").execute(undefined)
+    expect(rpc.listTasksInBrowser).toHaveBeenCalledWith({ data: {} })
   })
 })
 

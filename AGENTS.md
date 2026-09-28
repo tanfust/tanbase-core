@@ -1,7 +1,7 @@
 ---
 status: active
 audience: agents, contributors, maintainers
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # AI agent operating contract
@@ -59,9 +59,18 @@ change note as current truth. A superseded ADR must link to its replacement.
   meaningful implementation PR. Historical change records are immutable except
   for factual corrections.
 - Use the repository scripts in automation so local and CI behavior stay equal.
-- Import `@/lib/zod-config` in any module that builds a Zod schema the browser
-  loads. It turns off Zod's JIT, whose eval probe the CSP reports as a
-  violation.
+- Build a Zod schema the browser loads with `zod/mini`, and import
+  `@/lib/zod-config` in its module. Full `zod` stays on the Worker: its
+  methods cannot be tree-shaken, so one import brings all of Zod to the page.
+  `@/lib/zod-config` turns off Zod's JIT, whose eval probe the CSP reports as
+  a violation, and sets Zod's English messages.
+- Keep the browser's WebMCP tools free of Zod. They describe their inputs
+  with the JSON Schemas in `src/modules/mcp/tool-descriptions.ts`, which a
+  test keeps equal to Zod's output, and their server functions validate with
+  the Zod schemas in `tool-definitions.ts`.
+- Load a view's heavy library with `lazy()` when the page's default view does
+  not need it, as the board does for TanStack Table and TanStack Charts; the
+  server then skips it too.
 - Keep route options small. `validateSearch`, `loader`, `beforeLoad`, and
   `head` load with every page, the landing page included; only components
   are split per route. Validate search params without Zod, as
@@ -80,7 +89,7 @@ change note as current truth. A superseded ADR must link to its replacement.
 | Data       | D1 through Drizzle ORM; migrations are generated SQL in `drizzle/`       |
 | Auth       | Better Auth on D1, with its OAuth 2.1 provider for MCP clients           |
 | UI         | Tailwind CSS v4 and shadcn/ui on Base UI                                 |
-| Validation | Zod                                                                      |
+| Validation | Zod; `zod/mini` for the schemas the browser loads                        |
 | Tests      | Vitest in the Workers runtime, Vitest with jsdom for UI, Playwright      |
 
 ## Module map
@@ -207,7 +216,8 @@ at build time and rendered on the Worker (ADR-0019). The public health endpoint 
 a D1 check cached for 30 seconds per location (ADR-0009). PostHog analytics is
 optional and loads only when the `POSTHOG_KEY` Worker secret is set (ADR-0010).
 Production runs next to its D1 primary through a placement hint that belongs to
-that database (ADR-0011).
+that database (ADR-0011); the guided installer and `pnpm run placement` choose
+it from where the primary is.
 
 The guided installer owns clone personalization and essential Cloudflare setup.
 It must remain resumable, must never persist production secrets, and must keep

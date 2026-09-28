@@ -25,6 +25,8 @@ import {
   mergeSetupState,
   normalizeOrigin,
   parseArguments,
+  placementMessage,
+  placementRegionFor,
   r2Unavailable,
   readWranglerInstallation,
   resolveTurnstileSiteKey,
@@ -39,6 +41,7 @@ import {
 import {
   commandAvailable,
   packageManager,
+  readD1Location,
   run,
   runPnpm,
   runWrangler,
@@ -68,6 +71,10 @@ Options:
   --description <text>
                       The app's one-sentence description, written there too
   --reuse-existing    Reuse same-named Worker and D1 resources intentionally
+  --placement <region|default>
+                      Place production in this region, such as
+                      azure:francesouth, instead of next to the D1 primary;
+                      default removes the placement hint
   --local-only        Prepare local development without Cloudflare changes
   --yes, -y           Accept safe defaults without the initial confirmation
   --dry-run           Print the plan without changing local or remote state
@@ -208,6 +215,17 @@ async function authenticate(manager) {
     })
   }
   return JSON.parse(identity.output)
+}
+
+// Setup rewrites names and values in wrangler.jsonc and src/lib/site.ts. A
+// new name can change where Prettier wraps a line, and `pnpm verify` checks
+// formatting first, so both files are formatted before each verify.
+async function formatConfiguration(manager) {
+  await runPnpm(
+    manager,
+    ["exec", "prettier", "--write", "wrangler.jsonc", "src/lib/site.ts"],
+    { cwd: root }
+  )
 }
 
 async function ensureLocalSecret() {
@@ -553,6 +571,7 @@ async function main() {
     await runPnpm(manager, ["db:migrate:local"], { cwd: root })
     await runPnpm(manager, ["db:seed:local"], { cwd: root })
     await runPnpm(manager, ["cf:typegen"], { cwd: root })
+    await formatConfiguration(manager)
     await runPnpm(manager, ["verify"], { cwd: root })
     heading("TanBase local setup is complete")
     process.stdout.write("Run pnpm dev and open http://localhost:3000.\n")
@@ -613,6 +632,22 @@ async function main() {
     reuseExisting: options.reuseExisting,
   })
 
+  // One read-only query reports where the primary is. The database is named
+  // by ID, since wrangler.jsonc may still name the template's. A location
+  // that cannot be read leaves placement to updateWranglerInstallation.
+  const location = options.placement
+    ? null
+    : (
+        await readD1Location(manager, database.uuid, {
+          cwd: root,
+          env: accountEnv,
+        })
+      ).location
+  const placementRegion =
+    options.placement === "default"
+      ? null
+      : (options.placement ?? placementRegionFor(location) ?? undefined)
+
   const desiredBucketName = `${workerName}-files`
   const filesBucket = await ensureFilesBucket({
     accountEnv,
@@ -665,11 +700,20 @@ async function main() {
     filesBucketName: filesBucket ?? undefined,
     localDatabaseName,
     localFilesBucketName: `${workerName}-files-local`,
+    placementRegion,
     productionUrl: provisionalOrigin,
     reminderQueueName: reminderQueue ?? undefined,
     workerName,
   })
   await writeAtomic(configPath, configuredSource)
+  const placement = readWranglerInstallation(configuredSource).placementRegion
+  process.stdout.write(
+    `${placementMessage({
+      location,
+      placementRegion: placement,
+      requested: options.placement,
+    })}\n`
+  )
   await writeAtomic(
     sitePath,
     updateSiteOrigin(await readFile(sitePath, "utf8"), provisionalOrigin)
@@ -708,6 +752,7 @@ async function main() {
 
   await saveState({
     completedSteps: ["cloudflare-account", "d1", "configuration"],
+    placement: placement ?? "default",
   })
 
   heading("Preparing and verifying TanBase")
@@ -715,6 +760,7 @@ async function main() {
   await runPnpm(manager, ["db:migrate:local"], { cwd: root })
   await runPnpm(manager, ["db:seed:local"], { cwd: root })
   await runPnpm(manager, ["cf:typegen"], { cwd: root })
+  await formatConfiguration(manager)
   await runPnpm(manager, ["verify"], { cwd: root })
   await runPnpm(manager, ["cf:dry-run:production"], {
     cwd: root,
@@ -771,6 +817,7 @@ async function main() {
       updateSiteOrigin(await readFile(sitePath, "utf8"), deploymentUrl)
     )
     await runPnpm(manager, ["cf:typegen"], { cwd: root })
+    await formatConfiguration(manager)
     await runPnpm(manager, ["verify"], { cwd: root })
     await runPnpm(manager, ["cf:dry-run:production"], {
       cwd: root,
@@ -824,6 +871,13 @@ async function main() {
   heading("TanBase is ready")
   process.stdout.write(`App: ${deploymentUrl}\n`)
   process.stdout.write(`D1: ${database.name} (${database.uuid})\n`)
+  process.stdout.write(
+    placement
+      ? `Placement: ${placement}. If the D1 primary moves, run pnpm run placement --env production --write.\n`
+      : options.placement === "default"
+        ? "Placement: default, as --placement asked.\n"
+        : "Placement: default. Run pnpm run placement --env production to place the Worker next to the D1 primary (docs/DEPLOYMENT.md).\n"
+  )
   process.stdout.write(
     "Better Auth secret: configured in Cloudflare and not stored locally.\n"
   )

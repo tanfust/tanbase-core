@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, product, agents
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # TanBase Core: Features
@@ -47,7 +47,7 @@ Build in this order:
 
 ### F-001: Worker foundation and binding skeleton
 
-**Module:** platform | **Priority:** P0 | **Status:** 🟡 In Progress | **Depends on:** none
+**Module:** platform | **Priority:** P0 | **Status:** ✅ Done | **Depends on:** none
 
 **What:** Establish the runtime and deployment foundation first, then add each
 binding through a product-backed vertical slice. The split preserves F-001 while
@@ -70,16 +70,26 @@ preventing unused infrastructure from entering the template.
 
 #### F-001B: Product-backed binding slices
 
-**Status:** 🟡 In Progress
+**Status:** ✅ Done (2026-09-28)
 
 **Acceptance criteria**
 
 - [x] Add D1 with the first data-backed feature and verify its migration path
       locally and in production
-- [ ] Add KV, R2, Durable Objects, Workflows, Queues, AI, Cron, and MCP only when
-      their owning product feature is implemented
-- [ ] Extend health or focused diagnostics for each added binding
-- [ ] Verify every binding locally and in production
+- [x] Add KV, R2, Durable Objects, Workflows, Queues, AI, Cron, and MCP only when
+      their owning product feature is implemented: R2 came with F-010, the
+      Durable Object with F-011, the queue and cron with F-012, Workers AI
+      and the Workflow with F-013 and F-014, and MCP with F-015. No feature
+      needs KV, so it is not bound; sessions live in D1
+      ([ADR-0006](decisions/0006-d1-auth-session-storage.md))
+- [x] Extend health or focused diagnostics for each added binding:
+      `/api/health` checks D1, R2, and the Durable Object. The queue, cron,
+      Workflow, and AI serve optional features that switch off when their
+      binding is missing, so each is checked by its feature's tests and
+      production run instead
+- [x] Verify every binding locally and in production: each feature's tests
+      run against its binding locally, and [STATUS](STATUS.md) records its
+      production evidence
 
 ---
 
@@ -576,6 +586,12 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
       JavaScript budget rose from 100 KB to 150 KB, since React DOM alone is
       about 65 KB; the others are met ([Performance](PERFORMANCE.md))
 
+On 2026-09-28 no page loads full Zod any more: the forms' schemas use
+`zod/mini`, and the WebMCP tools leave validation to the server. The board's
+list view loads only when opened, which took the `/app` route's server chunk
+from 429 KB to 181 KB
+([Performance](PERFORMANCE.md#2026-09-28-launch-readiness)).
+
 ---
 
 ### F-020: Agent layer
@@ -665,6 +681,14 @@ reached the setup page: it offers the D1 database, R2 bucket, and queue by
 name and runs `pnpm run deploy`, and it ticks **Protect with Cloudflare
 Access** by default, which the README now covers. The tester stopped before
 deploying, on Workers Free.
+
+On 2026-09-28 the README put the Deploy to Cloudflare button first. The
+guided installer now places the Worker next to the new database's D1 primary
+([ADR-0020](decisions/0020-installer-chooses-placement.md)), and
+`pnpm run placement` does the same for a button deployment. The installer
+also formats the files it rewrites before running `pnpm verify`: a renamed
+resource could change where Prettier wraps a line in `wrangler.jsonc`, and
+the formatting check then stopped setup.
 
 ---
 

@@ -76,12 +76,32 @@ Local, on this branch:
   144.5 KB; the entry chunk contains no Zod.
 - `pnpm cf:dry-run:production` passed.
 
+Production, 2026-09-28, merge commit `c812a1a`:
+
+- Workers Build `220c33a0` deployed version `010905a2` at 09:06 UTC and passed
+  its post-deploy smoke. The pinned smoke passed at 09:07 UTC.
+- The landing page loads 147.6 KB of JavaScript in 14 files, and the post
+  144.6 KB.
+- **Production performance run:** Lighthouse scored 77, 91, 94, 86, and 91 on
+  GitHub's runner, a median of 91, up from 88. Four fresh-browser Lighthouse
+  runs from a Mac scored 100, 99, 99, and 96.
+- **PageSpeed Insights, mobile, 09:11 UTC:** the homepage and
+  `/blog/why-tanbase-core` each scored 97 Performance, 100 Accessibility, 100
+  Best Practices, 100 SEO, and 4/4 Agentic Browsing. Both had a first and
+  largest contentful paint of 2.1 s; blocking time was 20 ms and 0 ms, and
+  layout shift 0.021 and 0.007.
+- Signed out, `/login` and `/sign-up` return `200`, and `/app` redirects to
+  `/login` with its list params in `redirect`. The signed-in redirect needs
+  a session, so the browser journeys cover it.
+- The CI run on `main` first failed its Lighthouse job with a `NO_NAVSTART`
+  trace error, not a missed budget; the rerun passed.
+
 ## Deployment state
 
-| Target     | Commit | URL                        | Date       | Result       |
-| ---------- | ------ | -------------------------- | ---------- | ------------ |
-| Local      | branch | `http://localhost:4391`    | 2026-09-28 | Passed       |
-| Production | —      | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit    | URL                        | Date       | Result |
+| ---------- | --------- | -------------------------- | ---------- | ------ |
+| Local      | branch    | `http://localhost:4391`    | 2026-09-28 | Passed |
+| Production | `c812a1a` | `https://core.tanbase.dev` | 2026-09-28 | Passed |
 
 ## Rollback notes
 
@@ -89,7 +109,7 @@ Revert the merge. Nothing to migrate or clean up.
 
 ## Remaining work
 
-- Deploy, then compare the Production performance run's median with 88, and
-  run PageSpeed Insights by hand on `/` and a post.
 - Moving the WebMCP tools' validation to the server would take full Zod out
-  of the browser altogether.
+  of the browser altogether. Done in
+  [2026-09-28, launch readiness](2026-09-28-launch-readiness.md), which also
+  moves the forms' schemas to `zod/mini`.

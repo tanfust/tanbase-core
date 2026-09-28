@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, operators, agents
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # Guided installation
@@ -64,17 +64,18 @@ The full setup:
 3. Personalizes the Worker name, account ID, D1 IDs, Better Auth URL, and
    canonical discovery origin, renames the task-breakdown Workflow to
    `<worker-name>-task-breakdown` (Workflow names are unique per account),
-   and removes the production placement hint when
-   production points at a different database. It keeps the production
-   Turnstile site key only
-   when the Worker already has `TURNSTILE_SECRET_KEY`; otherwise it clears the
+   and sets the production placement hint from where the database's primary
+   is ([Placement](#placement)). It keeps the production Turnstile site key
+   only when the Worker already has `TURNSTILE_SECRET_KEY`; otherwise it clears the
    key, which disables the auth challenge instead of failing closed. It keeps
    the production `EMAIL` binding and sender only when the sender's Email
    Sending domain is onboarded and enabled in the account; otherwise it removes
    them so email is logged as metadata and the deployment succeeds.
 4. Creates an ignored local Better Auth secret and adds Cloudflare's Turnstile
    test secret, applies local migrations, and runs the idempotent local seed.
-5. Regenerates Worker types and runs `pnpm verify` plus the production dry run.
+5. Regenerates Worker types, formats `wrangler.jsonc` and `src/lib/site.ts`
+   with Prettier, since a new name can change where a line wraps, and runs
+   `pnpm verify` plus the production dry run.
 6. Applies production D1 migrations before deploying application code.
 7. Generates `BETTER_AUTH_SECRET` when the Worker does not already have it and
    uploads it from a temporary permission-restricted file.
@@ -87,6 +88,31 @@ The script never deletes resources, prints secrets, stores production secrets,
 or silently reuses an unknown same-named Worker or database. A rerun inspects
 Cloudflare again and resumes completed work.
 
+## Placement
+
+The installer runs the production Worker next to its D1 primary, so each
+query stays local however far a visitor is
+([Worker placement](DEPLOYMENT.md#worker-placement)). Once the database
+exists, it runs one read-only query, `select 1`, and reads the colo and
+location hint of the primary that served it. It maps the colo to a cloud
+region in the same city, such as `MRS` to `azure:francesouth`, or else the
+location hint to one region. It writes that region to
+`env.production.placement` in `wrangler.jsonc`, replacing any older hint, and
+prints one line with the primary's location and the region it chose.
+
+When the location cannot be read, setup continues. It keeps the hint when
+production still points at the same database, and removes it when production
+points at a different one, which leaves the Worker on default placement.
+
+`--placement <region>` skips the query and uses that region, such as
+`aws:eu-west-3`. It must have the `provider:region` shape. Pass a hint you
+chose yourself this way on every rerun, or setup replaces it.
+`--placement default` removes the hint.
+
+For an installation the installer did not make, such as one from the Deploy
+to Cloudflare button, run `pnpm run placement`
+([Worker placement](DEPLOYMENT.md#worker-placement)).
+
 ## Options
 
 | Option                 | Behavior                                                        |
@@ -96,6 +122,7 @@ Cloudflare again and resumes completed work.
 | `--app-name <name>`    | Name the app in `src/lib/site.ts` without asking                |
 | `--description <text>` | Set the app's description there without asking                  |
 | `--reuse-existing`     | Explicitly authorize same-named Worker and D1 reuse             |
+| `--placement <region>` | Place production in this region; `default` removes the hint     |
 | `--local-only`         | Prepare local D1, secrets, types, and verification only         |
 | `--yes`, `-y`          | Accept safe defaults; ambiguity and collisions still stop setup |
 | `--dry-run`            | Print the plan without changes                                  |

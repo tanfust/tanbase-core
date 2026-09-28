@@ -90,6 +90,8 @@ test("forms validate with the shared schemas; the list and stats views live in t
   await expect(page).toHaveURL(/\/login\?sig=e2e-check$/)
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible()
   await page.goto("/app")
+  // A click before the board hydrates opens nothing.
+  await waitForHydration(page)
 
   console.log("e2e: task dialog validation")
   await page.getByRole("button", { name: "New task" }).click()

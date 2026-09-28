@@ -1,7 +1,7 @@
 ---
 status: active
 audience: users, contributors, maintainers, agents
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # TanBase Core
@@ -10,66 +10,29 @@ A task board that proves the whole stack works. TanBase Core is an
 open-source TanStack Start foundation for Cloudflare Workers: auth, data,
 files, realtime, jobs, AI, and an MCP server in one Worker you fork and own.
 
-[Live demo](https://core.tanbase.dev) · [Deploy your own](#quick-start) ·
-[Documentation](docs/README.md)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tanfust/tanbase-core)
+
+[Live demo](https://core.tanbase.dev) · [Guided installer](#guided-installer) ·
+[Built with](#built-with) · [Documentation](docs/README.md)
 
 It is not a bare template. Each Cloudflare primitive powers a real feature of
 the board, runs in production on `core.tanbase.dev`, and has tests and docs.
 Keep what you need and [remove the rest](#removing-a-module).
 
-## Primitive map
+<p>
+  <img src="docs/images/pagespeed-mobile.webp" width="49%" alt="PageSpeed Insights on mobile for core.tanbase.dev: 97 Performance, 100 Accessibility, 100 Best Practices, 100 SEO, and 4 of 4 for Agentic Browsing">
+  <img src="docs/images/agent-readiness.webp" width="49%" alt="isitagentready.com scan of core.tanbase.dev: a score of 87, level 5, Agent-Native">
+</p>
 
-Every feature runs in the same Worker, `src/server.ts`: server rendering,
-static assets, the cron handler, the queue consumer, the Workflow, and the
-Durable Object ship in one deploy.
-
-| Feature                                 | Cloudflare product                         | Binding or route             |
-| --------------------------------------- | ------------------------------------------ | ---------------------------- |
-| Projects and tasks                      | D1 with Drizzle                            | `DB`                         |
-| Accounts and sessions                   | Better Auth on D1                          | `DB`                         |
-| Bot checks on sign-up and sign-in       | Turnstile                                  | `TURNSTILE_SECRET_KEY`       |
-| Abuse limits on auth and AI             | Rate Limiting                              | `AUTH_LIMITER`, `AI_LIMITER` |
-| Task attachments                        | R2                                         | `FILES`                      |
-| Live board across devices               | Durable Objects with WebSocket Hibernation | `BOARD`                      |
-| Due-date reminders                      | Cron Triggers and Queues                   | `EMAIL_QUEUE`                |
-| Verification and reminder email         | Email Service                              | `EMAIL`                      |
-| Task breakdown into subtasks            | Workflows                                  | `BREAKDOWN`                  |
-| Subtask suggestions                     | Workers AI through AI Gateway              | `AI`                         |
-| Task tools for Claude and other agents  | MCP server with OAuth 2.1                  | `/mcp`                       |
-| Link preview images drawn on the Worker | Workers Caching                            | `exports.OgImage`            |
-| Structured request logs                 | Workers Logs                               | `observability`              |
-
-## Cost
-
-The target: the public demo runs on Workers Paid at $5 a month, with its
-usage inside the plan's included allowances. Static assets and egress are
-free. Every deployment needs Workers Paid, because password sign-in and
-drawing a preview image take more CPU per request than Workers Free allows
-([why](docs/DEPLOYMENT.md#workers-paid-is-required)).
-
-What could push it past $5:
-
-- Workers AI beyond the free daily Neurons
-- Abuse of the public demo: sign-ups, uploads, and AI calls
-
-Guardrails running now:
-
-- Turnstile and per-IP rate limits on auth
-- A per-user daily AI quota and burst limit
-- A 10 MB upload cap with a file type allowlist
-
-The allowances each product includes are on the
-[landing page](https://core.tanbase.dev/#cost-heading) and in the
-[cost model](docs/OVERVIEW.md#cost-model). [Performance](docs/PERFORMANCE.md)
-records the measured budgets.
+PageSpeed Insights on mobile and the isitagentready.com scan, both on
+2026-09-28. [Performance](docs/PERFORMANCE.md) and
+[agent discovery](docs/AGENT_DISCOVERY.md) record how each is measured.
 
 ## Quick start
 
 ### Deploy to Cloudflare
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tanfust/tanbase-core)
-
-You need:
+The button above deploys your own copy. You need:
 
 - A Cloudflare account on **Workers Paid**, $5 a month (upgrade under
   **Workers & Pages** in the dashboard). Signing in and drawing link preview images take
@@ -120,6 +83,8 @@ configures Better Auth, deploys to Cloudflare, and runs production smoke checks.
 Optional Email Service, custom-domain, Git-integration, and preview setup is
 skipped. See [guided installation](docs/INSTALLING.md) for flags and recovery.
 
+### Local development
+
 To prepare only local development:
 
 ```sh
@@ -140,6 +105,95 @@ Before submitting a change, run:
 pnpm verify
 pnpm cf:dry-run:production
 ```
+
+## Built with
+
+### Cloudflare
+
+Every feature runs in the same Worker, `src/server.ts`: server rendering,
+static assets, the cron handler, the queue consumer, the Workflow, and the
+Durable Object ship in one deploy. Each line names the feature and the
+binding, secret, route, or config key it uses.
+
+- **D1 with Drizzle**: Projects and tasks (`DB`)
+- **Better Auth on D1**: Accounts and sessions (`DB`)
+- **Turnstile**: Bot checks on sign-up and sign-in (`TURNSTILE_SECRET_KEY`)
+- **Rate Limiting**: Abuse limits on auth and AI (`AUTH_LIMITER`, `AI_LIMITER`)
+- **R2**: Task attachments (`FILES`)
+- **Durable Objects with WebSocket Hibernation**: Live board across devices (`BOARD`)
+- **Cron Triggers and Queues**: Due-date reminders (`EMAIL_QUEUE`)
+- **Email Service**: Verification and reminder email (`EMAIL`)
+- **Workflows**: Task breakdown into subtasks (`BREAKDOWN`)
+- **Workers AI through AI Gateway**: Subtask suggestions (`AI`)
+- **MCP server with OAuth 2.1**: Task tools for Claude and other agents (`/mcp`)
+- **Workers Caching**: Link preview images drawn on the Worker (`exports.OgImage`)
+- **Workers Logs**: Structured request logs (`observability`)
+
+Around them:
+
+- **Workers Builds** deploys every push to `main`, applies migrations, and
+  runs the post-deploy smoke
+- **Placement hints** run the Worker next to its D1 primary; the installer
+  picks the region ([Deploying](docs/DEPLOYMENT.md#worker-placement))
+- **Web Analytics**, turned on for the production zone, records page views
+  and web vitals with no code in the app
+
+### TanStack
+
+- **TanStack Start**: server rendering, server functions, and the Worker
+  entry, on React 19
+- **TanStack Router**: file routes, typed search params, and redirects
+- **TanStack Query**: the board's data, rendered on the server and hydrated
+- **TanStack Form**: every form, validated in the browser with the same Zod
+  schemas the server applies
+- **TanStack Table**: the board's list view, with its sort, filters, search,
+  and columns in the URL
+- **TanStack Charts**: project stats, drawn as SVG on the server
+- **TanStack Markdown**: the blog, rendered on the Worker from `content/blog`
+- **TanStack Devtools**: the router and query devtools, in development
+
+### Also
+
+- **Better Auth**, with its OAuth 2.1 provider and MCP plugin: accounts,
+  sessions, and sign-in for MCP clients
+- **Drizzle ORM** and drizzle-kit: the D1 schema, queries, and generated
+  migrations
+- **Zod**: input validation; the browser loads `zod/mini`
+- **MCP TypeScript SDK**: the `/mcp` endpoint
+- **React Email**: the email templates
+- **Takumi**: draws the link preview images in WebAssembly
+- **Tailwind CSS v4**, **shadcn/ui** on **Base UI**, and **Lucide** icons:
+  the interface
+- **PostHog**, optional: cookieless product analytics, error tracking, and
+  web vitals
+- **Vite** with the Cloudflare plugin, and **Wrangler**: builds, the local
+  Workers runtime, and deploys
+- **Vitest** in the Workers runtime and in jsdom, **Playwright**, and
+  **Lighthouse**: tests and performance checks
+
+## Cost
+
+The target: the public demo runs on Workers Paid at $5 a month, with its
+usage inside the plan's included allowances. Static assets and egress are
+free. Every deployment needs Workers Paid, because password sign-in and
+drawing a preview image take more CPU per request than Workers Free allows
+([why](docs/DEPLOYMENT.md#workers-paid-is-required)).
+
+What could push it past $5:
+
+- Workers AI beyond the free daily Neurons
+- Abuse of the public demo: sign-ups, uploads, and AI calls
+
+Guardrails running now:
+
+- Turnstile and per-IP rate limits on auth
+- A per-user daily AI quota and burst limit
+- A 10 MB upload cap with a file type allowlist
+
+The allowances each product includes are on the
+[landing page](https://core.tanbase.dev/#cost-heading) and in the
+[cost model](docs/OVERVIEW.md#cost-model). [Performance](docs/PERFORMANCE.md)
+records the measured budgets.
 
 ## Make it yours
 
@@ -194,7 +248,7 @@ include the name, with `pnpm exec vitest run src/modules/email -u`.
 - AI task breakdown: a Workflow asks Workers AI, through AI Gateway, for 3 to 7 validated subtasks, behind a per-user daily quota and burst limit
 - A remote MCP server at `/mcp`: Claude and other MCP clients sign in with OAuth 2.1 and can list, create, and complete tasks
 - Typed transactional email templates with safe logging and optional Cloudflare delivery
-- Resumable guided setup for local development and essential production resources
+- Resumable guided setup for local development and essential production resources, which places the Worker next to its D1 primary
 - Public `GET /api/health` endpoint with a live database check
 - A landing page with the primitive map, cost model, and install commands
 - Per-route SEO head tags with opt-in indexing, a canonical homepage, and `SoftwareSourceCode` JSON-LD
@@ -202,8 +256,8 @@ include the name, with `pnpm exec vitest run src/modules/email -u`.
 - Canonical sitemap, environment-aware robots policy, and truthful `llms.txt`
 - Homepage discovery links, Content Signals, and a Markdown representation for agents
 - Agent discovery: an API catalog, AI Catalog, MCP server card, agent skills index, and WebMCP tools
-- Forms on TanStack Form, validated in the browser with the same Zod schemas the server applies
-- A list view on TanStack Table whose sort, filters, search, and columns live in the URL, and project stats drawn with TanStack Charts
+- Forms on TanStack Form, validated in the browser with the same Zod schemas the server applies, built with `zod/mini` so pages carry only the checks they use
+- A list view on TanStack Table whose sort, filters, search, and columns live in the URL, and project stats drawn with TanStack Charts; both load only when opened
 - A public blog: Markdown posts in `content/blog`, rendered on the Worker with TanStack Markdown, with an RSS feed, sitemap entries, and a preview image per post
 - CI verification, generated binding-type drift detection, and deploy dry run
 - Automatic production deployment from `main`; branch previews are optional

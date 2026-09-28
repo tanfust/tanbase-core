@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, agents
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # Development
@@ -27,6 +27,7 @@ lockfile or supply-chain validation in contributor or CI instructions.
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm run setup`                                                     | Guided local and production installation                                                                                                    |
 | `pnpm run setup --local-only`                                        | Prepare only isolated local development                                                                                                     |
+| `pnpm run placement [--env <name>] [--write]`                        | Read where the `DB` primary is and recommend the placement hint for the top level or `env.<name>`; `--write` writes it; queries remote D1   |
 | `pnpm dev`                                                           | Run TanStack Start inside the Workers runtime on port 3000, with `env.local`                                                                |
 | `pnpm verify`                                                        | Format, lint, docs, migration, type, test, boundary, and build gates                                                                        |
 | `pnpm test:e2e`                                                      | Run the isolated local-D1 authentication, board, views, blog, and WebMCP browser journeys, one spec at a time                               |
@@ -290,9 +291,13 @@ pages and the task dialog do:
 - Keep the inputs' `required`, `type`, and length attributes; the browser's
   own checks still run first. Keep a server error in component state and show
   it with `FieldError`.
-- Import `@/lib/zod-config` in a schema module the browser loads. It turns
-  off Zod's JIT before the first schema, since its eval probe is a CSP
-  violation.
+- Build a schema the browser loads with `zod/mini`, whose checks are
+  functions passed to `.check()`, such as
+  `z.string().check(z.trim(), z.minLength(1, "Enter a title."))`, and import
+  `@/lib/zod-config` in its module. Full `zod` brings all of Zod to the page,
+  because its methods cannot be tree-shaken. `@/lib/zod-config` turns off
+  Zod's JIT before the first schema, since its eval probe is a CSP violation,
+  and sets Zod's English messages for rules without their own.
 
 The auth schemas in `src/modules/auth/schemas.ts` also run on the server: a
 Better Auth `before` hook in `src/modules/auth/auth.server.ts` checks each
@@ -308,13 +313,18 @@ core on the landing page. A malformed param falls back to its default, and
 the route strips defaults from links. The list
 (`src/components/board/task-table.tsx`, TanStack Table) and the stats
 (`src/components/board/project-stats.tsx`, TanStack Charts) read the board's
-query data; changing the view never fetches. The stats panel loads only when
-someone opens it.
+query data; changing the view never fetches. The list and the stats load
+only when someone opens them, through `lazy()` in
+`src/components/board/board-page.tsx`, so the board view, the default,
+neither downloads nor server-renders TanStack Table or TanStack Charts.
+Dates show through `TaskDate` in `src/components/board/task-date.tsx`: the
+UTC day in the server's HTML and the first render, then the browser's day.
 
-The dev server pre-bundles the route-level TanStack packages listed in
-`routeDependencies` in `vite.config.ts`. Add a package there when a route
-starts importing it, or the dev server re-optimizes in the middle of a
-session, reloads the page, and can load React twice.
+The dev server pre-bundles the route-level packages listed in
+`routeDependencies` in `vite.config.ts`, the TanStack libraries and Zod's
+`zod/mini` entry points among them. Add a package or entry point there when
+a route starts importing it, or the dev server re-optimizes in the middle of
+a session, reloads the page, and can load React twice.
 
 ## Writing a blog post
 

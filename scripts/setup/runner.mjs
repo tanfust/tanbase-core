@@ -1,5 +1,7 @@
 import { spawn, spawnSync } from "node:child_process"
 
+import { d1LocationArgs, parseD1Location } from "./core.mjs"
+
 export function commandAvailable(command) {
   return spawnSync(command, ["--version"], { stdio: "ignore" }).status === 0
 }
@@ -68,4 +70,32 @@ export function runPnpm(manager, args, options) {
 
 export function runWrangler(manager, args, options) {
   return runPnpm(manager, ["exec", "wrangler", ...args], options)
+}
+
+/**
+ * Where a D1 database's primary is, `{ colo, region }`, from one read-only
+ * remote query, with Wrangler's output for reporting a failure. It never
+ * throws: a location that cannot be read is null.
+ */
+export async function readD1Location(
+  manager,
+  database,
+  { cwd, env, environment } = {}
+) {
+  try {
+    const result = await runWrangler(
+      manager,
+      d1LocationArgs(database, environment),
+      { allowFailure: true, capture: true, cwd, echo: false, env }
+    )
+    return {
+      location: result.code === 0 ? parseD1Location(result.output) : null,
+      output: `${result.output}\n${result.errorOutput}`.trim(),
+    }
+  } catch (error) {
+    return {
+      location: null,
+      output: error instanceof Error ? error.message : String(error),
+    }
+  }
 }
