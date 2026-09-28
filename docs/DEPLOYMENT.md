@@ -51,8 +51,10 @@ error 1102. Workers Paid allows 30 seconds of CPU per request by default. The
 
 The README's button deploys the top level. Cloudflare reads `wrangler.jsonc`,
 creates the resources it names, and configures Workers Builds with the
-repository's `build` and `deploy` scripts. `pnpm run deploy` applies D1
-migrations, then runs `wrangler deploy`.
+repository's `build` and `deploy` scripts. `pnpm run deploy` creates the D1
+database and the R2 bucket when they are missing, applies D1 migrations,
+then runs `wrangler deploy`. It stops with what to do when R2 is not
+enabled on the account.
 
 | Resource                      | Created by                                                                                                     |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -105,6 +107,30 @@ After the first deploy:
 4. Run the Worker next to its database: in a clone of your repository, run
    `pnpm run placement --write`, then commit and push
    ([Worker placement](#worker-placement)).
+
+### Importing the repository from the dashboard
+
+A copy of the repository can also be connected from the dashboard, under
+**Workers & Pages → Create → Import a repository**, instead of through the
+button. Workers Builds then defaults to `npx wrangler deploy` as the deploy
+command, which never applies D1 migrations: the site deploys with an empty
+database, and signing up fails. Before the first build:
+
+1. Enable R2 under **R2 Object Storage**.
+2. Under the Worker's **Settings → Build**, set the build command to
+   `pnpm run build` and the deploy command to `pnpm run deploy`.
+
+`pnpm run deploy` then creates the database and the bucket, and applies the
+migrations before it deploys. Wrangler would create the database and the
+queue during `npx wrangler deploy` too, but after the point where migrations
+run, and it skips an R2 bucket without saying so when R2 is not enabled; the
+deploy then fails with `R2 bucket 'tanbase-core-files' not found [code:
+10085]`. Workers Builds names the Worker after the project, so a warning says
+the config's `tanbase-core` does not match, and Cloudflare opens a pull
+request in your copy to rename it; merging it is harmless.
+
+On 2026-09-28 an outside tester imported the repository this way, with the
+default deploy command and R2 not enabled, and hit that error.
 
 `pnpm run deploy` refuses to run in the upstream `tanfust/tanbase-core`
 checkout, where the top level would replace the TanBase demo's production

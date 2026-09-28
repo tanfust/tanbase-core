@@ -1,7 +1,7 @@
 ---
 status: active
 audience: testers, maintainers
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # Fresh-account install test
@@ -55,6 +55,9 @@ minutes.
    create, and whether you left **Protect with Cloudflare Access** ticked.
    If the deployed URL asked you to sign in to Cloudflare, say so.
 5. Whether you had to add a payment method at any point, and for what.
+6. Whether you used the **Deploy to Cloudflare** button or imported the
+   repository from the dashboard, and the Workers Build log if a build
+   failed.
 
 ## For the maintainer
 
