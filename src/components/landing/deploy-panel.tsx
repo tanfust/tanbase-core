@@ -101,7 +101,17 @@ export function DeployPanel() {
             {guide.label}
             <ArrowUpRightIcon data-icon="inline-end" />
           </a>
-          <p className="text-sm text-primary-foreground/85">{oneClick}</p>
+          <p className="text-sm text-primary-foreground/85">{oneClick.intro}</p>
+          <a
+            href={oneClick.action.href}
+            className={cn(
+              buttonVariants({ size: "lg", variant: "outline" }),
+              "border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            )}
+          >
+            {oneClick.action.label}
+            <ArrowUpRightIcon data-icon="inline-end" />
+          </a>
         </div>
       </div>
     </section>
