@@ -9,6 +9,7 @@ import { CheckCircle2Icon } from "lucide-react"
 
 import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
+import { SetupNotice } from "@/components/auth/setup-notice"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
@@ -73,7 +74,8 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const search = Route.useSearch()
-  const { turnstileSiteKey, emailDelivery } = Route.useLoaderData()
+  const { turnstileSiteKey, emailDelivery, installationProblem } =
+    Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -142,6 +144,7 @@ function LoginPage() {
 
   return (
     <AuthShell>
+      <SetupNotice problem={installationProblem} />
       {search.verified && (
         <Alert>
           <CheckCircle2Icon aria-hidden="true" />

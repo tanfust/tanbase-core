@@ -17,6 +17,7 @@ import { configuredOrigin } from "@/platform/origin"
 import { getRequestContext } from "@/platform/request-context"
 
 import { getAuthDatabase } from "./repository.server"
+import { authSecretUsable } from "./installation.server"
 import { authBodyError } from "./schemas"
 
 interface AuthEnvironment {
@@ -86,11 +87,7 @@ function getAuthEnvironment(): AuthEnvironment {
 }
 
 function validateAuthEnvironment(environment: AuthEnvironment) {
-  if (!environment.BETTER_AUTH_SECRET) {
-    throw new Error("Authentication is not configured")
-  }
-
-  if (environment.BETTER_AUTH_SECRET.length < 32) {
+  if (!authSecretUsable(environment.BETTER_AUTH_SECRET)) {
     throw new Error("Authentication is not configured")
   }
 

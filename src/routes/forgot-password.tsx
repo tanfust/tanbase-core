@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 
 import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
+import { SetupNotice } from "@/components/auth/setup-notice"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
 import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -42,7 +43,8 @@ export const Route = createFileRoute("/forgot-password")({
 
 function ForgotPasswordPage() {
   const { redirect } = Route.useSearch()
-  const { turnstileSiteKey, emailDelivery } = Route.useLoaderData()
+  const { turnstileSiteKey, emailDelivery, installationProblem } =
+    Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +73,7 @@ function ForgotPasswordPage() {
 
   return (
     <AuthShell>
+      <SetupNotice problem={installationProblem} />
       {!emailDelivery && (
         <Alert>
           <AlertTitle>This deployment does not send email</AlertTitle>
