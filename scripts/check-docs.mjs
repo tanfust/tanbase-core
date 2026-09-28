@@ -20,6 +20,10 @@ const requiredAdrSections = [
   "Consequences",
   "Alternatives",
 ]
+// GitHub shows the root README as the repository's front page and renders
+// frontmatter there as a table, so it carries none; the documentation index
+// dates it instead.
+const withoutFrontmatter = new Set(["README.md"])
 const errors = []
 
 function markdownFiles(directory) {
@@ -47,7 +51,13 @@ for (const file of files) {
   const source = readFileSync(file, "utf8")
   const frontmatter = source.match(/^---\n([\s\S]*?)\n---(?:\n|$)/)
 
-  if (!frontmatter) {
+  if (withoutFrontmatter.has(display)) {
+    if (frontmatter) {
+      errors.push(
+        `${display}: GitHub renders frontmatter as a table; leave it out`
+      )
+    }
+  } else if (!frontmatter) {
     errors.push(`${display}: missing YAML frontmatter`)
   } else {
     for (const key of requiredFrontmatter) {

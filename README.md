@@ -1,9 +1,3 @@
----
-status: active
-audience: users, contributors, maintainers, agents
-last_verified: 2026-09-28
----
-
 # TanBase Core
 
 A task board that proves the whole stack works. TanBase Core is an
