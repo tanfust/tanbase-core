@@ -9,7 +9,7 @@ last_verified: 2026-09-27
 <!-- PROJECT: tanbase-core | OVERVIEW: docs/OVERVIEW.md -->
 <!-- Build in the order listed under "Remaining work". A feature starts only when every dependency is ✅ Done. -->
 
-**Status:** 🔲 Todo · 🟡 In Progress · ✅ Done · ⛔ Dropped
+**Status:** 🔲 Todo · 🟡 In Progress · ✅ Done · ⏸ Deferred · ⛔ Dropped
 **Priority:** P0 blocks launch · P1 part of v1
 
 ## Milestones
@@ -25,7 +25,9 @@ last_verified: 2026-09-27
 | 7   | MCP            | F-015                 |
 | 8   | Launch         | F-016 to F-024, F-027 |
 | 9   | After launch   | F-022                 |
+| 10  | TanStack       | F-028 to F-031        |
 
+Deferred: F-032 and F-033, future candidates for milestone 10.
 Dropped: F-008, F-009, F-025, and F-026. The task board exists to exercise
 each Cloudflare primitive a real app needs, not to become a complete product,
 so app-level features beyond that are left to forks.
@@ -34,10 +36,12 @@ so app-level features beyond that are left to forks.
 
 Build in this order:
 
-1. F-023: One-click setup, waiting on the first button run and the outside
+1. F-028 to F-031: TanStack Form, Table, Charts, and Markdown, waiting on
+   the merge and a production check
+2. F-023: One-click setup, waiting on the first button run and the outside
    fresh-account test
-2. F-024: Public launch
-3. F-022: Demo guardrails, after launch
+3. F-024: Public launch
+4. F-022: Demo guardrails, after launch
 
 ---
 
@@ -714,6 +718,105 @@ A fork renames the app in one file. Before F-027 the name was written out
 
 No invoice report. The landing page and OVERVIEW state the $5 target, the
 allowances it relies on, and the guardrails that keep usage inside them.
+
+---
+
+## Milestone 10: TanStack
+
+Each TanStack library enters the app the way a Cloudflare primitive does:
+with a real feature that uses it, tests, and docs. F-028 to F-031 shipped in
+one pull request ([change record](changes/2026-09-27-tanstack-libraries.md)).
+
+### F-028: Forms on TanStack Form
+
+**Module:** auth, tasks | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-005, F-007
+
+**Acceptance criteria**
+
+- [x] Login, sign-up, forgot-password, reset-password, both settings forms,
+      the task dialog, and the project dialog use `@tanstack/react-form`
+      through one app form hook, `src/components/form.tsx`
+- [x] The forms validate with the same Zod schemas as the server: the task
+      and project schemas are the server functions' own, and the auth
+      schemas run in a Better Auth `before` hook for every client
+- [x] Turnstile, redirects, OAuth continuation, and the error messages are
+      unchanged; fields carry `aria-invalid` and errors linked through
+      `aria-describedby`
+- [x] Tests: schema and hook tests in the Workers runtime, the task dialog
+      in jsdom, and a browser journey for sign-up and task validation
+- [ ] Verified in production
+
+### F-029: Task list view on TanStack Table
+
+**Module:** tasks | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007, F-028
+
+**Acceptance criteria**
+
+- [x] A List tab beside the board renders the project's tasks with
+      `@tanstack/react-table` and `src/components/ui/table.tsx`
+- [x] Sorting, a status filter, a search over titles and notes, and column
+      visibility, stored in `/app`'s search params and validated with a Zod
+      schema that falls back per param
+- [x] The data comes from `boardQueryOptions()`; switching views never fetches
+- [x] A shared link reopens the same view, which the browser journey checks
+- [ ] Verified in production
+
+### F-030: Project stats on TanStack Charts
+
+**Module:** tasks | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-029
+
+TanStack Charts is Alpha: 0.18.0, whose minor releases may break. It could
+draw both charts, server-render them, and name them for screen readers, so it
+replaced recharts, which nothing used. The version is pinned exactly.
+
+**Acceptance criteria**
+
+- [x] A Stats tab shows tasks created and completed per week, over eight
+      UTC weeks, and tasks by status, from the board's existing data. The app
+      stores no completion date, so a done task counts in the week it was
+      last updated
+- [x] Each chart has a descriptive name and a table of its numbers for
+      screen readers; the Worker renders the SVG, and the panel loads only
+      when opened
+- [x] `recharts` and `src/components/ui/chart.tsx` are removed
+- [ ] Verified in production
+
+### F-031: Blog on TanStack Markdown
+
+**Module:** blog | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-016, F-017
+
+**Acceptance criteria**
+
+- [x] `/blog` lists posts and `/blog/$slug` shows one, from Markdown files
+      with frontmatter in `content/blog`, read at build time; no D1 table
+      and no CMS ([ADR-0019](decisions/0019-blog-from-repository-markdown.md))
+- [x] Meta tags, canonical URLs, sitemap entries, a preview image per post,
+      and an RSS feed at `/blog/rss.xml`
+- [x] Server-rendered with no Markdown code in the browser: 156 KB of
+      JavaScript and a Lighthouse median of 97 on a local build
+- [x] The first post, "Why TanBase Core"
+- [x] Removable: [module removal](MODULE_REMOVAL.md#blog) and the
+      `remove-module` skill, with the removal run once and its checks green
+- [ ] Verified in production
+
+---
+
+## Future candidates
+
+### F-032: Live board on TanStack DB
+
+**Module:** realtime, tasks | **Status:** ⏸ Deferred
+
+An optimistic board whose collections sync through the `BOARD` Durable
+Object. Deferred because it changes how data flows: TanStack Query and the
+server functions would give way to client collections.
+
+### F-033: AI on TanStack AI
+
+**Module:** ai | **Status:** ⏸ Deferred
+
+Streamed subtask suggestions, or an "ask your board" chat. Deferred until
+TanStack AI supports Workers AI and AI Gateway well.
 
 ---
 

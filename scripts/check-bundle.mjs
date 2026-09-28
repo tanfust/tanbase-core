@@ -13,7 +13,8 @@ import {
 // Measures the JavaScript the landing page needs to render and hydrate, the
 // way a first-time visitor downloads it, and fails when it exceeds the
 // budget. Optional code loaded after hydration, such as PostHog when an
-// installation sets a key, is not part of it.
+// installation sets a key, is not part of it. `--path` measures another
+// public page, such as a blog post, against the same budget.
 
 const args = process.argv.slice(2)
 const siteSource = readFileSync(
@@ -21,7 +22,9 @@ const siteSource = readFileSync(
   "utf8"
 )
 const canonicalOrigin = siteSource.match(/\borigin:\s*"([^"]+)"/)?.[1]
-const pageUrl = new URL("/", option(args, "url") ?? canonicalOrigin).href
+const path = option(args, "path") ?? "/"
+const pageUrl = new URL(path, option(args, "url") ?? canonicalOrigin).href
+const pageName = path === "/" ? "Landing page" : path
 const budget = budgets.landingJavaScriptBytes
 
 async function fetchBytes(url) {
@@ -53,7 +56,7 @@ for (const file of files) {
   )
 }
 console.log(
-  `Landing page JavaScript: ${kilobytes(total)} gzipped in ${files.length} files; budget ${kilobytes(budget)}.`
+  `${pageName} JavaScript: ${kilobytes(total)} gzipped in ${files.length} files; budget ${kilobytes(budget)}.`
 )
 
 if (total > budget) {

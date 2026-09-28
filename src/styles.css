@@ -135,3 +135,46 @@
     background-color: color-mix(in oklch, var(--primary) 30%, transparent);
   }
 }
+
+/* Blog posts: TanStack Markdown renders their HTML on the Worker. */
+@layer components {
+  .blog-prose {
+    @apply flex flex-col gap-5 text-base leading-7 text-pretty;
+  }
+  .blog-prose h2 {
+    @apply mt-6 scroll-mt-24 text-2xl font-semibold tracking-tight text-balance;
+  }
+  .blog-prose h3 {
+    @apply mt-4 scroll-mt-24 text-xl font-semibold tracking-tight;
+  }
+  .blog-prose a:not(.heading-anchor) {
+    @apply rounded-sm font-medium text-foreground underline decoration-primary underline-offset-4 outline-none hover:decoration-2 focus-visible:ring-3 focus-visible:ring-ring/30;
+  }
+  .blog-prose .heading-anchor {
+    @apply ms-2 text-muted-foreground opacity-0 transition-opacity;
+  }
+  .blog-prose :is(h2, h3):hover .heading-anchor {
+    @apply opacity-100;
+  }
+  .blog-prose ul {
+    @apply ms-6 flex list-disc flex-col gap-2;
+  }
+  .blog-prose ol {
+    @apply ms-6 flex list-decimal flex-col gap-2;
+  }
+  .blog-prose strong {
+    @apply font-semibold;
+  }
+  .blog-prose :not(pre) > code {
+    @apply rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.875em];
+  }
+  .blog-prose pre {
+    @apply overflow-x-auto rounded-2xl bg-muted p-4 font-mono text-sm leading-6;
+  }
+  .blog-prose blockquote {
+    @apply border-s-2 ps-4 text-muted-foreground;
+  }
+  .blog-prose hr {
+    @apply my-4 border-t;
+  }
+}

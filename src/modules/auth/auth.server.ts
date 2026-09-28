@@ -1,6 +1,7 @@
 import { env, waitUntil } from "cloudflare:workers"
 import { mcp } from "@better-auth/mcp"
 import { betterAuth } from "better-auth"
+import { APIError, createAuthMiddleware } from "better-auth/api"
 import { captcha, jwt } from "better-auth/plugins"
 import { tanstackStartCookies } from "better-auth/tanstack-start"
 
@@ -16,6 +17,7 @@ import { configuredOrigin } from "@/platform/origin"
 import { getRequestContext } from "@/platform/request-context"
 
 import { getAuthDatabase } from "./repository.server"
+import { authBodyError } from "./schemas"
 
 interface AuthEnvironment {
   APP_ENV: "local" | "production"
@@ -218,6 +220,13 @@ export function createAuth(dependencies: AuthDependencies = {}) {
             expiresInMinutes: 60,
           },
         }),
+    },
+    // The forms validate with the same schemas; this holds for every client.
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        const message = authBodyError(ctx.path, ctx.body)
+        if (message) throw new APIError("BAD_REQUEST", { message })
+      }),
     },
     databaseHooks: {
       session: {

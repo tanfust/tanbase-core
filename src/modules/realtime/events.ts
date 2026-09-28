@@ -1,3 +1,4 @@
+import { optimisticTaskPrefix } from "@/modules/tasks/contracts"
 import type {
   BoardSnapshot,
   ProjectView,
@@ -72,10 +73,30 @@ export function applyBoardEvent(
       if (task.projectId !== active.id) return snapshot
       const existing = snapshot.tasks.find((item) => item.id === task.id)
       if (existing && existing.updatedAt > task.updatedAt) return snapshot
+      if (existing) {
+        return {
+          ...snapshot,
+          tasks: snapshot.tasks.map((item) =>
+            item.id === task.id ? task : item
+          ),
+        }
+      }
+      // This device's own new task can echo back before the server answers
+      // its create; it takes the place of the optimistic copy, never a second
+      // card beside it.
+      const twin = snapshot.tasks.find(
+        (item) =>
+          item.id.startsWith(optimisticTaskPrefix) &&
+          item.parentId === task.parentId &&
+          item.title === task.title &&
+          item.notes === task.notes &&
+          item.status === task.status &&
+          item.dueAt === task.dueAt
+      )
       return {
         ...snapshot,
-        tasks: existing
-          ? snapshot.tasks.map((item) => (item.id === task.id ? task : item))
+        tasks: twin
+          ? snapshot.tasks.map((item) => (item === twin ? task : item))
           : [...snapshot.tasks, task],
       }
     }

@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { siteConfig } from "@/lib/site"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { TurnstileField, useTurnstile } from "@/components/auth/turnstile"
+import { submitHandler, useAppForm, validateOnSubmit } from "@/components/form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,13 +19,11 @@ import {
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Spinner } from "@/components/ui/spinner"
 import { getAuthChallengeConfig } from "@/modules/auth/challenge"
 import { authClient } from "@/modules/auth/client"
 import { authErrorMessage } from "@/modules/auth/errors"
+import { emailRequestSchema } from "@/modules/auth/schemas"
 import { seo } from "@/modules/seo/head"
 
 export const Route = createFileRoute("/forgot-password")({
@@ -47,28 +46,28 @@ function ForgotPasswordPage() {
   const captcha = useTurnstile(turnstileSiteKey)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const email = String(new FormData(event.currentTarget).get("email") ?? "")
-    if (!captcha.ready) {
-      setError("Complete the security check, then try again.")
-      return
-    }
-    setPending(true)
-    setError(null)
-    const result = await authClient.requestPasswordReset({
-      email,
-      redirectTo: "/reset-password",
-      fetchOptions: captcha.fetchOptions,
-    })
-    setPending(false)
-    captcha.reset()
-    if (result.error)
-      setError(authErrorMessage(result.error, "Unable to request a reset"))
-    else setSuccess(true)
-  }
+  const form = useAppForm({
+    defaultValues: { email: "" },
+    validationLogic: validateOnSubmit,
+    validators: { onDynamic: emailRequestSchema },
+    onSubmit: async ({ value }) => {
+      if (!captcha.ready) {
+        setError("Complete the security check, then try again.")
+        return
+      }
+      setError(null)
+      const result = await authClient.requestPasswordReset({
+        email: emailRequestSchema.parse(value).email,
+        redirectTo: "/reset-password",
+        fetchOptions: captcha.fetchOptions,
+      })
+      captcha.reset()
+      if (result.error)
+        setError(authErrorMessage(result.error, "Unable to request a reset"))
+      else setSuccess(true)
+    },
+  })
 
   return (
     <AuthShell>
@@ -100,25 +99,30 @@ function ForgotPasswordPage() {
               Return to sign in
             </Button>
           ) : (
-            <form method="post" onSubmit={submit}>
+            <form method="post" onSubmit={submitHandler(form)}>
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                  />
-                </Field>
+                <form.AppField name="email">
+                  {(field) => (
+                    <field.TextField
+                      id="email"
+                      label="Email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                    />
+                  )}
+                </form.AppField>
                 <TurnstileField captcha={captcha} />
                 {error && <FieldError>{error}</FieldError>}
                 <Field>
-                  <Button type="submit" disabled={pending} className="w-full">
-                    {pending && <Spinner data-icon="inline-start" />}
-                    {pending ? "Requesting reset…" : "Send reset link"}
-                  </Button>
+                  <form.AppForm>
+                    <form.SubmitButton
+                      className="w-full"
+                      pendingLabel="Requesting reset…"
+                    >
+                      Send reset link
+                    </form.SubmitButton>
+                  </form.AppForm>
                   <FieldDescription className="text-center">
                     <Link to="/login" search={{ redirect }}>
                       Return to sign in

@@ -12,13 +12,13 @@ together. This page says how each budget is measured and records the results.
 
 ## Checks
 
-| Budget                          | Checked                                                                                                                                | Command                                                             |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Landing page JavaScript         | CI, on a local build of every push; after each deploy, on production                                                                   | `pnpm perf:bundle -- [--url <url>]`                                 |
-| Lighthouse mobile performance   | PageSpeed Insights by hand, for the budget; Lighthouse in CI on the local build and after each deploy on production, alarming below 90 | `pnpm perf:lighthouse -- [--url <url>] [--compress] [--runs <n>]`   |
-| Time to first byte              | By hand, from Tunis and US East                                                                                                        | `pnpm perf:ttfb -- [--url <url>] [--path <path>] [--rounds <n>]`    |
-| Worker CPU per server render    | By hand, in Workers Logs                                                                                                               | See [Worker CPU](#worker-cpu)                                       |
-| Realtime event between two tabs | `pnpm test:e2e`, locally                                                                                                               | The board journey fails when a change takes over a second to arrive |
+| Budget                          | Checked                                                                                                                                | Command                                                                           |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Landing page JavaScript         | CI, on a local build of every push, for the landing page and the blog index; after each deploy, on production                          | `pnpm perf:bundle -- [--url <url>] [--path <path>]`                               |
+| Lighthouse mobile performance   | PageSpeed Insights by hand, for the budget; Lighthouse in CI on the local build and after each deploy on production, alarming below 90 | `pnpm perf:lighthouse -- [--url <url>] [--path <path>] [--compress] [--runs <n>]` |
+| Time to first byte              | By hand, from Tunis and US East                                                                                                        | `pnpm perf:ttfb -- [--url <url>] [--path <path>] [--rounds <n>]`                  |
+| Worker CPU per server render    | By hand, in Workers Logs                                                                                                               | See [Worker CPU](#worker-cpu)                                                     |
+| Realtime event between two tabs | `pnpm test:e2e`, locally                                                                                                               | The board journey fails when a change takes over a second to arrive               |
 
 Without `--url`, the scripts target the canonical origin in `src/lib/site.ts`.
 
@@ -27,7 +27,18 @@ Without `--url`, the scripts target the canonical origin in `src/lib/site.ts`.
 `pnpm perf:bundle` fetches the homepage and counts what a first visit
 downloads to render and hydrate: its module scripts, module preloads, and the
 modules its inline bootstrap imports. Each file is measured uncompressed, then
-gzipped at level 9; Cloudflare serves Brotli, which is smaller.
+gzipped at level 9; Cloudflare serves Brotli, which is smaller. `--path`
+measures another public page against the same budget; CI measures `/blog`
+too, since the blog's pages are public and indexable.
+
+The budget is 160 KB. It rose from 150 KB when Zod began validating `/app`'s
+search params (F-029). The router loads every route's options with the first
+page, so the schema ships with the landing page. Zod Mini keeps the schema
+itself to about 5.5 KB, but Zod's core is shared with the browser's WebMCP
+tools, which need full Zod because the MCP SDK reads each tool's JSON Schema
+from it. The landing page therefore carries about 13 KB more than before.
+Moving the WebMCP tools' validation to the server would take full Zod out of
+the browser and give about 7 KB back.
 
 PostHog is not counted. It loads after hydration, and only when an
 installation sets `POSTHOG_KEY`; on `core.tanbase.dev` it adds about 100 KB
@@ -85,6 +96,36 @@ open the Worker's **Observability** tab and filter `GET` requests with status
 through the Workers Observability API's `telemetry/query` endpoint.
 
 ## Results
+
+### 2026-09-27, TanStack libraries
+
+On a local build of the F-028 to F-031 change, served by `vite preview`, from
+Chrome 153 on a Mac. Production numbers follow the deploy.
+
+| Budget                             | Target               | Measured                                                                                     | Result       |
+| ---------------------------------- | -------------------- | -------------------------------------------------------------------------------------------- | ------------ |
+| Landing page JavaScript            | under 160 KB gzipped | 159.1 KB in 16 files; `main` before the change, 145.1 KB in 10 files                         | Met          |
+| Blog JavaScript                    | under 160 KB gzipped | `/blog` 155.9 KB and `/blog/why-tanbase-core` 156.0 KB, in 17 files each                     | Met          |
+| Lighthouse alarm, local build      | 90 or higher         | Landing page median 97 of 3 runs; the post and the index each 97, with 100 for accessibility | Met          |
+| Lighthouse mobile, production      | 95 or higher         | Not measured yet                                                                             | After deploy |
+| TTFB and Worker CPU for blog pages | under 400 ms, 50 ms  | Not measured yet; a post is compiled once per isolate, then only rendered                    | After deploy |
+
+Notes:
+
+- **Where the landing page's 14 KB went.** A source-map comparison with
+  `main` put 42.8 KB of minified Zod into the landing page's scripts, about
+  12 KB gzipped, and about 3 KB more of minified router and Start code for
+  search validation and the new routes. The blog's head tags are built on the Worker
+  (`src/modules/blog/pages.server.ts`), which kept them out of the landing
+  page.
+- **The stats panel** is its own chunk, 42.7 KB gzipped, loaded only when
+  someone opens the Stats view. The list view adds TanStack Table to the
+  board's chunk, and the shared form chunk that TanStack Form lives in is
+  17.3 KB gzipped; neither loads on the landing page.
+- **Blog pages load no Markdown code.** TanStack Markdown's parser and
+  renderer run on the Worker; its React renderer would have added about
+  7.5 KB gzipped to every post
+  ([ADR-0019](decisions/0019-blog-from-repository-markdown.md)).
 
 ### 2026-09-27, after the board fix
 

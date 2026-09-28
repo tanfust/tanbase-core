@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as LoginRouteImport } from './routes/login'
@@ -22,6 +23,9 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AppAppRouteImport } from './routes/_app/app'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as BlogIndexRouteImport } from './routes/blog/index'
+import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
+import { Route as BlogRssDotxmlRouteImport } from './routes/blog/rss[.]xml'
 import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
 import { Route as ApiAttachmentsAttachmentIdRouteImport } from './routes/api/attachments/$attachmentId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -34,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -91,6 +100,21 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
+const BlogRssDotxmlRoute = BlogRssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
+  getParentRoute: () => BlogRoute,
+} as any)
 const OauthConsentRoute = OauthConsentRouteImport.update({
   id: '/oauth/consent',
   path: '/oauth/consent',
@@ -116,6 +140,7 @@ const ApiTasksTaskIdAttachmentsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/blog': typeof BlogRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
@@ -127,7 +152,10 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppAppRoute
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/blog/': typeof BlogIndexRoute
   '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
@@ -145,7 +173,10 @@ export interface FileRoutesByTo {
   '/app': typeof AppAppRoute
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/blog': typeof BlogIndexRoute
   '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
@@ -154,6 +185,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/blog': typeof BlogRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
@@ -165,7 +197,10 @@ export interface FileRoutesById {
   '/_app/app': typeof AppAppRoute
   '/_app/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/blog/': typeof BlogIndexRoute
   '/api/attachments/$attachmentId': typeof ApiAttachmentsAttachmentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tasks/$taskId/attachments': typeof ApiTasksTaskIdAttachmentsRoute
@@ -174,6 +209,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/blog'
     | '/forgot-password'
     | '/llms.txt'
     | '/login'
@@ -185,7 +221,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/settings'
     | '/api/health'
+    | '/blog/$slug'
+    | '/blog/rss.xml'
     | '/oauth/consent'
+    | '/blog/'
     | '/api/attachments/$attachmentId'
     | '/api/auth/$'
     | '/api/tasks/$taskId/attachments'
@@ -203,7 +242,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/settings'
     | '/api/health'
+    | '/blog/$slug'
+    | '/blog/rss.xml'
     | '/oauth/consent'
+    | '/blog'
     | '/api/attachments/$attachmentId'
     | '/api/auth/$'
     | '/api/tasks/$taskId/attachments'
@@ -211,6 +253,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/blog'
     | '/forgot-password'
     | '/llms.txt'
     | '/login'
@@ -222,7 +265,10 @@ export interface FileRouteTypes {
     | '/_app/app'
     | '/_app/settings'
     | '/api/health'
+    | '/blog/$slug'
+    | '/blog/rss.xml'
     | '/oauth/consent'
+    | '/blog/'
     | '/api/attachments/$attachmentId'
     | '/api/auth/$'
     | '/api/tasks/$taskId/attachments'
@@ -231,6 +277,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  BlogRoute: typeof BlogRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   LoginRoute: typeof LoginRoute
@@ -260,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -339,6 +393,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/blog/rss.xml': {
+      id: '/blog/rss.xml'
+      path: '/rss.xml'
+      fullPath: '/blog/rss.xml'
+      preLoaderRoute: typeof BlogRssDotxmlRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/oauth/consent': {
       id: '/oauth/consent'
       path: '/oauth/consent'
@@ -382,9 +457,24 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+  BlogRssDotxmlRoute: typeof BlogRssDotxmlRoute
+  BlogIndexRoute: typeof BlogIndexRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+  BlogRssDotxmlRoute: BlogRssDotxmlRoute,
+  BlogIndexRoute: BlogIndexRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  BlogRoute: BlogRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   LoginRoute: LoginRoute,

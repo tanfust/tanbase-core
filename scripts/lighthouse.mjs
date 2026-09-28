@@ -12,13 +12,17 @@ import { budgets, median, option } from "./performance.mjs"
 // Runs Lighthouse's default mobile audit several times and fails when the
 // median performance score is under the minimum. `--compress` puts a Brotli
 // proxy in front of `--url`, because `vite preview` serves assets
-// uncompressed and Cloudflare does not.
+// uncompressed and Cloudflare does not. `--path` audits another page than
+// the landing page, such as a blog post.
 
 const args = process.argv.slice(2)
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
 const siteSource = readFileSync(join(root, "src/lib/site.ts"), "utf8")
 const canonicalOrigin = siteSource.match(/\borigin:\s*"([^"]+)"/)?.[1]
-const target = new URL("/", option(args, "url") ?? canonicalOrigin)
+const target = new URL(
+  option(args, "path") ?? "/",
+  option(args, "url") ?? canonicalOrigin
+)
 const runs = Number(option(args, "runs") ?? 3)
 const compress = args.includes("--compress")
 const minimum = Number(option(args, "min-score") ?? budgets.lighthouseAlarm)

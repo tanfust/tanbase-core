@@ -88,6 +88,23 @@ describe("board events", () => {
     expect(stale?.tasks[0]?.status).toBe("done")
   })
 
+  it("lets this device's echo replace its optimistic copy, not add a card", () => {
+    const optimistic = task({ id: "optimistic:1234", title: "Ship it" })
+    const pending = board([optimistic])
+    const real = { ...optimistic, id: "task-real", updatedAt: 5 }
+    const echoed = applyBoardEvent(pending, {
+      type: "task.upserted",
+      task: real,
+    })
+    expect(echoed?.tasks).toEqual([real])
+
+    // Another task with a different title is simply added.
+    const other = { ...real, id: "task-other", title: "Something else" }
+    expect(
+      applyBoardEvent(pending, { type: "task.upserted", task: other })?.tasks
+    ).toEqual([optimistic, other])
+  })
+
   it("removes a deleted task with its subtasks and ignores other projects", () => {
     const snapshot = board([
       task({ id: "parent" }),

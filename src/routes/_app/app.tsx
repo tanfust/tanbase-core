@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, stripSearchParams } from "@tanstack/react-router"
 import { CircleAlertIcon, RotateCcwIcon } from "lucide-react"
 
 import { siteConfig } from "@/lib/site"
@@ -7,15 +7,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { seo } from "@/modules/seo/head"
+import {
+  boardSearchDefaults,
+  boardSearchSchema,
+} from "@/modules/tasks/board-search"
+import type { BoardSearch } from "@/modules/tasks/board-search"
 import { boardQueryOptions } from "@/modules/tasks/queries"
 
 export const Route = createFileRoute("/_app/app")({
-  validateSearch: (search): { project?: string } => ({
-    project:
-      typeof search.project === "string" && search.project.length > 0
-        ? search.project
-        : undefined,
-  }),
+  // The view and the list's search, filters, sort, and columns live in the
+  // URL, so a link opens the same view. Only the project reloads data.
+  validateSearch: boardSearchSchema,
+  search: { middlewares: [stripSearchParams(boardSearchDefaults)] },
   loaderDeps: ({ search }) => ({ projectId: search.project }),
   loader: ({ context, deps }) =>
     context.queryClient.ensureQueryData(boardQueryOptions(deps.projectId)),
@@ -31,8 +34,19 @@ export const Route = createFileRoute("/_app/app")({
 })
 
 function AppHome() {
-  const { project } = Route.useSearch()
-  return <BoardPage projectId={project} />
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  function changeSearch(patch: Partial<BoardSearch>) {
+    void navigate({
+      search: (previous) => ({ ...previous, ...patch }),
+      // Switching views adds a history entry; refining a list replaces it.
+      replace: !("view" in patch),
+      resetScroll: false,
+    })
+  }
+
+  return <BoardPage search={search} onSearchChange={changeSearch} />
 }
 
 function BoardPending() {

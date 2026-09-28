@@ -18,7 +18,8 @@ every document itself
 
 | Resource                                                | Contract                                                                 |
 | ------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `/sitemap.xml`                                          | XML sitemap containing only the canonical public homepage                |
+| `/sitemap.xml`                                          | XML sitemap of the canonical homepage, the blog, and its posts           |
+| `/blog/rss.xml`                                         | RSS 2.0 feed of the blog's posts                                         |
 | `/robots.txt`                                           | Production crawl policy, Content Signals, and canonical sitemap location |
 | `/llms.txt`                                             | llmstxt.org summary with linked docs, agent entry points, and limits     |
 | `/`                                                     | HTML by default, Markdown on request, discovery links, Content Signals   |
@@ -54,9 +55,12 @@ Indexing is opt-in. The root route sets `robots: noindex`, and a page becomes
 indexable only when its route calls `seo({ path })` from
 `src/modules/seo/head.ts`. That call adds `index, follow`, the page's only
 canonical link, `og:url`, and a preview image drawn on the Worker
-([ADR-0018](decisions/0018-preview-images-on-the-worker.md)). Only the
-homepage does this, matching the sitemap, and it also carries
-`SoftwareSourceCode` JSON-LD for the repository. Every other page calls
+([ADR-0018](decisions/0018-preview-images-on-the-worker.md)). The homepage,
+the blog index, and each post do this, matching the sitemap. The homepage
+also carries `SoftwareSourceCode` JSON-LD for the repository; the blog index
+carries `Blog` and each post `BlogPosting` JSON-LD, and a post is an Open
+Graph `article` with its own preview image
+([ADR-0019](decisions/0019-blog-from-repository-markdown.md)). Every other page calls
 `seo({ noindex: true })` for its title, description, and Open Graph text, with
 no canonical URL and a text-only link preview.
 

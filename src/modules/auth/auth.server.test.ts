@@ -371,6 +371,70 @@ describe("Better Auth D1 core", () => {
   })
 })
 
+describe("form schemas on the server", () => {
+  it("rejects the bodies the forms reject, with the same messages", async () => {
+    const { auth } = createTestAuth({ emailDelivery: false })
+    const email = `schema-${crypto.randomUUID()}@example.com`
+    const rejected: [string, Record<string, unknown>, string][] = [
+      [
+        "/sign-up/email",
+        { name: "   ", email, password: "long-enough-123" },
+        "Enter your name.",
+      ],
+      [
+        "/sign-up/email",
+        { name: "Owner", email, password: "short" },
+        "Use at least 8 characters for your password.",
+      ],
+      [
+        "/request-password-reset",
+        { email: "not-an-email", redirectTo: "/reset-password" },
+        "Enter a valid email address.",
+      ],
+      [
+        "/reset-password",
+        { newPassword: "short", token: "any-token" },
+        "Use at least 8 characters for your password.",
+      ],
+    ]
+    for (const [path, body, message] of rejected) {
+      const response = await auth.handler(authRequest(path, body))
+      expect(response.status, path).toBe(400)
+      await expect(response.json()).resolves.toMatchObject({ message })
+    }
+
+    const signUp = await auth.handler(
+      authRequest("/sign-up/email", {
+        name: "Owner",
+        email,
+        password: "long-enough-123",
+      })
+    )
+    expect(signUp.status).toBe(200)
+    const cookie = sessionCookie(signUp)
+
+    const blankName = await auth.handler(
+      authRequest("/update-user", { name: "  " }, cookie)
+    )
+    expect(blankName.status).toBe(400)
+    await expect(blankName.json()).resolves.toMatchObject({
+      message: "Enter your name.",
+    })
+
+    const shortPassword = await auth.handler(
+      authRequest(
+        "/change-password",
+        { currentPassword: "long-enough-123", newPassword: "short" },
+        cookie
+      )
+    )
+    expect(shortPassword.status).toBe(400)
+    await expect(shortPassword.json()).resolves.toMatchObject({
+      message: "Use at least 8 characters for the new password.",
+    })
+  })
+})
+
 describe("authFor", () => {
   const environment = {
     APP_ENV: "production" as const,

@@ -72,6 +72,8 @@ jobs:
           pnpm exec vite preview --port 4391 --strictPort > preview.log 2>&1 &
           curl --silent --output /dev/null --retry 30 --retry-delay 1 --retry-all-errors http://localhost:4391/
       - run: pnpm perf:bundle -- --url http://localhost:4391
+      # Blog pages load the same entry; the index stands in for every post.
+      - run: pnpm perf:bundle -- --url http://localhost:4391 --path /blog
       - run: pnpm perf:lighthouse -- --url http://localhost:4391 --compress
       - uses: actions/upload-artifact@v4
         if: always()

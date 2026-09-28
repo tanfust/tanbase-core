@@ -23,27 +23,27 @@ lockfile or supply-chain validation in contributor or CI instructions.
 
 ## Commands
 
-| Command                                              | Purpose                                                                                                                                     |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm run setup`                                     | Guided local and production installation                                                                                                    |
-| `pnpm run setup --local-only`                        | Prepare only isolated local development                                                                                                     |
-| `pnpm dev`                                           | Run TanStack Start inside the Workers runtime on port 3000, with `env.local`                                                                |
-| `pnpm verify`                                        | Format, lint, docs, migration, type, test, boundary, and build gates                                                                        |
-| `pnpm test:e2e`                                      | Run the isolated local-D1 authentication, board, and WebMCP browser journeys                                                                |
-| `pnpm test:dev-client`                               | Load the dev server's client module graph and fail on import-protection errors                                                              |
-| `pnpm docs:check`                                    | Validate frontmatter, required sections, and internal links                                                                                 |
-| `pnpm db:generate`                                   | Generate a migration from the Drizzle schema and format its snapshot                                                                        |
-| `pnpm db:check`                                      | Check generated Drizzle migration history                                                                                                   |
-| `pnpm db:migrate:local`                              | Apply pending migrations to isolated local D1 storage                                                                                       |
-| `pnpm db:seed:local`                                 | Idempotently add local-only project and task fixtures                                                                                       |
-| `pnpm cf:typegen`                                    | Regenerate Worker binding types                                                                                                             |
-| `pnpm cf:dry-run:production`                         | Build production configuration and run Wrangler dry run                                                                                     |
-| `pnpm cf:dry-run:default`                            | Build the top-level configuration, which the Deploy button deploys, and run Wrangler dry run                                                |
-| `pnpm cf:deploy:production`                          | Build, migrate, deploy, and smoke production; superseded Workers Builds skip the deploy; changes live remote state                          |
-| `pnpm smoke -- [--url <url>] --environment <name>`   | Verify public and protected-route contracts; production defaults to the canonical origin; add `--config default` for a top-level deployment |
-| `pnpm perf:bundle -- [--url <url>]`                  | Check the landing page's JavaScript against its budget ([Performance](PERFORMANCE.md))                                                      |
-| `pnpm perf:lighthouse -- [--url <url>] [--compress]` | Run Lighthouse mobile several times and check the median score; `--compress` for a local `vite preview`; needs Node.js 22.19 or newer       |
-| `pnpm perf:ttfb -- [--url <url>] [--path <path>]`    | Measure time to first byte from Tunis and US East with Globalping probes                                                                    |
+| Command                                                              | Purpose                                                                                                                                     |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run setup`                                                     | Guided local and production installation                                                                                                    |
+| `pnpm run setup --local-only`                                        | Prepare only isolated local development                                                                                                     |
+| `pnpm dev`                                                           | Run TanStack Start inside the Workers runtime on port 3000, with `env.local`                                                                |
+| `pnpm verify`                                                        | Format, lint, docs, migration, type, test, boundary, and build gates                                                                        |
+| `pnpm test:e2e`                                                      | Run the isolated local-D1 authentication, board, views, blog, and WebMCP browser journeys, one spec at a time                               |
+| `pnpm test:dev-client`                                               | Load the dev server's client module graph and fail on import-protection errors                                                              |
+| `pnpm docs:check`                                                    | Validate frontmatter, required sections, and internal links                                                                                 |
+| `pnpm db:generate`                                                   | Generate a migration from the Drizzle schema and format its snapshot                                                                        |
+| `pnpm db:check`                                                      | Check generated Drizzle migration history                                                                                                   |
+| `pnpm db:migrate:local`                                              | Apply pending migrations to isolated local D1 storage                                                                                       |
+| `pnpm db:seed:local`                                                 | Idempotently add local-only project and task fixtures                                                                                       |
+| `pnpm cf:typegen`                                                    | Regenerate Worker binding types                                                                                                             |
+| `pnpm cf:dry-run:production`                                         | Build production configuration and run Wrangler dry run                                                                                     |
+| `pnpm cf:dry-run:default`                                            | Build the top-level configuration, which the Deploy button deploys, and run Wrangler dry run                                                |
+| `pnpm cf:deploy:production`                                          | Build, migrate, deploy, and smoke production; superseded Workers Builds skip the deploy; changes live remote state                          |
+| `pnpm smoke -- [--url <url>] --environment <name>`                   | Verify public and protected-route contracts; production defaults to the canonical origin; add `--config default` for a top-level deployment |
+| `pnpm perf:bundle -- [--url <url>] [--path <path>]`                  | Check a page's JavaScript against the landing budget, the landing page by default ([Performance](PERFORMANCE.md))                           |
+| `pnpm perf:lighthouse -- [--url <url>] [--path <path>] [--compress]` | Run Lighthouse mobile several times and check the median score; `--compress` for a local `vite preview`; needs Node.js 22.19 or newer       |
+| `pnpm perf:ttfb -- [--url <url>] [--path <path>]`                    | Measure time to first byte from Tunis and US East with Globalping probes                                                                    |
 
 ## Generated files
 
@@ -204,6 +204,13 @@ Install the matching browser once with `pnpm exec playwright install chromium`,
 or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an existing compatible Chromium
 binary before running `pnpm test:e2e`.
 
+`pnpm test:e2e` runs the spec files one at a time, with `--workers=1`. They
+share one dev server, and Vite's dev module runner can hand a request a
+module that another request is still evaluating, which fails with "Cannot
+access `__vite_ssr_import_N__` before initialization" on a cold server. A
+production bundle evaluates each module once, so this affects only the dev
+server.
+
 The public authentication pages cover sign-up, verification guidance, sign-in,
 verification resend, forgot password, and reset password. Protected routes use
 the responsive application shell, while `/settings` manages the display name,
@@ -255,6 +262,77 @@ with Takumi and answers `404` for any other slug
 image drawn in a fresh isolate takes about half a second there, while Vite
 loads the renderer. Workers Caching runs only on Cloudflare, so locally every
 request draws the image again.
+
+The blog's pages build their head tags in a server function instead:
+`src/modules/blog/pages.server.ts` calls `seo()` on the Worker, and the route
+returns what its loader fetched. Route options load with every page, so this
+keeps the blog's head code off the landing page.
+
+## Forms
+
+Build a form with `useAppForm()` from `src/components/form.tsx`, as the auth
+pages and the task dialog do:
+
+- Pass the schema the server applies, or one that extends it with fields that
+  stay in the browser, such as a password confirmation, as `onDynamic`, with
+  `validationLogic: validateOnSubmit`. Fields then validate on the first
+  submit and on every change after it.
+- Render fields with `field.TextField` or `field.TextareaField`, which draw
+  the shadcn/ui `Field` markup with `aria-invalid` and an error linked
+  through `aria-describedby`, and the button with `form.SubmitButton`.
+- Keep the inputs' `required`, `type`, and length attributes; the browser's
+  own checks still run first. Keep a server error in component state and show
+  it with `FieldError`.
+- Import `@/lib/zod-config` in a schema module the browser loads. It turns
+  off Zod's JIT before the first schema, since its eval probe is a CSP
+  violation.
+
+The auth schemas in `src/modules/auth/schemas.ts` also run on the server: a
+Better Auth `before` hook in `src/modules/auth/auth.server.ts` checks each
+endpoint's body, so every client gets the same rules and messages.
+
+## Board views
+
+`/app` shows a project as a board, a list, or stats. The view and the list's
+search, status filter, sort, and hidden columns are search params, validated
+by `boardSearchSchema` in `src/modules/tasks/board-search.ts`, with Zod Mini
+because route options load with every page. A malformed param falls back to
+its default, and the route strips defaults from links. The list
+(`src/components/board/task-table.tsx`, TanStack Table) and the stats
+(`src/components/board/project-stats.tsx`, TanStack Charts) read the board's
+query data; changing the view never fetches. The stats panel loads only when
+someone opens it.
+
+The dev server pre-bundles the route-level TanStack packages listed in
+`routeDependencies` in `vite.config.ts`. Add a package there when a route
+starts importing it, or the dev server re-optimizes in the middle of a
+session, reloads the page, and can load React twice.
+
+## Writing a blog post
+
+Add a Markdown file to `content/blog/`. Its name is the post's slug, in
+lowercase words joined by hyphens, such as `content/blog/first-post.md` for
+`/blog/first-post`. Start it with frontmatter:
+
+```md
+---
+title: First post
+description: One or two sentences for the index, search results, and the feed.
+date: 2026-10-01
+author: Your name
+tags: [tanstack, cloudflare-workers]
+---
+```
+
+Start headings at `##`; the page draws the title as its only `h1`. Raw HTML
+is off, and links with executable URLs are dropped. Posts are bundled into the
+Worker at build time, so a post ships with a deploy
+([ADR-0019](decisions/0019-blog-from-repository-markdown.md)).
+
+`pnpm exec vitest run src/modules/blog` compiles every post and fails with
+the file and the field when frontmatter is wrong, so a bad post fails CI
+rather than production. Under `pnpm dev`, open `/blog`, the post, its preview
+image at `/og/blog-<slug>.png`, and `/blog/rss.xml`.
 
 ## Server-only boundaries
 

@@ -30,6 +30,7 @@ Accepted decisions:
 - [ADR-0016: A deployment works without personalization](0016-deploy-without-personalization.md)
 - [ADR-0017: A generic top-level Wrangler configuration](0017-wrangler-configuration-layout.md)
 - [ADR-0018: Preview images drawn on the Worker and kept in Workers Caching](0018-preview-images-on-the-worker.md)
+- [ADR-0019: Blog posts are repository Markdown rendered on the Worker](0019-blog-from-repository-markdown.md)
 
 Never rewrite an accepted decision to hide a later change. Add a replacement ADR
 and link the superseded record to it.

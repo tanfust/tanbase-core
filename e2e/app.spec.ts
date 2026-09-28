@@ -5,6 +5,10 @@ import { join } from "node:path"
 import { expect, test } from "@playwright/test"
 import type { Page } from "@playwright/test"
 
+// Several spec files share one dev server, so an auth request or the
+// Turnstile token can take longer than the default five seconds.
+const authTimeout = 15_000
+
 const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const signupEmail = `browser-${suffix}@example.com`
 const email = "browser-verified@example.com"
@@ -40,7 +44,8 @@ async function waitForHydration(page: Page) {
 // Protected auth requests need a fresh token, so wait before each submit.
 async function waitForChallenge(page: Page) {
   await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(
-    /.+/
+    /.+/,
+    { timeout: authTimeout }
   )
 }
 
@@ -58,7 +63,9 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByLabel("Password", { exact: true }).fill(initialPassword)
   await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
-  await expect(page).toHaveURL(/\/app\?project=preserved$/)
+  await expect(page).toHaveURL(/\/app\?project=preserved$/, {
+    timeout: authTimeout,
+  })
   await expect(page.getByText("The board could not be loaded")).toBeVisible()
   await page
     .getByRole("button", { name: /browser-verified@example\.com/ })
@@ -76,7 +83,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByRole("button", { name: "Create account" }).click()
   // The e2e Worker has no email delivery, so a new account needs no
   // verification and lands on its board signed in.
-  await expect(page).toHaveURL(/\/app$/)
+  await expect(page).toHaveURL(/\/app$/, { timeout: authTimeout })
   await expect(
     page.getByRole("heading", { level: 1, name: "My project" })
   ).toBeVisible()
@@ -90,7 +97,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByLabel("Password", { exact: true }).fill(initialPassword)
   await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
-  await expect(page).toHaveURL(/\/app$/)
+  await expect(page).toHaveURL(/\/app$/, { timeout: authTimeout })
   console.log("e2e: signed in")
   await expect(
     page.getByRole("heading", { level: 1, name: "My project" })
@@ -229,7 +236,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByLabel("Password", { exact: true }).fill(changedPassword)
   await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
-  await expect(page).toHaveURL(/\/app$/)
+  await expect(page).toHaveURL(/\/app$/, { timeout: authTimeout })
   await page
     .getByRole("button", { name: /browser-verified@example\.com/ })
     .click()
@@ -268,7 +275,7 @@ test("authentication, board CRUD, settings, persistence, and reset", async ({
   await page.getByLabel("Password", { exact: true }).fill(resetPassword)
   await waitForChallenge(page)
   await page.getByRole("button", { name: "Sign in" }).click()
-  await expect(page).toHaveURL(/\/app$/)
+  await expect(page).toHaveURL(/\/app$/, { timeout: authTimeout })
 
   await page.getByRole("link", { name: "Release plan" }).click()
   await page

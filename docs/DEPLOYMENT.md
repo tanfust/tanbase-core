@@ -638,8 +638,9 @@ pnpm smoke -- --url https://core.tanbase.dev --environment production
 For production, `--url` defaults to the canonical origin in `src/lib/site.ts`.
 The script checks the database-aware health contract, SSR document, canonical
 metadata, discovery headers, sitemap, robots policy, truthful `llms.txt`,
-Markdown negotiation, the agent discovery documents, and absence of a
-server-error page. Record the commit, URL, UTC date, Worker version,
+Markdown negotiation, the agent discovery documents, the blog (its index, the
+newest post in the sitemap with its preview image, the RSS feed, and a 404
+for a missing post), and absence of a server-error page. Record the commit, URL, UTC date, Worker version,
 and result in [status](STATUS.md) and the active change record.
 
 ## Rollback and recovery

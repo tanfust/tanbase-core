@@ -2,7 +2,7 @@ import { canonicalUrl, siteConfig } from "@/lib/site"
 // Type only: the card list stays out of routes that name no image.
 import type { PageImage } from "@/modules/og/cards"
 
-type LdJsonObject = { [key: string]: LdJsonValue }
+export type LdJsonObject = { [key: string]: LdJsonValue }
 type LdJsonValue =
   string | number | boolean | null | LdJsonObject | readonly LdJsonValue[]
 
@@ -22,6 +22,15 @@ interface IndexablePage extends SeoCommon {
   image?: PageImage
   /** A schema.org object, rendered as JSON-LD. */
   structuredData?: LdJsonObject
+  /**
+   * Marks the page as an article, such as a blog post, for link previews.
+   * Tags belong in its JSON-LD: the router keeps one meta tag per property.
+   */
+  article?: {
+    /** The publication day, as YYYY-MM-DD. */
+    publishedTime: string
+    author: string
+  }
 }
 
 interface NoindexPage extends SeoCommon {
@@ -31,6 +40,7 @@ interface NoindexPage extends SeoCommon {
   origin?: never
   image?: never
   structuredData?: never
+  article?: never
 }
 
 export type SeoOptions = IndexablePage | NoindexPage
@@ -80,11 +90,25 @@ export function seo(options: SeoOptions) {
 
   const url = canonicalUrl(options.path, options.origin)
   const image = options.image
+  const article = options.article
   return {
     meta: [
-      ...meta,
+      ...meta.map((tag) =>
+        article && "property" in tag && tag.property === "og:type"
+          ? { property: "og:type", content: "article" }
+          : tag
+      ),
       { name: "robots", content: "index, follow" },
       { property: "og:url", content: url },
+      ...(article
+        ? [
+            {
+              property: "article:published_time",
+              content: article.publishedTime,
+            },
+            { property: "article:author", content: article.author },
+          ]
+        : []),
       ...(image
         ? [
             {
