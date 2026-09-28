@@ -391,6 +391,14 @@ To turn breakdown off, remove the production `ai` binding or set
 `AI_DAILY_LIMIT` to `0`; the menu item disappears and the server refuses new
 runs.
 
+A deployment of the top level, from the button or `pnpm run deploy`, runs
+breakdown on its own account's Workers AI and is billed there. Workers AI
+includes 10,000 Neurons a day on every plan, then costs $0.011 per 1,000
+Neurons; one breakdown in the TanBase demo cost $0.000086. The button's
+setup page describes the three `AI_*` variables, and the build log's
+`AI task breakdown:` line says whether breakdown is on, with its model and
+daily limit.
+
 ### MCP server
 
 `/mcp` is a remote MCP server with three tools: `list_tasks` (filter by

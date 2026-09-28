@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import test from "node:test"
 
 import {
+  aiSummary,
   attachmentsNoAccessMessage,
   attachmentsOffMessage,
   bucketStatus,
@@ -301,4 +302,25 @@ test("creates the secret only when it is known to be missing", () => {
   assert.equal(shouldCreateSecret("no-worker"), true)
   assert.equal(shouldCreateSecret("present"), false)
   assert.equal(shouldCreateSecret("unknown"), false)
+})
+
+test("says whether task breakdown uses Workers AI, and how to turn it off", () => {
+  const vars = {
+    AI_MODEL: "@cf/mistralai/mistral-small-3.1-24b-instruct",
+    AI_GATEWAY_ID: "default",
+    AI_DAILY_LIMIT: "20",
+  }
+  const on = aiSummary({ ai: { binding: "AI" }, vars })
+  assert.match(on, /^AI task breakdown: on/)
+  assert.match(on, /mistral-small-3\.1-24b-instruct/)
+  assert.match(on, /up to 20 a day per person/)
+  assert.match(on, /AI_DAILY_LIMIT to 0/)
+  assert.equal(
+    aiSummary({
+      ai: { binding: "AI" },
+      vars: { ...vars, AI_DAILY_LIMIT: "0" },
+    }),
+    "AI task breakdown: off."
+  )
+  assert.equal(aiSummary({ vars }), "AI task breakdown: off.")
 })

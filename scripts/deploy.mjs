@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url"
 
 import { isUpstreamRemote, originUrl } from "./deploy-guard.mjs"
 import {
+  aiSummary,
   deployResources,
   filesBucketName,
   isTopLevelBuild,
@@ -173,3 +174,4 @@ log(
       ? "BETTER_AUTH_SECRET: kept."
       : "BETTER_AUTH_SECRET: not checked."
 )
+log(aiSummary(generated.config))

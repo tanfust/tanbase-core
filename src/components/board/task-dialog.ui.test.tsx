@@ -28,6 +28,20 @@ function submit(name: RegExp) {
 }
 
 describe("TaskDialog", () => {
+  it("shows the status by its label, not its stored value", () => {
+    render(
+      <TaskDialog
+        open
+        onOpenChange={() => undefined}
+        status="doing"
+        onSubmit={() => Promise.resolve()}
+      />
+    )
+    const trigger = screen.getByRole("combobox")
+    expect(trigger.textContent).toContain("Doing")
+    expect(trigger.textContent).not.toContain("doing")
+  })
+
   it("shows the schema's error on the title and does not submit", async () => {
     const onSubmit = vi.fn(() => Promise.resolve())
     render(
