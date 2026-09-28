@@ -75,6 +75,22 @@ test("forms validate with the shared schemas; the list and stats views live in t
     page.getByRole("heading", { level: 1, name: "My project" })
   ).toBeVisible()
 
+  console.log("e2e: signed-in visits to the auth pages")
+  // The landing page's Sign in link leads a signed-in person to the board.
+  await page.goto("/")
+  await waitForHydration(page)
+  await page.getByRole("link", { name: "Sign in" }).first().click()
+  await expect(page).toHaveURL(/\/app$/, { timeout: authTimeout })
+  await page.goto("/login?redirect=%2Fsettings")
+  await expect(page).toHaveURL(/\/settings$/)
+  await page.goto("/sign-up")
+  await expect(page).toHaveURL(/\/app$/)
+  // An OAuth client waiting on the sign-in page keeps it.
+  await page.goto("/login?sig=e2e-check")
+  await expect(page).toHaveURL(/\/login\?sig=e2e-check$/)
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible()
+  await page.goto("/app")
+
   console.log("e2e: task dialog validation")
   await page.getByRole("button", { name: "New task" }).click()
   const dialog = page.getByRole("dialog")

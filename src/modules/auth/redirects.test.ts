@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { authHref, safeRedirect } from "./redirects"
+import { authHref, safeRedirect, signedInDestination } from "./redirects"
 
 describe("authentication redirects", () => {
   it("keeps local paths and query strings", () => {
@@ -19,5 +19,16 @@ describe("authentication redirects", () => {
     expect(authHref("/login?verified=true", "/settings")).toBe(
       "/login?verified=true&redirect=%2Fsettings"
     )
+  })
+
+  it("sends a signed-in visitor where they were headed, except mid-OAuth", () => {
+    expect(signedInDestination(undefined, "")).toBe("/app")
+    expect(signedInDestination("/settings", "?redirect=%2Fsettings")).toBe(
+      "/settings"
+    )
+    expect(signedInDestination("https://example.com", "")).toBe("/app")
+    expect(
+      signedInDestination(undefined, "?client_id=claude&sig=signed-query")
+    ).toBeNull()
   })
 })
