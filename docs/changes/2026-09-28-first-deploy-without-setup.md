@@ -141,12 +141,35 @@ Local:
 - No command ran against a real Cloudflare account, and no live error 1102
   was seen.
 
+Production, 2026-09-28, merge commit `197cbbb`:
+
+- Workers Build `d65b30db` deployed version `143f0f56` at 14:43 UTC and passed
+  its post-deploy smoke. The pinned smoke passed at 14:53 UTC.
+- `/login`, `/sign-up`, and `/forgot-password` return `200` and render their
+  forms with no setup notice. Health still reports `files: ok`.
+- The landing page's HTML and Markdown link the Deploy to Cloudflare button,
+  and "on the roadmap" is gone.
+- **Production performance run:** 148.1 KB of landing JavaScript in 14 files.
+  Lighthouse scored 89, 95, 95, 95, and 90 on GitHub's runner, a median of 95.
+
+An outside tester's copy, the same day:
+
+- Its first retry still ran `npx wrangler deploy`. Health was `ok` with
+  `files: disabled`; `/login` and `/sign-up` showed "This site is not set up
+  yet: its database has no tables"; the smoke suite stopped at `/mcp`, which
+  answered `500`, since auth could not start.
+- With the deploy command set to `pnpm run deploy`, the build log ended with
+  `Attachments: off until R2 is enabled` and `BETTER_AUTH_SECRET: created for
+this Worker`. Version `635a73a2` then passed `pnpm smoke -- --config
+default` from here, the notice was gone, and sign-up, the board, and an AI
+  breakdown of seven subtasks worked.
+
 ## Deployment state
 
-| Target     | Commit | URL                        | Date       | Result       |
-| ---------- | ------ | -------------------------- | ---------- | ------------ |
-| Local      | branch | `http://localhost:3110`    | 2026-09-28 | Passed       |
-| Production | —      | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit    | URL                        | Date       | Result |
+| ---------- | --------- | -------------------------- | ---------- | ------ |
+| Local      | branch    | `http://localhost:3110`    | 2026-09-28 | Passed |
+| Production | `197cbbb` | `https://core.tanbase.dev` | 2026-09-28 | Passed |
 
 ## Rollback notes
 
@@ -156,7 +179,6 @@ and the bucket it bound; both keep working, and the reverted top level names
 
 ## Remaining work
 
-- The tester's retry with the deploy command `pnpm run deploy`, the first
-  button run, and the fresh-account test (F-023).
+- The first button run, and the timed fresh-account test (F-023).
 - Confirm on the button's setup page that it no longer lists the R2 bucket
   or `BETTER_AUTH_SECRET`.

@@ -716,6 +716,15 @@ Then a first deploy stopped needing any setup beyond Workers Paid
 - The landing page offers the Deploy to Cloudflare button, which it had
   called "on the roadmap".
 
+The tester's retry, with the deploy command set to `pnpm run deploy`, gave
+the first working deploy on a fresh account: the log ended with
+`Attachments: off until R2 is enabled` and `BETTER_AUTH_SECRET: created`, the
+smoke suite passed against it, and sign-up, the board, and an AI breakdown
+worked. The run was neither timed nor README-only, and it used a dashboard
+import, so the two criteria above stay open for a clean button run. It found
+one bug: the task dialog showed the raw status value, such as `doing`, which
+now shows as its label.
+
 ---
 
 ### F-024: Public launch
