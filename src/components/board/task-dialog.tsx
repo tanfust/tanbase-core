@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { taskStatusLabels, taskStatuses } from "@/modules/tasks/contracts"
 import type { TaskStatus, TaskView } from "@/modules/tasks/contracts"
 import { dateFromDueAt, taskFormSchema } from "@/modules/tasks/schemas"
 import type { TaskValues } from "@/modules/tasks/schemas"
@@ -116,8 +117,10 @@ function TaskForm({
           {(field) => (
             <Field>
               <FieldLabel>Status</FieldLabel>
+              {/* items lets the trigger show a status's label, not its value. */}
               <Select
                 name={field.name}
+                items={taskStatusLabels}
                 value={field.state.value}
                 onValueChange={(value) => value && field.handleChange(value)}
               >
@@ -126,9 +129,11 @@ function TaskForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="todo">Todo</SelectItem>
-                    <SelectItem value="doing">Doing</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
+                    {taskStatuses.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {taskStatusLabels[value]}
+                      </SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
