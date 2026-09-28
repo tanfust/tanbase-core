@@ -64,8 +64,9 @@ change note as current truth. A superseded ADR must link to its replacement.
   violation.
 - Keep route options small. `validateSearch`, `loader`, `beforeLoad`, and
   `head` load with every page, the landing page included; only components
-  are split per route. Build heavy head data in a server function, as the
-  blog does, and check `pnpm perf:bundle`.
+  are split per route. Validate search params without Zod, as
+  `parseBoardSearch()` does, build heavy head data in a server function, as
+  the blog does, and check `pnpm perf:bundle`.
 
 ## Stack
 

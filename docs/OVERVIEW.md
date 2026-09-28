@@ -330,7 +330,7 @@ the checks enforce.
 | Metric                                                   | Target                             |
 | -------------------------------------------------------- | ---------------------------------- |
 | Landing page Lighthouse performance (mobile), production | 95 or higher in PageSpeed Insights |
-| Landing page JavaScript to render and hydrate            | under 160 KB gzipped               |
+| Landing page JavaScript to render and hydrate            | under 150 KB gzipped               |
 | Landing and board TTFB, p75, from Tunis and US East      | under 400 ms                       |
 | Realtime event between two devices                       | under 1 s                          |
 | Worker CPU per server-rendered request, p75              | under 50 ms                        |
@@ -339,13 +339,10 @@ The JavaScript budget started at 100 KB, which this stack cannot reach: React
 DOM alone is about 65 KB gzipped, and TanStack Router and Query add about
 25 KB more. F-019 moved the toast system out of public pages, which took the
 landing page from 159 KB to 145 KB, and set the budget just above it.
-The budget rose to 160 KB when Zod began validating `/app`'s search params
-(F-029): the router loads every route's options with the first page, so
-Zod's core ships with the landing page. It shares that core with the
-browser's WebMCP tools, which need full Zod for the MCP SDK, so the page
-carries about 13 KB more ([Performance](PERFORMANCE.md#2026-09-27-tanstack-libraries)).
-PostHog, when an installation sets its key, loads after hydration and is not
-counted; on `core.tanbase.dev` it adds about 100 KB.
+Route options, which the router loads with the first page, must stay small:
+a Zod schema for `/app`'s search params once added 14 KB to the landing page
+and cost it its Lighthouse score, so those params are parsed by hand
+([Performance](PERFORMANCE.md#2026-09-28-search-params-by-hand)).
 
 ---
 

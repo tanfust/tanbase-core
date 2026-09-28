@@ -36,12 +36,10 @@ so app-level features beyond that are left to forks.
 
 Build in this order:
 
-1. F-028 to F-031: TanStack Form, Table, Charts, and Markdown, waiting on
-   the merge and a production check
-2. F-023: One-click setup, waiting on the first button run and the outside
+1. F-023: One-click setup, waiting on the first button run and the outside
    fresh-account test
-3. F-024: Public launch
-4. F-022: Demo guardrails, after launch
+2. F-024: Public launch
+3. F-022: Demo guardrails, after launch
 
 ---
 
@@ -729,7 +727,7 @@ one pull request ([change record](changes/2026-09-27-tanstack-libraries.md)).
 
 ### F-028: Forms on TanStack Form
 
-**Module:** auth, tasks | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-005, F-007
+**Module:** auth, tasks | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-005, F-007
 
 **Acceptance criteria**
 
@@ -744,26 +742,28 @@ one pull request ([change record](changes/2026-09-27-tanstack-libraries.md)).
       `aria-describedby`
 - [x] Tests: schema and hook tests in the Workers runtime, the task dialog
       in jsdom, and a browser journey for sign-up and task validation
-- [ ] Verified in production
+- [x] Verified in production on 2026-09-28, version `d6c5a2f5`
 
 ### F-029: Task list view on TanStack Table
 
-**Module:** tasks | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-007, F-028
+**Module:** tasks | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-007, F-028
 
 **Acceptance criteria**
 
 - [x] A List tab beside the board renders the project's tasks with
       `@tanstack/react-table` and `src/components/ui/table.tsx`
 - [x] Sorting, a status filter, a search over titles and notes, and column
-      visibility, stored in `/app`'s search params and validated with a Zod
-      schema that falls back per param
+      visibility, stored in `/app`'s search params and validated with a
+      parser that falls back per param. It was a Zod schema at first; since
+      2026-09-28 it is written by hand, since route options load with every
+      page and Zod cost the landing page 14 KB
 - [x] The data comes from `boardQueryOptions()`; switching views never fetches
 - [x] A shared link reopens the same view, which the browser journey checks
-- [ ] Verified in production
+- [x] Verified in production on 2026-09-28, version `d6c5a2f5`
 
 ### F-030: Project stats on TanStack Charts
 
-**Module:** tasks | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-029
+**Module:** tasks | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-029
 
 TanStack Charts is Alpha: 0.18.0, whose minor releases may break. It could
 draw both charts, server-render them, and name them for screen readers, so it
@@ -779,11 +779,11 @@ replaced recharts, which nothing used. The version is pinned exactly.
       screen readers; the Worker renders the SVG, and the panel loads only
       when opened
 - [x] `recharts` and `src/components/ui/chart.tsx` are removed
-- [ ] Verified in production
+- [x] Verified in production on 2026-09-28, version `d6c5a2f5`
 
 ### F-031: Blog on TanStack Markdown
 
-**Module:** blog | **Priority:** P1 | **Status:** 🟡 In Progress | **Depends on:** F-016, F-017
+**Module:** blog | **Priority:** P1 | **Status:** ✅ Done | **Depends on:** F-016, F-017
 
 **Acceptance criteria**
 
@@ -797,7 +797,7 @@ replaced recharts, which nothing used. The version is pinned exactly.
 - [x] The first post, "Why TanBase Core"
 - [x] Removable: [module removal](MODULE_REMOVAL.md#blog) and the
       `remove-module` skill, with the removal run once and its checks green
-- [ ] Verified in production
+- [x] Verified in production on 2026-09-28, version `d6c5a2f5`
 
 ---
 

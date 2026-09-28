@@ -188,10 +188,35 @@ Local, on this branch:
 
 ## Deployment state
 
-| Target     | Commit | URL                        | Date       | Result       |
-| ---------- | ------ | -------------------------- | ---------- | ------------ |
-| Local      | branch | `http://localhost:4391`    | 2026-09-27 | Passed       |
-| Production | —      | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit    | URL                        | Date       | Result                          |
+| ---------- | --------- | -------------------------- | ---------- | ------------------------------- |
+| Local      | branch    | `http://localhost:4391`    | 2026-09-27 | Passed                          |
+| Production | `946d08c` | `https://core.tanbase.dev` | 2026-09-28 | Passed; Lighthouse alarm failed |
+
+Production, 2026-09-28, merge commit `946d08c`:
+
+- Workers Build `47d6a595` deployed version `d6c5a2f5` at 08:10 UTC and
+  passed its post-deploy smoke, the first to check the blog.
+- `pnpm smoke -- --environment production --expect-version d6c5a2f5-ba05-4221-ad19-e92c401e365a`
+  passed at 08:15 UTC.
+- `/blog`, `/blog/why-tanbase-core`, `/blog/rss.xml`, and `/sitemap.xml`
+  answered `200` in about 140 ms from this Mac; the sitemap lists the
+  homepage, `/blog`, and the post; `/og/blog.png` and
+  `/og/blog-why-tanbase-core.png` were `Cf-Cache-Status: HIT`; a missing post
+  answered `404`.
+- The Production performance run failed its Lighthouse alarm: 159.1 KB of
+  landing JavaScript in 16 files, within the 160 KB budget, but a median of
+  88, where the five runs before this change scored 91 to 96.
+  - From this Mac, `pnpm perf:lighthouse` scored a median of 89 for the
+    landing page and 99 for the post. Four runs of the Lighthouse CLI, each in
+    a fresh browser as PageSpeed Insights uses, scored 95 to 100. The
+    repository's script runs every pass in one browser, where later passes
+    score lower. PageSpeed Insights' free API had no quota left that day.
+  - With mobile throttling in Chrome, the headline painted at about 1.2 s,
+    before the scripts finished at about 2.6 s, with no hydration errors.
+  - The follow-up
+    [2026-09-28-search-parser-and-signed-in-redirect](2026-09-28-search-parser-and-signed-in-redirect.md)
+    takes Zod off the landing page.
 
 ## Rollback notes
 
