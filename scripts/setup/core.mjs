@@ -8,6 +8,139 @@ export const localTurnstileTestSecret = "1x0000000000000000000000000000000AA"
 
 const workerNamePattern = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
 
+/**
+ * The cloud region in the same metro area as a D1 primary's colo, the
+ * three-letter airport code in `meta.served_by_colo`. Only pairs in the same
+ * city, or very close, belong here. Every value must be an identifier from
+ * `GET /accounts/{account_id}/workers/placement/regions`.
+ */
+export const placementRegionByColo = Object.freeze({
+  AMS: "azure:westeurope",
+  ARN: "aws:eu-north-1",
+  BOM: "aws:ap-south-1",
+  CDG: "aws:eu-west-3",
+  DUB: "aws:eu-west-1",
+  FRA: "aws:eu-central-1",
+  GRU: "aws:sa-east-1",
+  HKG: "aws:ap-east-1",
+  HND: "aws:ap-northeast-1",
+  IAD: "aws:us-east-1",
+  ICN: "aws:ap-northeast-2",
+  JNB: "azure:southafricanorth",
+  KIX: "aws:ap-northeast-3",
+  LAX: "gcp:us-west2",
+  LHR: "aws:eu-west-2",
+  MAD: "azure:spaincentral",
+  MEL: "aws:ap-southeast-4",
+  MRS: "azure:francesouth",
+  MXP: "aws:eu-south-1",
+  NRT: "aws:ap-northeast-1",
+  ORD: "azure:northcentralus",
+  SEA: "azure:westus2",
+  SIN: "aws:ap-southeast-1",
+  SJC: "aws:us-west-1",
+  SYD: "aws:ap-southeast-2",
+  VIE: "azure:austriaeast",
+  WAW: "azure:polandcentral",
+  YYZ: "gcp:northamerica-northeast2",
+  ZRH: "azure:switzerlandnorth",
+})
+
+/**
+ * One region per D1 location hint, `meta.served_by_region`, for a colo
+ * missing from the table above.
+ */
+export const placementRegionByLocationHint = Object.freeze({
+  APAC: "aws:ap-southeast-1",
+  EEUR: "azure:polandcentral",
+  ENAM: "aws:us-east-1",
+  OC: "aws:ap-southeast-2",
+  WEUR: "aws:eu-central-1",
+  WNAM: "aws:us-west-1",
+})
+
+const placementRegionPattern = /^[a-z]+:[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+/** Whether a value has the `provider:region` shape, such as `aws:us-east-1`. */
+export function isPlacementRegion(value) {
+  return typeof value === "string" && placementRegionPattern.test(value)
+}
+
+/**
+ * Wrangler arguments for one read-only query whose result reports where a
+ * D1 database's primary is. `database` is a binding, name, or ID.
+ */
+export function d1LocationArgs(database, environment) {
+  return [
+    "d1",
+    "execute",
+    database,
+    ...(environment ? ["--env", environment] : []),
+    "--remote",
+    "--command",
+    "select 1",
+    "--json",
+  ]
+}
+
+/**
+ * Reads `wrangler d1 execute --remote --json` output and returns the colo
+ * and location hint of the primary that served the query, or null when the
+ * output does not say, including when a replica served it.
+ */
+export function parseD1Location(output) {
+  if (typeof output !== "string") return null
+  const text = output.trim()
+  let value = null
+  // Anything Wrangler prints before the JSON, such as a warning, is skipped.
+  for (const candidate of [text, text.slice(Math.max(text.indexOf("["), 0))]) {
+    try {
+      value = JSON.parse(candidate)
+      break
+    } catch {
+      value = null
+    }
+  }
+  const items = Array.isArray(value)
+    ? value
+    : Array.isArray(value?.result)
+      ? value.result
+      : [value]
+
+  for (const item of items) {
+    const meta = item?.meta
+    if (item?.success === false || meta?.served_by_primary !== true) continue
+    const colo = meta.served_by_colo
+    const region = meta.served_by_region
+    if (typeof colo !== "string" || !/^[a-z]{3}$/i.test(colo)) continue
+    if (typeof region !== "string" || !/^[a-z]+$/i.test(region)) continue
+    return { colo: colo.toUpperCase(), region: region.toUpperCase() }
+  }
+  return null
+}
+
+/**
+ * The placement region next to a D1 primary: by its colo when the colo is
+ * known, else by its location hint, else null.
+ */
+export function placementRegionFor(location) {
+  if (!location) return null
+  const colo = String(location.colo ?? "").toUpperCase()
+  const hint = String(location.region ?? "").toUpperCase()
+  if (Object.hasOwn(placementRegionByColo, colo)) {
+    return placementRegionByColo[colo]
+  }
+  if (Object.hasOwn(placementRegionByLocationHint, hint)) {
+    return placementRegionByLocationHint[hint]
+  }
+  return null
+}
+
+/** The `placement` value for a region, on one line as the repository writes it. */
+export function placementValue(region) {
+  return `{ "region": ${JSON.stringify(region)} }`
+}
+
 export function deriveWorkerName(value) {
   const normalized = value
     .toLowerCase()
@@ -27,6 +160,7 @@ export function parseArguments(argv, defaultWorkerName = "tanbase-core") {
     dryRun: false,
     help: false,
     localOnly: false,
+    placement: null,
     reuseExisting: false,
     workerName: defaultWorkerName,
     yes: false,
@@ -59,6 +193,16 @@ export function parseArguments(argv, defaultWorkerName = "tanbase-core") {
       case "--name":
         options.workerName = argv[++index] ?? ""
         break
+      case "--placement": {
+        const value = argv[++index]
+        if (value !== "default" && !isPlacementRegion(value)) {
+          throw new Error(
+            "--placement takes a region such as azure:francesouth, or default."
+          )
+        }
+        options.placement = value
+        break
+      }
       case "--reuse-existing":
         options.reuseExisting = true
         break
@@ -80,11 +224,24 @@ export function parseArguments(argv, defaultWorkerName = "tanbase-core") {
   if (options.localOnly && options.accountId) {
     throw new Error("--account-id cannot be combined with --local-only.")
   }
+  if (options.localOnly && options.placement) {
+    throw new Error("--placement cannot be combined with --local-only.")
+  }
 
   return options
 }
 
-export function setupPlan({ localOnly }) {
+function placementStep(placement) {
+  if (placement === "default") {
+    return "Keep the production Worker on default placement (--placement default)"
+  }
+  if (placement) {
+    return `Place the production Worker in ${placement} (--placement)`
+  }
+  return "Place the production Worker next to its D1 primary, or keep default placement when its location cannot be read"
+}
+
+export function setupPlan({ localOnly, placement = null }) {
   const localSteps = [
     "Create local-only Better Auth and Turnstile test secrets when missing",
     "Apply and seed the isolated local D1 database",
@@ -104,6 +261,7 @@ export function setupPlan({ localOnly }) {
     "Install locked dependencies",
     "Authorize and select a Cloudflare account",
     "Create or safely reuse the production Worker and D1 database",
+    placementStep(placement),
     "Create or safely reuse the production R2 bucket, or turn attachments off when R2 is not enabled",
     "Create or safely reuse the reminder queue and its dead-letter queue, or turn reminders off",
     "Personalize Wrangler, canonical URLs, and local configuration",
@@ -128,11 +286,78 @@ function parseJsonc(source) {
   return value
 }
 
+const formattingOptions = { eol: "\n", insertSpaces: true, tabSize: 2 }
+
 function updateJsonc(source, path, value) {
-  const edits = modify(source, path, value, {
-    formattingOptions: { eol: "\n", insertSpaces: true, tabSize: 2 },
-  })
+  const edits = modify(source, path, value, { formattingOptions })
   return applyEdits(source, edits)
+}
+
+/**
+ * Sets the `placement` object at `path` to `{ "region": region }`, or removes
+ * it when `region` is null. A new hint goes right after the section's `name`.
+ * The value is written on one line: jsonc-parser would spread it over three
+ * without the trailing comma Prettier adds, which fails `pnpm format:check`.
+ */
+function writePlacement(source, path, region) {
+  if (region === null) return updateJsonc(source, path, undefined)
+  if (!isPlacementRegion(region)) {
+    throw new Error(
+      `${region} is not a placement region such as azure:francesouth.`
+    )
+  }
+  const marker = "<tanbase placement>"
+  const edits = modify(source, path, marker, {
+    formattingOptions,
+    getInsertionIndex: (properties) => {
+      const name = properties.indexOf("name")
+      return name >= 0 ? name + 1 : properties.length
+    },
+  })
+  return applyEdits(source, edits).replace(JSON.stringify(marker), () =>
+    placementValue(region)
+  )
+}
+
+/**
+ * Sets or removes (`region: null`) the placement hint of one section of
+ * wrangler.jsonc: `env.<environment>`, or the top level without one.
+ */
+export function updatePlacement(source, { environment = null, region }) {
+  const config = parseJsonc(source)
+  if (environment && !config.env?.[environment]) {
+    throw new Error(`wrangler.jsonc has no env.${environment} section.`)
+  }
+  return writePlacement(
+    source,
+    environment ? ["env", environment, "placement"] : ["placement"],
+    region
+  )
+}
+
+/**
+ * The `DB` database and placement of one section of wrangler.jsonc:
+ * `env.<environment>`, or the top level, which the Deploy to Cloudflare
+ * button deploys, without one.
+ */
+export function readPlacementTarget(source, environment = null) {
+  const config = parseJsonc(source)
+  const section = environment ? config.env?.[environment] : config
+  const label = environment ? `env.${environment}` : "the top level"
+  if (!section) {
+    throw new Error(`wrangler.jsonc has no env.${environment} section.`)
+  }
+  const database = (section.d1_databases ?? []).find(
+    (candidate) => candidate.binding === "DB"
+  )
+  if (!database) {
+    throw new Error(`${label} of wrangler.jsonc has no DB binding.`)
+  }
+  return {
+    databaseId: database.database_id ?? null,
+    databaseName: database.database_name ?? null,
+    placement: section.placement ?? null,
+  }
 }
 
 export function readWranglerInstallation(source) {
@@ -148,6 +373,7 @@ export function readWranglerInstallation(source) {
     filesBucketName:
       production?.r2_buckets?.find((bucket) => bucket.binding === "FILES")
         ?.bucket_name ?? null,
+    placementRegion: production?.placement?.region ?? null,
     productionUrl: production?.vars?.BETTER_AUTH_URL ?? null,
     reminderQueueName:
       production?.queues?.producers?.find(
@@ -158,6 +384,12 @@ export function readWranglerInstallation(source) {
   }
 }
 
+/**
+ * Personalizes wrangler.jsonc for one installation. `placementRegion` sets
+ * the production placement hint to that region, `null` removes it, and
+ * leaving it out means the database's location is unknown: the hint then
+ * stays for the same database and is removed for a different one.
+ */
 export function updateWranglerInstallation(
   source,
   {
@@ -170,6 +402,7 @@ export function updateWranglerInstallation(
     filesBucketName,
     localDatabaseName,
     localFilesBucketName,
+    placementRegion,
     productionUrl,
     reminderQueueName,
     turnstileSiteKey,
@@ -257,19 +490,92 @@ export function updateWranglerInstallation(
       ])
     }
   }
-  // A placement hint describes where one database's primary lives, so it
-  // cannot follow production to a different database.
+  const updated = updates.reduce(
+    (current, [path, value]) => updateJsonc(current, path, value),
+    source
+  )
+
+  // A placement hint describes where one database's primary lives. A known
+  // location sets it; without one, it cannot follow production to a
+  // different database.
+  const placementPath = ["env", "production", "placement"]
+  if (placementRegion !== undefined) {
+    return writePlacement(updated, placementPath, placementRegion)
+  }
   if (
     config.env?.production?.placement !== undefined &&
     config.env.production.d1_databases?.[0]?.database_id !== databaseId
   ) {
-    updates.push([["env", "production", "placement"], undefined])
+    return writePlacement(updated, placementPath, null)
+  }
+  return updated
+}
+
+/**
+ * One line for the installer: where the D1 primary is and the placement
+ * production ends up with. `placementRegion` is the resulting hint, or null.
+ */
+export function placementMessage({ location, placementRegion, requested }) {
+  if (requested === "default") {
+    return "Placement: default, as --placement asked, so production has no placement hint."
+  }
+  if (requested) return `Placement: ${requested}, as --placement asked.`
+
+  const primary = location
+    ? `The D1 primary is in ${location.colo} (${location.region})`
+    : "The D1 primary's location could not be read"
+  if (location && placementRegionFor(location) && placementRegion) {
+    return `${primary}, so production is placed in ${placementRegion}.`
+  }
+  const reason = location
+    ? `${primary}, which has no known placement region`
+    : primary
+  return placementRegion
+    ? `${reason}; production keeps ${placementRegion}, the hint this database already had.`
+    : `${reason}, so production stays on default placement. Run pnpm run placement --env production to set it later.`
+}
+
+/** Options for `pnpm run placement`. */
+export function parsePlacementArguments(argv) {
+  const options = {
+    accountId: null,
+    environment: null,
+    help: false,
+    write: false,
   }
 
-  return updates.reduce(
-    (updated, [path, value]) => updateJsonc(updated, path, value),
-    source
-  )
+  for (let index = 0; index < argv.length; index += 1) {
+    const argument = argv[index]
+    switch (argument) {
+      case "--":
+        break
+      case "--account-id":
+        options.accountId = argv[++index]?.trim() || null
+        if (!options.accountId) {
+          throw new Error("--account-id needs a Cloudflare account ID.")
+        }
+        break
+      case "--env":
+        options.environment = argv[++index]?.trim() || null
+        if (!options.environment || options.environment.startsWith("-")) {
+          throw new Error(
+            "--env needs an environment name, such as production."
+          )
+        }
+        break
+      case "--help":
+      case "-h":
+        options.help = true
+        break
+      case "--write":
+        options.write = true
+        break
+      default:
+        throw new Error(`Unknown option: ${argument}`)
+    }
+  }
+
+  return options
 }
 
 /** Messages that exhaust their retries move to this queue. */

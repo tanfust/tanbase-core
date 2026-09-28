@@ -1,7 +1,7 @@
 ---
 status: active
 audience: maintainers, operators, agents
-last_verified: 2026-09-27
+last_verified: 2026-09-28
 ---
 
 # Deployment runbook
@@ -102,6 +102,9 @@ After the first deploy:
    canonical URLs, cookies, and tokens use one origin.
 3. Before a public launch, set up email (below) and Turnstile, so sign-up
    requires a verified address and a challenge.
+4. Run the Worker next to its database: in a clone of your repository, run
+   `pnpm run placement --write`, then commit and push
+   ([Worker placement](#worker-placement)).
 
 `pnpm run deploy` refuses to run in the upstream `tanfust/tanbase-core`
 checkout, where the top level would replace the TanBase demo's production
@@ -188,9 +191,32 @@ environment sets:
 "placement": { "region": "azure:francesouth" }
 ```
 
-To find a database's primary, run a read-only query through the D1 API and
-read `served_by_region` and `served_by_colo` from the result's `meta` where
-`served_by_primary` is `true`. List the accepted region identifiers with
+The guided installer chooses the hint for its installation
+([Placement](INSTALLING.md#placement)). For a deployment made another way,
+run `pnpm run placement`. It runs one read-only query, `select 1`, against the
+`DB` database of one section of `wrangler.jsonc`. It prints the primary's colo
+and location hint, the recommended `placement` block, and the section it
+belongs in:
+
+```sh
+# The top level, which the Deploy to Cloudflare button deploys
+pnpm run placement
+# env.production
+pnpm run placement --env production
+```
+
+Add `--write` to write the block into that section of `wrangler.jsonc`, then
+commit and push the change; the next deploy applies it. For a button
+deployment, that is the repository the button created, whose Workers Build
+deploys the top level. Add `--account-id <id>` when the Wrangler login can
+access several accounts. The command maps the colo to a cloud region in the
+same city, such as `MRS` to `azure:francesouth`, and otherwise the location
+hint to one region. When it cannot read the location, it stops without
+changing anything.
+
+To find a database's primary by hand, run a read-only query through the D1
+API and read `served_by_region` and `served_by_colo` from the result's `meta`
+where `served_by_primary` is `true`. List the accepted region identifiers with
 `GET /accounts/{account_id}/workers/placement/regions`, and choose the one
 nearest the primary.
 
@@ -199,10 +225,20 @@ served from the location nearest the visitor, and each Durable Object stays
 where it was created. Dynamic responses then carry a `cf-placement` header
 such as `remote-MRS` (forwarded to Marseille) or `local-MRS` (already there).
 
-The hint belongs to one database. The guided installer removes it when it
-points production at a different database, which leaves the Worker on default
-placement until that installation chooses its own. To remove placement, delete
-the key and deploy.
+The hint belongs to one database. If the primary ever moves, the hint must
+change: run `pnpm run placement --env production --write` again and deploy.
+When the guided installer cannot read the location, it keeps the hint for the
+same database and removes it for a different one, which leaves the Worker on
+default placement. To remove placement, delete the key and deploy.
+
+#### Why not Smart Placement
+
+Since 2025-02-13, Smart Placement (`"mode": "smart"`) no longer runs Workers
+next to the D1 databases they are bound to. It uses the same latency-based
+logic as for any Worker, which needs consistent traffic from several
+locations. At low traffic it reports `INSUFFICIENT_INVOCATIONS` and does not
+move the Worker. The `host` and `hostname` options target external services,
+not D1. For D1, an explicit `region` is the reliable choice.
 
 ### Production R2 bucket
 
