@@ -217,6 +217,17 @@ async function authenticate(manager) {
   return JSON.parse(identity.output)
 }
 
+// Setup rewrites names and values in wrangler.jsonc and src/lib/site.ts. A
+// new name can change where Prettier wraps a line, and `pnpm verify` checks
+// formatting first, so both files are formatted before each verify.
+async function formatConfiguration(manager) {
+  await runPnpm(
+    manager,
+    ["exec", "prettier", "--write", "wrangler.jsonc", "src/lib/site.ts"],
+    { cwd: root }
+  )
+}
+
 async function ensureLocalSecret() {
   let source = ""
   try {
@@ -560,6 +571,7 @@ async function main() {
     await runPnpm(manager, ["db:migrate:local"], { cwd: root })
     await runPnpm(manager, ["db:seed:local"], { cwd: root })
     await runPnpm(manager, ["cf:typegen"], { cwd: root })
+    await formatConfiguration(manager)
     await runPnpm(manager, ["verify"], { cwd: root })
     heading("TanBase local setup is complete")
     process.stdout.write("Run pnpm dev and open http://localhost:3000.\n")
@@ -748,6 +760,7 @@ async function main() {
   await runPnpm(manager, ["db:migrate:local"], { cwd: root })
   await runPnpm(manager, ["db:seed:local"], { cwd: root })
   await runPnpm(manager, ["cf:typegen"], { cwd: root })
+  await formatConfiguration(manager)
   await runPnpm(manager, ["verify"], { cwd: root })
   await runPnpm(manager, ["cf:dry-run:production"], {
     cwd: root,
@@ -804,6 +817,7 @@ async function main() {
       updateSiteOrigin(await readFile(sitePath, "utf8"), deploymentUrl)
     )
     await runPnpm(manager, ["cf:typegen"], { cwd: root })
+    await formatConfiguration(manager)
     await runPnpm(manager, ["verify"], { cwd: root })
     await runPnpm(manager, ["cf:dry-run:production"], {
       cwd: root,
