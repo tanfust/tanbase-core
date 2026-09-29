@@ -160,6 +160,14 @@ first user's rows.
   deploy never fails on it ([ADR-0021](docs/decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
 - Never make a deployment ask for a secret the Worker can create itself:
   `pnpm run deploy` creates `BETTER_AUTH_SECRET` on the first deploy.
+- The Deploy button asks for every top-level variable and resource name and
+  refuses an empty field. Never add a top-level variable whose default does
+  not work, or a resource whose name should follow the Worker's, as the
+  reminder queue does; have the code treat the variable as unset, or bind the
+  resource in `scripts/deploy.mjs`, and list the setting in DEPLOYMENT's
+  "Finishing the setup" ([ADR-0022](docs/decisions/0022-setup-page-asks-nothing-that-can-break.md)).
+- Read `APP_ENV` through `appEnvironment()` in `src/platform/environment.ts`:
+  the top level leaves it unset, which means production.
 - Read it from `env` in a `.server.ts` getter that returns `null` when the
   binding is absent, so an installation without it degrades instead of
   failing.

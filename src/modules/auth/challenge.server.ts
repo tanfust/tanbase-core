@@ -1,9 +1,14 @@
 import { env } from "cloudflare:workers"
 
 import { isEmailDeliveryConfigured } from "@/modules/email/send-email.server"
+import { configuredOrigin } from "@/platform/origin"
+import { getRequestContext } from "@/platform/request-context"
 
-import { findInstallationProblem } from "./installation.server"
-import type { InstallationProblem } from "./installation"
+import type { InstallationProblem, OriginMismatch } from "./installation"
+import {
+  findInstallationProblem,
+  findOriginMismatch,
+} from "./installation.server"
 
 export interface AuthChallengeConfig {
   turnstileSiteKey: string | null
@@ -14,16 +19,22 @@ export interface AuthChallengeConfig {
   emailDelivery: boolean
   /** What an unfinished deployment is missing, for the auth pages to say. */
   installationProblem: InstallationProblem | null
+  /** Set when sign-in works only at another origin than this page's. */
+  originMismatch: OriginMismatch | null
 }
 
 // The site key is public. The paired secret never leaves the Worker.
 export async function readAuthChallengeConfig(): Promise<AuthChallengeConfig> {
   // Generated types narrow the key to this repository's values; an
   // installation without a widget sets it to "".
-  const siteKey: string = env.TURNSTILE_SITE_KEY
+  const siteKey: string = env.TURNSTILE_SITE_KEY ?? ""
   return {
     turnstileSiteKey: siteKey || null,
     emailDelivery: isEmailDeliveryConfigured(env),
     installationProblem: await findInstallationProblem(env),
+    originMismatch: findOriginMismatch(
+      configuredOrigin(env.BETTER_AUTH_URL),
+      getRequestContext()?.origin
+    ),
   }
 }

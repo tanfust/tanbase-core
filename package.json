@@ -112,18 +112,6 @@
   },
   "cloudflare": {
     "bindings": {
-      "BETTER_AUTH_URL": {
-        "description": "Leave empty to use the deployment's own URL. Set it to your canonical origin, such as `https://app.example.com`, once you add a custom domain or enable email reminders."
-      },
-      "EMAIL_FROM": {
-        "description": "Leave empty: email is logged, not sent, and sign-up needs no verification. To send, set up [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) and add an `EMAIL` binding first."
-      },
-      "TURNSTILE_SITE_KEY": {
-        "description": "Leave empty for the first deploy: the sign-up challenge stays off. To use [Turnstile](https://developers.cloudflare.com/turnstile/), add its secret as the `TURNSTILE_SECRET_KEY` Worker secret, then set the widget's site key here. A site key without the secret stops sign-in."
-      },
-      "POSTHOG_HOST": {
-        "description": "Optional. Analytics stay off unless the `POSTHOG_KEY` secret is set."
-      },
       "AI_MODEL": {
         "description": "The Workers AI model that breaks a task into subtasks. It runs on your Cloudflare account: Workers AI includes 10,000 Neurons a day on every plan, then costs $0.011 per 1,000 Neurons. One breakdown in the TanBase demo cost $0.000086."
       },

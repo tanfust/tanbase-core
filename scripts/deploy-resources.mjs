@@ -33,12 +33,17 @@ export function deployResources(source) {
   const bucket = (config.r2_buckets ?? []).find(
     (candidate) => candidate.binding === "FILES"
   )
+  const queue = (config.queues?.producers ?? []).find(
+    (candidate) => candidate.binding === "EMAIL_QUEUE"
+  )
   return {
     database: database?.database_name
       ? { name: database.database_name, id: database.database_id ?? null }
       : null,
     // Copies made before ADR-0021 declared the bucket; they keep its name.
     bucket: bucket?.bucket_name ? { name: bucket.bucket_name } : null,
+    // Copies made before ADR-0022 declared the reminder queue.
+    queue: queue?.queue ? { name: queue.queue } : null,
     name: typeof config.name === "string" ? config.name : null,
   }
 }
@@ -69,6 +74,56 @@ export function filesBucketName(worker) {
     .slice(0, bucketNameLimit - bucketSuffix.length)
     .replace(/-$/, "")
   return `${base || "tanbase-core"}${bucketSuffix}`
+}
+
+const queueNameLimit = 63
+const deadLetterSuffix = "-dlq"
+
+/**
+ * The reminder queue for a Worker, `<worker>-email`, short enough that its
+ * dead-letter queue, `<worker>-email-dlq`, is a valid queue name too.
+ */
+export function emailQueueName(worker) {
+  const suffix = "-email"
+  const base = worker
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, queueNameLimit - suffix.length - deadLetterSuffix.length)
+    .replace(/-$/, "")
+  return `${base || "tanbase-core"}${suffix}`
+}
+
+/**
+ * A copy of a generated configuration that produces reminders on `queue` as
+ * EMAIL_QUEUE and consumes them, with `<queue>-dlq` for messages that fail
+ * three retries. Wrangler creates missing queues while it deploys. Other
+ * queues are kept.
+ */
+export function withEmailQueue(config, queue) {
+  const producers = (config.queues?.producers ?? []).filter(
+    (candidate) => candidate.binding !== "EMAIL_QUEUE"
+  )
+  const consumers = (config.queues?.consumers ?? []).filter(
+    (candidate) => candidate.queue !== queue
+  )
+  return {
+    ...config,
+    queues: {
+      ...config.queues,
+      producers: [...producers, { binding: "EMAIL_QUEUE", queue }],
+      consumers: [
+        ...consumers,
+        {
+          queue,
+          max_retries: 3,
+          retry_delay: 120,
+          dead_letter_queue: `${queue}${deadLetterSuffix}`,
+        },
+      ],
+    },
+  }
 }
 
 /** Whether a generated configuration is a build of the top level. */

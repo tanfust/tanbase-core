@@ -13,6 +13,7 @@ import { siteConfig } from "@/lib/site"
 import type { SendEmailInput } from "@/modules/email/types"
 import { ensureDefaultProject } from "@/modules/tasks/repository.server"
 import { log } from "@/platform/log"
+import { appEnvironment } from "@/platform/environment"
 import { configuredOrigin } from "@/platform/origin"
 import { getRequestContext } from "@/platform/request-context"
 
@@ -21,7 +22,8 @@ import { authSecretUsable } from "./installation.server"
 import { authBodyError } from "./schemas"
 
 interface AuthEnvironment {
-  APP_ENV: "local" | "production"
+  /** Unset at the top level of wrangler.jsonc, where it means production. */
+  APP_ENV?: "local" | "production"
   BETTER_AUTH_SECRET?: string
   /** The public origin. Unset, auth uses the origin of the current request. */
   BETTER_AUTH_URL?: string
@@ -129,7 +131,7 @@ function captchaPlugins(environment: AuthEnvironment, origin: string) {
       endpoints: captchaProtectedEndpoints,
       // Test keys report a placeholder hostname, so only production pins it.
       allowedHostnames:
-        environment.APP_ENV === "production"
+        appEnvironment(environment.APP_ENV) === "production"
           ? [new URL(origin).hostname]
           : undefined,
     }),
@@ -263,7 +265,7 @@ const maxCachedOrigins = 8
 export function authFor(environment: AuthEnvironment, origin: string): Auth {
   const key = JSON.stringify([
     origin,
-    environment.APP_ENV,
+    appEnvironment(environment.APP_ENV),
     environment.BETTER_AUTH_SECRET,
     environment.BETTER_AUTH_URL,
     environment.EMAIL_FROM,

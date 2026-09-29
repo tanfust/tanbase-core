@@ -74,8 +74,12 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const search = Route.useSearch()
-  const { turnstileSiteKey, emailDelivery, installationProblem } =
-    Route.useLoaderData()
+  const {
+    turnstileSiteKey,
+    emailDelivery,
+    installationProblem,
+    originMismatch,
+  } = Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -144,7 +148,10 @@ function LoginPage() {
 
   return (
     <AuthShell>
-      <SetupNotice problem={installationProblem} />
+      <SetupNotice
+        problem={installationProblem}
+        originMismatch={originMismatch}
+      />
       {search.verified && (
         <Alert>
           <CheckCircle2Icon aria-hidden="true" />

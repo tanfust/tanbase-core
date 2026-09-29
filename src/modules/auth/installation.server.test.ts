@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import {
   authSecretUsable,
   findInstallationProblem,
+  findOriginMismatch,
 } from "./installation.server"
 import { hasAuthTables } from "./repository.server"
 import { getPageSession } from "./session.server"
@@ -119,5 +120,25 @@ describe("getPageSession", () => {
         problem: async () => null,
       })
     ).rejects.toThrow("not configured")
+  })
+})
+
+describe("findOriginMismatch", () => {
+  it("reports a configured origin that is not the page's", () => {
+    expect(
+      findOriginMismatch(
+        "https://klapt.ai",
+        "https://klapt.example.workers.dev"
+      )
+    ).toEqual({
+      configured: "https://klapt.ai",
+      current: "https://klapt.example.workers.dev",
+    })
+  })
+
+  it("stays quiet when they match or either is unknown", () => {
+    expect(findOriginMismatch("https://a.test", "https://a.test")).toBeNull()
+    expect(findOriginMismatch(null, "https://a.test")).toBeNull()
+    expect(findOriginMismatch("https://a.test", undefined)).toBeNull()
   })
 })

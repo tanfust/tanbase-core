@@ -1,20 +1,38 @@
 import { env } from "cloudflare:workers"
 
+import { log } from "./log"
 import { getRequestContext } from "./request-context"
 
 /**
- * The origin of a configured `BETTER_AUTH_URL` value, or null when it is unset.
- * A value that is set but is not a URL throws, so a typo fails loudly
- * instead of silently falling back to the request's origin.
+ * The origin of a configured `BETTER_AUTH_URL` value, or null when it is
+ * unset or unusable. A bare host, such as `app.example.com`, means https.
+ * Anything that is still not an http or https URL counts as unset, so the
+ * site keeps running on each request's origin instead of failing every page
+ * (ADR-0022); the Worker logs it.
  */
 export function configuredOrigin(value: string | undefined): string | null {
-  if (!value) return null
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`
   try {
-    return new URL(value).origin
+    const url = new URL(withScheme)
+    if (url.protocol === "http:" || url.protocol === "https:") return url.origin
   } catch {
-    throw new Error("BETTER_AUTH_URL must be an absolute URL")
+    // Falls through to the warning below.
   }
+  if (!warnedInvalid) {
+    warnedInvalid = true
+    log.warn("BETTER_AUTH_URL is not a web address, so it is ignored.", {
+      event: "origin.invalid_setting",
+    })
+  }
+  return null
 }
+
+// Once per isolate: the origin is read on every request.
+let warnedInvalid = false
 
 /**
  * This deployment's public origin: `BETTER_AUTH_URL` when an installation

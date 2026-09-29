@@ -282,6 +282,10 @@ CLAUDE.md
 - The auth forms turn Cloudflare's error page for a Worker over its CPU
   limit, error 1102, into a message that the account likely needs Workers
   Paid.
+- While `BETTER_AUTH_URL` names another origin than a page's, such as a
+  custom domain whose DNS is not ready, the sign-in pages say where sign-in
+  works. A bare host means https; a value that is not a web address is
+  ignored ([ADR-0022](decisions/0022-setup-page-asks-nothing-that-can-break.md)).
 - The auth route applies `AUTH_LIMITER` per client IP and endpoint before Better
   Auth runs. Client IPs come from `cf-connecting-ip`, and Better Auth's
   in-memory limiter is disabled because Worker isolates do not share memory.

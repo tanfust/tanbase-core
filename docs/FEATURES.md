@@ -725,6 +725,24 @@ import, so the two criteria above stay open for a clean button run. It found
 one bug: the task dialog showed the raw status value, such as `doing`, which
 now shows as its label.
 
+On 2026-09-29 a button run stopped on the setup page. It asked for
+`BETTER_AUTH_URL`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`, and `POSTHOG_HOST`,
+whose descriptions said to leave them empty, and refused to continue while
+they were. It also named the queue `tanbase-core-email`, the template's
+name. The setup page now asks for nothing that can break a first deploy
+([ADR-0022](decisions/0022-setup-page-asks-nothing-that-can-break.md)):
+
+- The top level sets only the three `AI_*` variables. A Worker without
+  `APP_ENV` runs as production, and each other variable is off when unset.
+- `pnpm run deploy` binds the reminder queue `<worker>-email` and its
+  dead-letter queue, as it binds R2.
+- Variables set in the dashboard survive later deploys (`keep_vars`).
+- A bare host in `BETTER_AUTH_URL` means `https://`, a value that is not a
+  web address is ignored, and while it names another origin than the page's,
+  the sign-in pages say where sign-in works.
+- [Deploying](DEPLOYMENT.md#finishing-the-setup) lists each optional
+  setting and where to set it.
+
 ---
 
 ### F-024: Public launch

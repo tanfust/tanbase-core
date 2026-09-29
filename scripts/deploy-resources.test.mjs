@@ -8,6 +8,7 @@ import {
   attachmentsOffMessage,
   bucketStatus,
   deployResources,
+  emailQueueName,
   filesBucketName,
   isTopLevelBuild,
   listsDatabase,
@@ -16,6 +17,7 @@ import {
   resolveWorkerName,
   secretStatus,
   shouldCreateSecret,
+  withEmailQueue,
   withFilesBinding,
 } from "./deploy-resources.mjs"
 
@@ -62,6 +64,7 @@ test("reads the database, the Worker name, and no bucket from the top level", ()
   assert.deepEqual(deployResources(readFileSync("wrangler.jsonc", "utf8")), {
     database: { name: "tanbase-core", id: null },
     bucket: null,
+    queue: null,
     name: "tanbase-core",
   })
 })
@@ -76,6 +79,7 @@ test("keeps the bucket a copy made before ADR-0021 declares", () => {
     {
       database: { name: "shop", id: "abc" },
       bucket: { name: "legacy-files" },
+      queue: null,
       name: "shop",
     }
   )
@@ -323,4 +327,54 @@ test("says whether task breakdown uses Workers AI, and how to turn it off", () =
     "AI task breakdown: off."
   )
   assert.equal(aiSummary({ vars }), "AI task breakdown: off.")
+})
+
+test("names the reminder queue after the Worker, leaving room for its dead-letter queue", () => {
+  assert.equal(emailQueueName("klapt"), "klapt-email")
+  assert.equal(emailQueueName("My App"), "my-app-email")
+  assert.equal(emailQueueName("---"), "tanbase-core-email")
+  const long = emailQueueName("a".repeat(80))
+  assert.ok(`${long}-dlq`.length <= 63)
+  assert.match(long, /^a+-email$/)
+})
+
+test("keeps the queue a copy made before ADR-0022 declares", () => {
+  assert.deepEqual(
+    deployResources(`{
+      "name": "shop",
+      "queues": { "producers": [{ "binding": "EMAIL_QUEUE", "queue": "shop-mail" }] },
+    }`).queue,
+    { name: "shop-mail" }
+  )
+})
+
+test("produces and consumes reminders on the Worker's queue", () => {
+  const config = {
+    name: "x",
+    queues: {
+      producers: [
+        { binding: "EMAIL_QUEUE", queue: "old" },
+        { binding: "OTHER", queue: "other" },
+      ],
+      consumers: [{ queue: "other" }],
+    },
+  }
+  const queues = withEmailQueue(config, "klapt-email").queues
+  assert.deepEqual(queues.producers, [
+    { binding: "OTHER", queue: "other" },
+    { binding: "EMAIL_QUEUE", queue: "klapt-email" },
+  ])
+  assert.deepEqual(queues.consumers, [
+    { queue: "other" },
+    {
+      queue: "klapt-email",
+      max_retries: 3,
+      retry_delay: 120,
+      dead_letter_queue: "klapt-email-dlq",
+    },
+  ])
+  assert.equal(config.queues.producers.length, 2)
+  assert.deepEqual(withEmailQueue({ name: "x" }, "a-email").queues.producers, [
+    { binding: "EMAIL_QUEUE", queue: "a-email" },
+  ])
 })

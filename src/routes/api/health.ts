@@ -3,12 +3,13 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import { createHealthResponse } from "@/lib/health"
 import { getBoardNamespace } from "@/modules/realtime/rooms.server"
+import { appEnvironment } from "@/platform/environment"
 
 export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
       GET: async ({ request }) =>
-        createHealthResponse(env.APP_ENV, {
+        createHealthResponse(appEnvironment(), {
           cache: {
             cache: await caches.open("health"),
             origin: new URL(request.url).origin,

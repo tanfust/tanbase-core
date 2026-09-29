@@ -15,10 +15,19 @@ describe("configured origin", () => {
     )
   })
 
-  it("throws on a value that is not a URL instead of falling back", () => {
-    expect(() => configuredOrigin("example.com")).toThrow(
-      "BETTER_AUTH_URL must be an absolute URL"
+  it("reads a bare host as https", () => {
+    expect(configuredOrigin("example.com")).toBe("https://example.com")
+    expect(configuredOrigin(" app.example.com/ ")).toBe(
+      "https://app.example.com"
     )
+    expect(configuredOrigin("http://localhost:3000")).toBe(
+      "http://localhost:3000"
+    )
+  })
+
+  it("ignores a value that is not a web address instead of failing", () => {
+    expect(configuredOrigin("not a url")).toBeNull()
+    expect(configuredOrigin("ftp://example.com")).toBeNull()
   })
 })
 

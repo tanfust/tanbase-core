@@ -16,6 +16,7 @@ import { isUpstreamRemote, originUrl } from "./deploy-guard.mjs"
 import {
   aiSummary,
   deployResources,
+  emailQueueName,
   filesBucketName,
   isTopLevelBuild,
   parseConfig,
@@ -25,6 +26,7 @@ import {
   secretCheckWarning,
   secretStatus,
   shouldCreateSecret,
+  withEmailQueue,
   withFilesBinding,
 } from "./deploy-resources.mjs"
 
@@ -118,16 +120,21 @@ try {
   stop(error instanceof Error ? error.message : String(error))
 }
 
-// Only the optional FILES binding is written into the generated file; the
-// rest is exactly what the build produced.
+// Two bindings are written into the generated file, since the button would
+// ask about them (ADR-0021, ADR-0022): the optional FILES bucket and the
+// reminder queue, both named after the Worker. The rest is exactly what the
+// build produced.
 const bucket = prepareFiles(
   resources.bucket?.name ?? filesBucketName(worker),
   capture,
   log
 )
+const queue = resources.queue?.name ?? emailQueueName(worker)
 writeFileSync(
   generated.path,
-  JSON.stringify(withFilesBinding(generated.config, bucket))
+  JSON.stringify(
+    withEmailQueue(withFilesBinding(generated.config, bucket), queue)
+  )
 )
 
 run(["d1", "migrations", "apply", "DB", "--remote"])
@@ -174,4 +181,5 @@ log(
       ? "BETTER_AUTH_SECRET: kept."
       : "BETTER_AUTH_SECRET: not checked."
 )
+log(`Reminders: the queue ${queue}, with ${queue}-dlq for failures.`)
 log(aiSummary(generated.config))

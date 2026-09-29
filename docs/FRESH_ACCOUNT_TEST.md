@@ -1,7 +1,7 @@
 ---
 status: active
 audience: testers, maintainers
-last_verified: 2026-09-28
+last_verified: 2026-09-29
 ---
 
 # Fresh-account install test
@@ -53,20 +53,23 @@ step 7 passes without the image.
    and what the screen said. Screenshots help.
 3. The deployed URL.
 4. What the setup page asked you for, which resources it said it would
-   create, and whether you left **Protect with Cloudflare Access** ticked.
+   create, whether you changed any field, and whether you left **Protect
+   with Cloudflare Access** ticked.
    If the deployed URL asked you to sign in to Cloudflare, say so.
 5. Whether you had to add a payment method at any point, and for what.
 6. Whether you used the **Deploy to Cloudflare** button or imported the
    repository from the dashboard, and the Workers Build log if a build
    failed.
-7. The `Attachments:` and `BETTER_AUTH_SECRET:` lines at the end of the
-   first build's log, and whether your account had R2 enabled.
+7. The `Attachments:`, `BETTER_AUTH_SECRET:`, and `Reminders:` lines at
+   the end of the first build's log, and whether your account had R2
+   enabled.
 
 ## For the maintainer
 
 After a run, record the result in the F-023 section of
 [FEATURES](FEATURES.md) and fix what the tester hit. From the tester's
-account, or the tester's report, confirm what the button created: the D1
-database, queue, dead-letter queue, Durable Object namespace, and Workflow,
-and the R2 bucket when the account had R2. Then compare it with the table in
+account, or the tester's report, confirm what the button and the first
+deploy created: the D1 database, the `<worker>-email` queue and its
+dead-letter queue, the Durable Object namespace, and the Workflow, and the R2
+bucket when the account had R2. Then compare it with the table in
 [Deploying](DEPLOYMENT.md#deploy-to-cloudflare-button).
