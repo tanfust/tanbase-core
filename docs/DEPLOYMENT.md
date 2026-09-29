@@ -139,9 +139,21 @@ On an account still on Workers Free, the `/og/home.png` check fails;
 ### Finishing the setup
 
 A first deploy runs with everything optional off. Each item below turns one
-on; none is needed to use the site. A coding agent working in your copy can
-read this list, check which items the copy already has, and ask which to set
-up or leave off.
+on; none is needed to use the site. To see which are on, run this in a clone
+of your copy, logged in with `pnpm exec wrangler login`:
+
+```sh
+pnpm run setup:status -- --name <worker>
+```
+
+It reads the version the Worker serves and changes nothing. `--name` is the
+project name from the setup page; leave it out when it matches `name` in
+`wrangler.jsonc`. It prints each item as `on`, `off`, or `attention`, for one
+that is half set up, with the next step.
+
+A coding agent working in your copy can follow the `finish-setup` skill in
+`.claude/skills/`: it runs the check, then asks about each item that is off,
+whether to set it up, leave it off, or remove its module.
 
 Set a variable in either place:
 
@@ -151,7 +163,7 @@ Set a variable in either place:
 
 | To turn on                         | Set                                                                                                                                                                                      |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A custom domain                    | Add it under **Domains**, then set `BETTER_AUTH_URL` to its full origin, such as `https://app.example.com`, so links, cookies, and tokens use it                                         |
+| A custom domain                    | Add it under **Settings → Domains & Routes**, then set `BETTER_AUTH_URL` to its full origin, such as `https://app.example.com`, so links, cookies, and tokens use it                     |
 | Email: verification and resets     | Onboard a sender domain in Cloudflare Email Service, add an `EMAIL` binding, and set `EMAIL_FROM` ([Transactional email](#transactional-email))                                          |
 | Due-date reminders by email        | Email, and `BETTER_AUTH_URL`, since a reminder needs an address to link to                                                                                                               |
 | Bot checks on sign-up              | Add the Turnstile secret as the `TURNSTILE_SECRET_KEY` secret, then set `TURNSTILE_SITE_KEY`; a site key without its secret stops sign-in ([Turnstile](#turnstile-and-auth-rate-limits)) |

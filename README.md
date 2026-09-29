@@ -78,7 +78,9 @@ Open the `workers.dev` URL it gives you and create an account. Then
 optional and starts off: a custom domain, email, the sign-up challenge,
 analytics, and attachments.
 [Finishing the setup](docs/DEPLOYMENT.md#finishing-the-setup) lists what each
-needs; a coding agent in your copy can work through it with you.
+needs. In a clone of your copy, `pnpm run setup:status` shows which are on,
+and a coding agent can work through the rest with you: ask it to finish the
+setup.
 
 ### Guided installer
 

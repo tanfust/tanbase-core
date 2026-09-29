@@ -183,3 +183,6 @@ log(
 )
 log(`Reminders: the queue ${queue}, with ${queue}-dlq for failures.`)
 log(aiSummary(generated.config))
+log(
+  "Optional settings, such as a custom domain and email, start off: docs/DEPLOYMENT.md#finishing-the-setup lists them, and `pnpm run setup:status` in a clone shows which are on."
+)

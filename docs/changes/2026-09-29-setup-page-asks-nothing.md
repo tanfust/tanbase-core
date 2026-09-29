@@ -121,12 +121,27 @@ Local:
 - No command ran against a real Cloudflare account, and the button's setup
   page has not been seen since the change.
 
+Production, merge commit `d490fd1`:
+
+- Workers Build `9029201d` deployed version `63b27e24` at 08:41 UTC and
+  passed its post-deploy smoke. The pinned smoke passed at 08:45 UTC.
+- `/login`, `/sign-up`, and `/forgot-password` return `200` with their forms
+  and no notice, since production's `BETTER_AUTH_URL` is its own origin.
+- The served version binds what `3080510`'s did: `EMAIL_QUEUE` on
+  `tanbase-core-email`, `FILES`, and all five variables. `env.production`
+  sets each of them, so `keep_vars` changed nothing there.
+- **Production performance run:** 148.1 KB of landing JavaScript in 14
+  files. Its Lighthouse alarm failed with runs of 75, 89, 94, 92, and 89, a
+  median of 89 under 90, on a deploy that changed nothing on the landing
+  page; the run before scored 96. The
+  [next change](2026-09-29-finish-setup-status.md) removed the workflow.
+
 ## Deployment state
 
-| Target     | Commit | URL                        | Date       | Result       |
-| ---------- | ------ | -------------------------- | ---------- | ------------ |
-| Local      | branch | —                          | 2026-09-29 | Passed       |
-| Production | —      | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit    | URL                        | Date       | Result |
+| ---------- | --------- | -------------------------- | ---------- | ------ |
+| Local      | branch    | —                          | 2026-09-29 | Passed |
+| Production | `d490fd1` | `https://core.tanbase.dev` | 2026-09-29 | Passed |
 
 ## Rollback notes
 
