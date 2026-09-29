@@ -48,19 +48,19 @@ $0.011 per 1,000; one breakdown in the demo cost $0.000086. Set
 last lines say what the deploy turned on.
 
 The button copies this repository into your GitHub or GitLab account, creates
-the D1 database and the queue, then builds and deploys with Workers Builds,
-and redeploys on every push. The first deploy creates the auth secret,
-`BETTER_AUTH_SECRET`, and binds an R2 bucket named `<worker>-files` when the
-account has R2. On its setup page:
+the D1 database, then builds and deploys with Workers Builds, and redeploys on
+every push. The first deploy creates the auth secret, `BETTER_AUTH_SECRET`,
+and the reminder queue `<worker>-email`, and binds an R2 bucket named
+`<worker>-files` when the account has R2. Nothing on the setup page needs
+changing:
 
 - **Git:** tick **Create private Git repository** unless you want the copy to
   be public.
-- **Project and resource names:** keep them or rename them. The Workflow and
-  the dead-letter queue keep the names in `wrangler.jsonc`, and Workflow names
-  are unique per account, so deploy one copy per account.
-- **Variables:** leave `BETTER_AUTH_URL`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`,
-  and `POSTHOG_HOST` empty for the first deploy. A Turnstile site key without
-  its secret stops sign-in.
+- **Project and resource names:** keep them or rename them. The Workflow keeps
+  its name from `wrangler.jsonc`, and Workflow names are unique per account,
+  so deploy one copy per account.
+- **`AI_MODEL`, `AI_GATEWAY_ID`, `AI_DAILY_LIMIT`:** keep them. They are the
+  only variables the page asks for; the AI costs are above.
 - **Protect with Cloudflare Access:** untick it for a public app. It can put
   the whole app behind a Cloudflare sign-in, which also blocks sign-up for
   everyone else, MCP clients, and link previews.
@@ -74,11 +74,11 @@ says what is missing
 ([Deploying](docs/DEPLOYMENT.md#importing-the-repository-from-the-dashboard)).
 
 Open the `workers.dev` URL it gives you and create an account. Then
-[make it yours](#make-it-yours) in `src/lib/site.ts`. Until you set
-up email, new accounts sign in without verifying their address; until you set
-up Turnstile, sign-up has no bot challenge.
-[Deploying](docs/DEPLOYMENT.md#deploy-to-cloudflare-button) covers both, and a
-custom domain.
+[make it yours](#make-it-yours) in `src/lib/site.ts`. Everything else is
+optional and starts off: a custom domain, email, the sign-up challenge,
+analytics, and attachments.
+[Finishing the setup](docs/DEPLOYMENT.md#finishing-the-setup) lists what each
+needs; a coding agent in your copy can work through it with you.
 
 ### Guided installer
 

@@ -29,4 +29,35 @@ describe("SetupNotice", () => {
       "BETTER_AUTH_SECRET"
     )
   })
+
+  it("says where sign-in works when BETTER_AUTH_URL names another address", () => {
+    render(
+      <SetupNotice
+        problem={null}
+        originMismatch={{
+          configured: "https://klapt.ai",
+          current: "https://klapt.example.workers.dev",
+        }}
+      />
+    )
+    const alert = screen.getByRole("alert")
+    expect(alert.textContent).toContain(
+      "Sign-in works only at https://klapt.ai"
+    )
+    expect(alert.textContent).toContain("https://klapt.example.workers.dev")
+    expect(alert.textContent).toContain("BETTER_AUTH_URL")
+  })
+
+  it("names an unfinished deployment before an address mismatch", () => {
+    render(
+      <SetupNotice
+        problem="database"
+        originMismatch={{
+          configured: "https://a.test",
+          current: "https://b.test",
+        }}
+      />
+    )
+    expect(screen.getByRole("alert").textContent).toContain("no tables")
+  })
 })

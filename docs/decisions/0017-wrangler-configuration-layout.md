@@ -10,6 +10,9 @@ last_verified: 2026-09-27
 parts of this decision: the top level no longer declares the R2 binding,
 which `pnpm run deploy` adds when the account has R2, and `.dev.vars.example`
 is gone, since the first deploy creates `BETTER_AUTH_SECRET`.
+[ADR-0022](0022-setup-page-asks-nothing-that-can-break.md) takes the queue
+and the empty variables off the top level too, so the setup page asks for
+nothing that can break a first deploy.
 
 ## Context
 

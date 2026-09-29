@@ -43,8 +43,12 @@ export const Route = createFileRoute("/forgot-password")({
 
 function ForgotPasswordPage() {
   const { redirect } = Route.useSearch()
-  const { turnstileSiteKey, emailDelivery, installationProblem } =
-    Route.useLoaderData()
+  const {
+    turnstileSiteKey,
+    emailDelivery,
+    installationProblem,
+    originMismatch,
+  } = Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +77,10 @@ function ForgotPasswordPage() {
 
   return (
     <AuthShell>
-      <SetupNotice problem={installationProblem} />
+      <SetupNotice
+        problem={installationProblem}
+        originMismatch={originMismatch}
+      />
       {!emailDelivery && (
         <Alert>
           <AlertTitle>This deployment does not send email</AlertTitle>

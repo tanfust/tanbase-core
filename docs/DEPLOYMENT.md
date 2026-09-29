@@ -54,9 +54,14 @@ plan includes.
 
 The README's button deploys the top level. Cloudflare reads `wrangler.jsonc`,
 creates the resources it names, and configures Workers Builds with the
-repository's `build` and `deploy` scripts. The top level names no R2 bucket
-and the repository no secret to ask for, so a first try needs nothing set up
-beyond Workers Paid ([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
+repository's `build` and `deploy` scripts. Its setup page asks for every
+variable and resource the top level names, and refuses an empty field, so
+the top level names only what works as it is
+([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md),
+[ADR-0022](decisions/0022-setup-page-asks-nothing-that-can-break.md)): the D1
+database, the Workflow, and the three pre-filled `AI_*` variables. A first
+try needs nothing set up beyond Workers Paid, and nothing on the page needs
+changing.
 
 `pnpm run deploy`, on every deploy:
 
@@ -69,29 +74,34 @@ beyond Workers Paid ([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-a
    without the binding and prints `Attachments are off: enable R2 …`; the
    next deploy after enabling R2 turns attachments on. A copy that still
    declares `FILES` at its top level keeps that bucket name.
-4. Applies D1 migrations.
-5. Deploys. When the Worker does not exist yet or has no
+4. Binds the reminder queue `<worker>-email` as `EMAIL_QUEUE` the same way,
+   with this Worker as its consumer and `<worker>-email-dlq` for messages
+   that fail three retries. Wrangler creates both queues when they are
+   missing. A copy that still declares `EMAIL_QUEUE` keeps its queue.
+5. Applies D1 migrations.
+6. Deploys. When the Worker does not exist yet or has no
    `BETTER_AUTH_SECRET`, it creates one, 32 random bytes that never leave
    Cloudflare, and uploads it with the deploy. It never replaces an existing
    secret, and when it cannot tell whether one exists, it creates none and
    says so.
 
-The build log ends with an `Attachments:` line and a `BETTER_AUTH_SECRET:`
-line saying what the deploy did.
+The build log ends with `Attachments:`, `BETTER_AUTH_SECRET:`, `Reminders:`,
+and `AI task breakdown:` lines saying what the deploy did.
 
 | Resource                      | Created by                                                                                                     |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | D1 database `DB`              | The button, which records the new database ID in your copy; named `tanbase-core`, renameable on the setup page |
 | R2 bucket `FILES`             | `pnpm run deploy`, on each deploy while the account has R2; named `<worker>-files`                             |
-| Queue `EMAIL_QUEUE`           | The button; named `tanbase-core-email`, renameable                                                             |
-| Dead-letter queue             | `wrangler deploy`, which creates a missing dead-letter queue, as `tanbase-core-email-dlq`                      |
+| Queue `EMAIL_QUEUE`           | `pnpm run deploy`, named `<worker>-email`; Wrangler creates it when missing                                    |
+| Dead-letter queue             | `wrangler deploy`, which creates a missing dead-letter queue, as `<worker>-email-dlq`                          |
 | Durable Object `BOARD`        | Deploy, from its `v1` migration                                                                                |
 | Workflow `BREAKDOWN`          | Deploy, as `tanbase-core-task-breakdown`; Workflow names are unique per account                                |
 | Workers AI `AI`               | Needs no resource; AI Gateway `default` is created on first use                                                |
 | Rate limits, version metadata | Need no resource                                                                                               |
 | `BETTER_AUTH_SECRET`          | `pnpm run deploy`, on the first deploy; never replaced                                                         |
 
-On 2026-09-27 an outside tester reached the setup page. It showed:
+On 2026-09-27 an outside tester reached the setup page, before ADR-0021 and
+ADR-0022 took most of it away. It showed:
 
 - a Git connection, and **Create private Git repository**, unticked
 - the project name, `tanbase-core`
@@ -107,31 +117,54 @@ On 2026-09-27 an outside tester reached the setup page. It showed:
 
 The tester stopped before deploying, since the account was on Workers Free,
 so the dead-letter queue, Durable Object, and Workflow rows still follow
-Cloudflare's documentation. That page listed the R2 bucket and
-`BETTER_AUTH_SECRET` too; since the top level stopped naming either, it
-should list neither, which no run has confirmed yet. The README lists what to choose on each field.
+Cloudflare's documentation. On 2026-09-29 another run showed the queue with
+its default name, and the empty `BETTER_AUTH_URL` and `EMAIL_FROM` fields,
+which the page would not accept empty; the tester had typed a bare domain
+into `BETTER_AUTH_URL`. Since ADR-0022 the page should show neither the queue
+nor those variables. The README lists what to choose on each field.
 Cloudflare Access can protect preview URLs only or all traffic, and the setup
 page does not say which. If the `workers.dev` URL asks for a Cloudflare
 sign-in, turn Access off in the Worker's **Access** tab for a public app.
 
-After the first deploy:
+After the first deploy, smoke-test it with its own URL and the top-level
+configuration:
 
-1. Smoke-test the deployment with its own URL and the top-level configuration:
+```sh
+pnpm smoke -- --url https://<worker>.<subdomain>.workers.dev --environment production --config default
+```
 
-   ```sh
-   pnpm smoke -- --url https://<worker>.<subdomain>.workers.dev --environment production --config default
-   ```
+On an account still on Workers Free, the `/og/home.png` check fails;
+[upgrade to Workers Paid](#workers-paid-is-required).
 
-   On an account still on Workers Free, the `/og/home.png` check fails;
-   [upgrade to Workers Paid](#workers-paid-is-required).
+### Finishing the setup
 
-2. Add a custom domain if you want one, then set `BETTER_AUTH_URL` to it so
-   canonical URLs, cookies, and tokens use one origin.
-3. Before a public launch, set up email (below) and Turnstile, so sign-up
-   requires a verified address and a challenge.
-4. Run the Worker next to its database: in a clone of your repository, run
-   `pnpm run placement --write`, then commit and push
-   ([Worker placement](#worker-placement)).
+A first deploy runs with everything optional off. Each item below turns one
+on; none is needed to use the site. A coding agent working in your copy can
+read this list, check which items the copy already has, and ask which to set
+up or leave off.
+
+Set a variable in either place:
+
+- under the Worker's **Settings → Variables and Secrets** in the dashboard.
+  The top level sets `keep_vars`, so later deploys keep what you set there;
+- in `vars` at the top level of `wrangler.jsonc`, then commit and push.
+
+| To turn on                         | Set                                                                                                                                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A custom domain                    | Add it under **Domains**, then set `BETTER_AUTH_URL` to its full origin, such as `https://app.example.com`, so links, cookies, and tokens use it                                         |
+| Email: verification and resets     | Onboard a sender domain in Cloudflare Email Service, add an `EMAIL` binding, and set `EMAIL_FROM` ([Transactional email](#transactional-email))                                          |
+| Due-date reminders by email        | Email, and `BETTER_AUTH_URL`, since a reminder needs an address to link to                                                                                                               |
+| Bot checks on sign-up              | Add the Turnstile secret as the `TURNSTILE_SECRET_KEY` secret, then set `TURNSTILE_SITE_KEY`; a site key without its secret stops sign-in ([Turnstile](#turnstile-and-auth-rate-limits)) |
+| Analytics                          | Add the `POSTHOG_KEY` secret, and set `POSTHOG_HOST` for a region other than the US ([Analytics](#analytics))                                                                            |
+| Attachments                        | Enable **R2 Object Storage**, then redeploy                                                                                                                                              |
+| Faster pages far from the database | Run `pnpm run placement --write` in a clone, then commit and push ([Worker placement](#worker-placement))                                                                                |
+| No AI                              | Set `AI_DAILY_LIMIT` to `0`                                                                                                                                                              |
+
+`BETTER_AUTH_URL` must be where the site is served. A bare host, such as
+`app.example.com`, means `https://app.example.com`, and a value that is not
+a web address is ignored. While it names another address than the one you
+are on, such as a domain whose DNS is not ready, the sign-in pages say where
+sign-in works, since signing in anywhere else fails.
 
 ### Importing the repository from the dashboard
 
@@ -431,11 +464,15 @@ from `oauth_client` revokes that client and its tokens.
 
 ### Better Auth
 
-`BETTER_AUTH_URL` pins the public origin. TanBase commits its own; left empty,
+`BETTER_AUTH_URL` pins the public origin. TanBase commits its own; unset,
 the Worker uses the origin each request arrives on, so a fresh deployment
 works on its `workers.dev` URL. Set it once the installation has one
 canonical hostname, such as a custom domain, and before enabling due-date
 reminders, which run without a request ([ADR-0016](decisions/0016-deploy-without-personalization.md)).
+A bare host means https, and a value that is not an http or https URL is
+ignored and logged as `origin.invalid_setting`, rather than failing every
+page. While it names another origin than a page's, the sign-in pages say
+where sign-in works ([ADR-0022](decisions/0022-setup-page-asks-nothing-that-can-break.md)).
 
 The secret is never committed. A deployment of the top level gets one from
 `pnpm run deploy` on its first deploy, and the guided installer creates one

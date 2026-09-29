@@ -145,13 +145,13 @@ Durable Object.
 Due-date reminders: an hourly Cron Trigger, the `EMAIL_QUEUE` queue and its
 consumer.
 
-| What              | Remove                                                                                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Folders and files | `src/modules/jobs/`                                                                                                                                                                            |
-| Bindings          | `queues` (producer, consumer, dead-letter queue) and `triggers` in the base configuration and `wrangler.e2e.jsonc`. In `env.production`, remove `queues` and set `"triggers": { "crons": [] }` |
-| Exports           | The `scheduled` and `queue` handlers in `src/server.ts`, and the `queue` handler in `test/worker.ts`                                                                                           |
-| Migration         | Drops the `task_due_reminder_idx` index and the `task.reminder_sent_at` column                                                                                                                 |
-| Packages          | None                                                                                                                                                                                           |
+| What              | Remove                                                                                                                                                                                                                                  |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Folders and files | `src/modules/jobs/`                                                                                                                                                                                                                     |
+| Bindings          | `queues` (producer, consumer, dead-letter queue) in `env.local` and `wrangler.e2e.jsonc`, and `triggers` in each. In `env.production`, remove `queues` and set `"triggers": { "crons": [] }`; the top level has no queue since ADR-0022 |
+| Exports           | The `scheduled` and `queue` handlers in `src/server.ts`, and the `queue` handler in `test/worker.ts`                                                                                                                                    |
+| Migration         | Drops the `task_due_reminder_idx` index and the `task.reminder_sent_at` column                                                                                                                                                          |
+| Packages          | None                                                                                                                                                                                                                                    |
 
 A deployed Cron Trigger stays in place when `triggers` is simply missing, so
 production needs the empty list. The column drop runs without rebuilding
@@ -168,6 +168,9 @@ Edit:
 - `scripts/seed.sql`: the `reminder_sent_at` column.
 - `scripts/setup.mjs`, `scripts/setup/core.mjs`, `scripts/setup/core.test.mjs`:
   the queue step, its state key, and its tests.
+- `scripts/deploy-resources.mjs` and its tests: `emailQueueName` and
+  `withEmailQueue`; `scripts/deploy.mjs`: the queue step and the
+  `Reminders:` line.
 - Public copy in `src/modules/seo/homepage.ts` (summary, Worker card, reminders
   row, Queues allowance, email row, installer line) and
   `src/modules/seo/llms.txt`.

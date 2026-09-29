@@ -13,24 +13,21 @@
   },
   // The top level is a production configuration any Cloudflare account can
   // deploy as committed: the Deploy to Cloudflare button and
-  // `pnpm run deploy` use it. The public origin comes from each request;
-  // email, Turnstile, and analytics stay off until configured; and the first
-  // deploy creates BETTER_AUTH_SECRET. `env.local`
-  // is local development; `env.production` is the TanBase demo, which the
-  // guided installer rewrites into your own pinned installation. ADR-0017.
+  // `pnpm run deploy` use it. `env.local` is local development;
+  // `env.production` is the TanBase demo, which the guided installer rewrites
+  // into your own pinned installation. ADR-0017.
+  //
+  // The button asks for every variable here and will not accept an empty one,
+  // so the top level sets only values that work as they are (ADR-0022). The
+  // Worker runs as production without APP_ENV, uses each request's origin
+  // without BETTER_AUTH_URL, and keeps email, Turnstile, and analytics off
+  // without EMAIL_FROM, TURNSTILE_SITE_KEY, and POSTHOG_HOST. Set those later,
+  // in `vars` below or under the Worker's Settings → Variables and Secrets,
+  // which deploys keep.
+  "keep_vars": true,
   "vars": {
-    "APP_ENV": "production",
-    // Empty: the Worker uses the origin each request arrives on. Set it to
-    // pin one canonical origin, and before enabling reminders.
-    "BETTER_AUTH_URL": "",
-    // Empty: email is logged as metadata and sign-up needs no verification.
-    "EMAIL_FROM": "",
-    // Empty: the Turnstile challenge is off.
-    "TURNSTILE_SITE_KEY": "",
-    // PostHog loads only when the POSTHOG_KEY Worker secret is set.
-    "POSTHOG_HOST": "",
     // Task breakdown: the model, the AI Gateway (`default` is created on first
-    // use), and the per-user daily quota.
+    // use), and the per-user daily quota; 0 turns it off.
     "AI_MODEL": "@cf/mistralai/mistral-small-3.1-24b-instruct",
     "AI_GATEWAY_ID": "default",
     "AI_DAILY_LIMIT": "20",
@@ -72,20 +69,10 @@
       "class_name": "TaskBreakdownWorkflow",
     },
   ],
-  // Due-date reminders: the hourly cron enqueues one message per due task,
-  // this Worker consumes them, and a message that fails three retries moves
-  // to the dead-letter queue, which deploy creates when it is missing.
-  "queues": {
-    "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" }],
-    "consumers": [
-      {
-        "queue": "tanbase-core-email",
-        "max_retries": 3,
-        "retry_delay": 120,
-        "dead_letter_queue": "tanbase-core-email-dlq",
-      },
-    ],
-  },
+  // Due-date reminders: the hourly cron enqueues one message per due task on
+  // EMAIL_QUEUE, which `pnpm run deploy` binds as <worker>-email, with this
+  // Worker as its consumer and <worker>-email-dlq for messages that fail three
+  // retries. The button would otherwise ask for the queue's name (ADR-0022).
   "triggers": { "crons": ["0 * * * *"] },
   // Task attachments have no binding here: enabling R2 is an account opt-in,
   // so `pnpm run deploy` binds FILES, as <worker>-files, only when the account

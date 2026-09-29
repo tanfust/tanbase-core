@@ -1,4 +1,4 @@
-import type { InstallationProblem } from "./installation"
+import type { InstallationProblem, OriginMismatch } from "./installation"
 import { hasAuthTables } from "./repository.server"
 
 /** The shortest BETTER_AUTH_SECRET the Worker accepts. */
@@ -30,4 +30,14 @@ export async function findInstallationProblem(environment: {
     }
   }
   return authSecretUsable(environment.BETTER_AUTH_SECRET) ? null : "secret"
+}
+
+/** The configured origin and this request's, when they differ. */
+export function findOriginMismatch(
+  configured: string | null,
+  current: string | undefined
+): OriginMismatch | null {
+  return configured && current && configured !== current
+    ? { configured, current }
+    : null
 }

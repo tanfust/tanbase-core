@@ -53,22 +53,28 @@ the Deploy to Cloudflare button deploys to any account; `env.local` for local
 development and the Worker tests; and `env.production`. Environments inherit
 nothing from the top level. Declare it in `wrangler.e2e.jsonc` too when the
 browser tests use the feature. Name local resources with a `-local` suffix,
-as `tanbase-core-email-local` is, and give the top level a default name that
+as `tanbase-core-files-local` is, and give the top level a default that
 works on a fresh account, since the button creates resources from it. For
-example, a queue producer:
+example, a rate limit:
 
 ```jsonc
 // top level
-"queues": { "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" }] },
+"ratelimits": [{ "name": "AUTH_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
 "env": {
   "local": {
-    "queues": { "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email-local" }] },
+    "ratelimits": [{ "name": "AUTH_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
   },
   "production": {
-    "queues": { "producers": [{ "binding": "EMAIL_QUEUE", "queue": "tanbase-core-email" }] },
+    "ratelimits": [{ "name": "AUTH_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
   },
 },
 ```
+
+The button's setup page asks for every top-level variable and resource name
+and refuses an empty field, so a variable goes in the top level only when
+its default works, and a resource whose name should follow the Worker's, as
+the reminder queue `<worker>-email` does, is bound by `scripts/deploy.mjs`
+instead ([ADR-0022](../../../docs/decisions/0022-setup-page-asks-nothing-that-can-break.md)).
 
 A binding that needs an account feature the owner may not have turned on,
 as R2 must be enabled for `FILES`, stays out of the top level so the first

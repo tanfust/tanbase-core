@@ -66,8 +66,12 @@ export const Route = createFileRoute("/sign-up")({
 
 function SignUpPage() {
   const { redirect: redirectPath } = Route.useSearch()
-  const { turnstileSiteKey, emailDelivery, installationProblem } =
-    Route.useLoaderData()
+  const {
+    turnstileSiteKey,
+    emailDelivery,
+    installationProblem,
+    originMismatch,
+  } = Route.useLoaderData()
   const captcha = useTurnstile(turnstileSiteKey)
   const navigate = useNavigate()
   const [submitted, setSubmitted] = useState(false)
@@ -107,7 +111,10 @@ function SignUpPage() {
 
   return (
     <AuthShell>
-      <SetupNotice problem={installationProblem} />
+      <SetupNotice
+        problem={installationProblem}
+        originMismatch={originMismatch}
+      />
       {submitted ? (
         <Card>
           <CardHeader>

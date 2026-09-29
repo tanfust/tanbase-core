@@ -24,6 +24,7 @@ import {
   analyticsConnectSources,
   readAnalyticsConfig,
 } from "@/platform/analytics"
+import { appEnvironment } from "@/platform/environment"
 import { log } from "@/platform/log"
 import { requirePublicOrigin } from "@/platform/origin"
 import { runWithRequestContext } from "@/platform/request-context"
@@ -122,7 +123,7 @@ export default {
           ],
           enforceCsp: !import.meta.env.DEV,
           nonce,
-          production: env.APP_ENV === "production",
+          production: appEnvironment() === "production",
           requestId,
         }
       )

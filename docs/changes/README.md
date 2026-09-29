@@ -60,6 +60,7 @@ Records:
 - [2026-09-28: Deploying a repository imported from the dashboard](2026-09-28-dashboard-import-deploy.md)
 - [2026-09-28: A first deploy with nothing set up](2026-09-28-first-deploy-without-setup.md)
 - [2026-09-28: The task status label, and what AI costs a deployment](2026-09-28-status-label-and-ai-costs.md)
+- [2026-09-29: The Deploy button's setup page asks for nothing that can break](2026-09-29-setup-page-asks-nothing.md)
 
 Once merged, a change record is historical and immutable except for factual
 corrections or the explicitly planned post-deployment evidence update. Current

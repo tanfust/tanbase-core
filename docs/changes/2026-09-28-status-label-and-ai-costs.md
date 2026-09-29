@@ -62,12 +62,21 @@ Local:
   `default`, and a limit of 20 a day per person.
 - `pnpm test:e2e` with the system Chrome: 5 passed.
 
+Production, merge commit `3080510`:
+
+- Workers Build `11935b8f` deployed version `a0319a79` at 2026-09-28
+  20:57 UTC and passed its post-deploy smoke. Every check on the merge
+  commit passed.
+- The pinned smoke passed at 2026-09-29 08:19 UTC.
+- **Production performance run:** 148.1 KB of landing JavaScript in 14
+  files, and a Lighthouse median of 96 on GitHub's runner.
+
 ## Deployment state
 
-| Target     | Commit | URL                        | Date       | Result       |
-| ---------- | ------ | -------------------------- | ---------- | ------------ |
-| Local      | branch | —                          | 2026-09-28 | Passed       |
-| Production | —      | `https://core.tanbase.dev` | —          | Not deployed |
+| Target     | Commit    | URL                        | Date       | Result |
+| ---------- | --------- | -------------------------- | ---------- | ------ |
+| Local      | branch    | —                          | 2026-09-28 | Passed |
+| Production | `3080510` | `https://core.tanbase.dev` | 2026-09-29 | Passed |
 
 ## Rollback notes
 

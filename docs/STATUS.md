@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, operators, agents
-last_verified: 2026-09-28
+last_verified: 2026-09-29
 ---
 
 # Current status
@@ -116,7 +116,15 @@ sign-in page what is missing
 ([ADR-0021](decisions/0021-deploy-binds-r2-and-creates-the-auth-secret.md)).
 The tester's retry with `pnpm run deploy` then worked: the first deploy on a
 fresh account, with sign-up, the board, and AI breakdown running and
-attachments off. The first button run and the timed
+attachments off. On 2026-09-29 a button run reached the setup page, which
+asked for `BETTER_AUTH_URL`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`, and
+`POSTHOG_HOST`, refused them empty, and named the queue
+`tanbase-core-email`. The setup page now asks for nothing that can break a
+first deploy: the top level sets only the three `AI_*` variables,
+`pnpm run deploy` binds `<worker>-email`, and DEPLOYMENT's "Finishing the
+setup" lists what to turn on later
+([ADR-0022](decisions/0022-setup-page-asks-nothing-that-can-break.md)). The
+first completed button run and the timed
 [fresh-account test](FRESH_ACCOUNT_TEST.md) are pending.
 
 F-028 to F-031 are live: forms on TanStack Form, the board's list and stats
@@ -136,6 +144,7 @@ signed-in visitor from `/login` and `/sign-up` to the board
 
 | Target        | Commit                                       | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | -------------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `3080510` / Worker version `a0319a79`        | `https://core.tanbase.dev`             | 2026-09-29 08:19 UTC | The task status label and AI costs (#56): Workers Build `11935b8f` deployed at 2026-09-28 20:57 UTC and passed its post-deploy smoke; every check on the merge commit passed; health reports the version with `database`, `files`, and `realtime` `ok`; pinned smoke passed; the Production performance run passed with 148.1 KB of landing JavaScript in 14 files and a Lighthouse median of 96 on GitHub's runner                                                                                                                                                          |
 | Production    | `197cbbb` / Worker version `143f0f56`        | `https://core.tanbase.dev`             | 2026-09-28 14:53 UTC | A first deploy with nothing set up (ADR-0021): Workers Build `d65b30db` deployed at 14:43 UTC and passed its post-deploy smoke; pinned smoke passed; `/login`, `/sign-up`, and `/forgot-password` render their forms with no setup notice; the landing page and its Markdown link the Deploy to Cloudflare button; health still reports `files: ok`; the Production performance run passed with 148.1 KB of landing JavaScript in 14 files and a Lighthouse median of 95 on GitHub's runner                                                                                  |
 | Outside copy  | dashboard import / Worker version `635a73a2` | an outside tester's `workers.dev` URL  | 2026-09-28           | The first working deploy on a fresh account: imported from the dashboard with the deploy command `pnpm run deploy`, whose log ended `Attachments: off until R2 is enabled` and `BETTER_AUTH_SECRET: created`; health `ok` with `files: disabled`; `pnpm smoke -- --config default` passed; sign-up, the board, and an AI breakdown of seven subtasks worked. The first retry, still on `npx wrangler deploy`, showed the "database has no tables" notice                                                                                                                     |
 | Production    | `8fb0168` / Worker version `2b301e37`        | `https://core.tanbase.dev`             | 2026-09-28 11:19 UTC | Launch readiness: Workers Build `6dbc0970` deployed at 11:13 UTC and passed its post-deploy smoke; pinned smoke passed; the Production performance run passed with 148.1 KB of landing JavaScript in 14 files and a Lighthouse median of 94 on GitHub's runner, up from 91; no page loads full Zod, the WebMCP tool code is 1.1 KB, `/login` preloads 184.2 KB and fetches no Zod after it; `cf-placement` is still `remote-MRS`; signed out, `/app` still redirects with its list params                                                                                    |
@@ -189,10 +198,13 @@ None.
 
 ## Last known deployed commit
 
-Production runs merge commit `197cbbb` as Worker version `143f0f56`, deployed
-by Workers Build `d65b30db` at 2026-09-28 14:43 UTC with a first deploy that
-needs nothing set up (ADR-0021). Its post-deploy smoke passed, and a pinned
-smoke passed at 14:53 UTC.
+Production runs merge commit `3080510` as Worker version `a0319a79`, deployed
+by Workers Build `11935b8f` at 2026-09-28 20:57 UTC with the task status label
+and the AI cost notes. Its post-deploy smoke passed, and a pinned smoke passed
+at 2026-09-29 08:19 UTC.
+
+A first deploy that needs nothing set up (ADR-0021) shipped in version
+`143f0f56` from `197cbbb`, deployed by Workers Build `d65b30db` at 14:43 UTC.
 
 The launch-readiness changes, no full Zod in the browser, the lazy list view,
 and the installer's placement and formatting fixes, shipped in version
