@@ -1,7 +1,7 @@
 ---
 status: active
 audience: contributors, maintainers, operators
-last_verified: 2026-09-28
+last_verified: 2026-09-29
 ---
 
 # Performance
@@ -12,13 +12,13 @@ together. This page says how each budget is measured and records the results.
 
 ## Checks
 
-| Budget                          | Checked                                                                                                                                | Command                                                                           |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Landing page JavaScript         | CI, on a local build of every push, for the landing page and the blog index; after each deploy, on production                          | `pnpm perf:bundle -- [--url <url>] [--path <path>]`                               |
-| Lighthouse mobile performance   | PageSpeed Insights by hand, for the budget; Lighthouse in CI on the local build and after each deploy on production, alarming below 90 | `pnpm perf:lighthouse -- [--url <url>] [--path <path>] [--compress] [--runs <n>]` |
-| Time to first byte              | By hand, from Tunis and US East                                                                                                        | `pnpm perf:ttfb -- [--url <url>] [--path <path>] [--rounds <n>]`                  |
-| Worker CPU per server render    | By hand, in Workers Logs                                                                                                               | See [Worker CPU](#worker-cpu)                                                     |
-| Realtime event between two tabs | `pnpm test:e2e`, locally                                                                                                               | The board journey fails when a change takes over a second to arrive               |
+| Budget                          | Checked                                                                                                                       | Command                                                                           |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Landing page JavaScript         | CI, on a local build of every push, for the landing page and the blog index; on production by hand                            | `pnpm perf:bundle -- [--url <url>] [--path <path>]`                               |
+| Lighthouse mobile performance   | PageSpeed Insights by hand, for the budget; Lighthouse in CI on the local build, alarming below 90, and on production by hand | `pnpm perf:lighthouse -- [--url <url>] [--path <path>] [--compress] [--runs <n>]` |
+| Time to first byte              | By hand, from Tunis and US East                                                                                               | `pnpm perf:ttfb -- [--url <url>] [--path <path>] [--rounds <n>]`                  |
+| Worker CPU per server render    | By hand, in Workers Logs                                                                                                      | See [Worker CPU](#worker-cpu)                                                     |
+| Realtime event between two tabs | `pnpm test:e2e`, locally                                                                                                      | The board journey fails when a change takes over a second to arrive               |
 
 Without `--url`, the scripts target the canonical origin in `src/lib/site.ts`.
 
@@ -59,19 +59,21 @@ a summary of every run to `output/lighthouse/`.
   needs Cloudflare credentials; the browser bundle is the same. `vite
 preview` sends files uncompressed, so `--compress` puts a Brotli proxy in
   front of it. SEO scores lower there, because robots.txt blocks crawlers
-  outside production.
-- **After each deploy,** `.github/workflows/production-performance.yml` waits
-  for the Workers Build of the pushed commit, checks the landing JavaScript,
-  which also warms the edge cache, and takes the median of five Lighthouse
-  runs. It reports and never blocks a merge. Forks set the `PRODUCTION_URL`
-  repository variable to audit their own site. Both jobs upload the report as
-  an artifact.
+  outside production. It uploads the report as an artifact.
+- **On production,** by hand after a deploy that changes a public page:
+  `pnpm perf:bundle -- --url <origin>`, which also warms the edge cache, then
+  `pnpm perf:lighthouse -- --url <origin> --runs 5`.
+- **No workflow audits production any more.** One did after each deploy
+  until 2026-09-29, when it failed the deploy of `d490fd1`, which changed
+  nothing on the landing page: its five runs scored 75, 89, 94, 92, and 89,
+  a median of 89 under the alarm, where the deploy before had scored 96. It
+  never blocked a merge, but its failures marked `main` as failing.
 
 The budget, 95, is the mobile score in
 [PageSpeed Insights](https://pagespeed.web.dev), measured by hand. GitHub's
 runners score the same page a few points lower: the first post-deploy run
-scored a median of 93 while PageSpeed Insights reported 97. So both CI jobs
-fail only below 90, an alarm for real regressions rather than a check of the
+scored a median of 93 while PageSpeed Insights reported 97. So CI fails
+only below 90, an alarm for real regressions rather than a check of the
 budget.
 
 ### Time to first byte

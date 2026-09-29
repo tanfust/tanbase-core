@@ -203,6 +203,7 @@ other agent can read each `SKILL.md` as a checklist.
 | `add-table`     | Add a user-owned D1 table with a repository, server functions, and tests |
 | `add-module`    | Add a feature module, with or without a new Cloudflare binding           |
 | `remove-module` | Remove an optional module and its bindings, exports, and data            |
+| `finish-setup`  | In a deployed copy, set up, leave off, or remove each optional setting   |
 | `deploy`        | Ship a merged change and record production evidence                      |
 
 ## Foundation boundaries

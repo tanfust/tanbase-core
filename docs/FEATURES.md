@@ -573,9 +573,11 @@ one-click button. The DNS-AID SVCB record validates under DNSSEC.
 **Acceptance criteria**
 
 - [x] Lighthouse CI on the production build and canonical production URL: the
-      CI job audits a local production build on every push, and the
-      Production performance workflow audits `core.tanbase.dev` after each
-      deploy
+      CI job audits a local production build on every push. A Production
+      performance workflow audited `core.tanbase.dev` after each deploy until
+      2026-09-29; its runner's scores for an unchanged page ranged from 75 to
+      96, so production is now audited by hand
+      ([Performance](PERFORMANCE.md#lighthouse))
 - [x] Bundle size check for the landing page: `pnpm perf:bundle` in both
 - [x] TTFB measured from Tunis and US East for landing and board, results recorded in `docs/PERFORMANCE.md`:
       on 2026-09-27 the landing page's p75 was 200 ms from Tunis and 264 ms
@@ -742,6 +744,13 @@ name. The setup page now asks for nothing that can break a first deploy
   the sign-in pages say where sign-in works.
 - [Deploying](DEPLOYMENT.md#finishing-the-setup) lists each optional
   setting and where to set it.
+
+Then a copy's owner can see what is left: `pnpm run setup:status` reads the
+version the Worker serves and prints each optional setting as on, off, or
+half set up, with the next step. The `finish-setup` skill has a coding agent
+in the copy run it, fix what is half set up, and ask about each setting that
+is off: set it up, leave it off, or remove its module. The deploy log's last
+line points to both.
 
 ---
 

@@ -9,6 +9,7 @@
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "placement": "node scripts/placement.mjs",
+    "setup:status": "node scripts/setup-status.mjs",
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",

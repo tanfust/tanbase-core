@@ -81,8 +81,8 @@ Accessibility, 100 Best Practices, 100 SEO, and 4/4 Agentic Browsing, up from
 
 F-019 performance budgets are measured and checked
 ([Performance](PERFORMANCE.md)). CI checks the landing page's JavaScript and
-runs Lighthouse on a local build, and a workflow audits production after each
-deploy. On 2026-09-27 the landing page loaded 144.8 KB of gzipped JavaScript,
+runs Lighthouse on a local build before each merge; production is audited by
+hand. On 2026-09-27 the landing page loaded 144.8 KB of gzipped JavaScript,
 and its time to first byte at p75 was 200 ms from Tunis and 264 ms from US
 East. The board's was about 336 and 400 ms, after its server time was halved.
 
@@ -123,8 +123,10 @@ asked for `BETTER_AUTH_URL`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`, and
 first deploy: the top level sets only the three `AI_*` variables,
 `pnpm run deploy` binds `<worker>-email`, and DEPLOYMENT's "Finishing the
 setup" lists what to turn on later
-([ADR-0022](decisions/0022-setup-page-asks-nothing-that-can-break.md)). The
-first completed button run and the timed
+([ADR-0022](decisions/0022-setup-page-asks-nothing-that-can-break.md)).
+`pnpm run setup:status` reads which of those a deployed Worker has on, and
+the `finish-setup` skill lets a coding agent in a copy work through the rest
+with its owner. The first completed button run and the timed
 [fresh-account test](FRESH_ACCOUNT_TEST.md) are pending.
 
 F-028 to F-031 are live: forms on TanStack Form, the board's list and stats
@@ -144,6 +146,7 @@ signed-in visitor from `/login` and `/sign-up` to the board
 
 | Target        | Commit                                       | URL / resource                         | Date                 | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | -------------------------------------------- | -------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | `d490fd1` / Worker version `63b27e24`        | `https://core.tanbase.dev`             | 2026-09-29 08:45 UTC | The setup page asks for nothing that can break (ADR-0022): Workers Build `9029201d` deployed at 08:41 UTC and passed its post-deploy smoke; pinned smoke passed; `/login`, `/sign-up`, and `/forgot-password` return `200` with their forms and no notice; the served version still binds `EMAIL_QUEUE` to `tanbase-core-email`, `FILES`, and all five variables; the Production performance run measured 148.1 KB of landing JavaScript in 14 files and failed its Lighthouse alarm, a median of 89 from runs of 75 to 94, and the workflow was then removed                |
 | Production    | `3080510` / Worker version `a0319a79`        | `https://core.tanbase.dev`             | 2026-09-29 08:19 UTC | The task status label and AI costs (#56): Workers Build `11935b8f` deployed at 2026-09-28 20:57 UTC and passed its post-deploy smoke; every check on the merge commit passed; health reports the version with `database`, `files`, and `realtime` `ok`; pinned smoke passed; the Production performance run passed with 148.1 KB of landing JavaScript in 14 files and a Lighthouse median of 96 on GitHub's runner                                                                                                                                                          |
 | Production    | `197cbbb` / Worker version `143f0f56`        | `https://core.tanbase.dev`             | 2026-09-28 14:53 UTC | A first deploy with nothing set up (ADR-0021): Workers Build `d65b30db` deployed at 14:43 UTC and passed its post-deploy smoke; pinned smoke passed; `/login`, `/sign-up`, and `/forgot-password` render their forms with no setup notice; the landing page and its Markdown link the Deploy to Cloudflare button; health still reports `files: ok`; the Production performance run passed with 148.1 KB of landing JavaScript in 14 files and a Lighthouse median of 95 on GitHub's runner                                                                                  |
 | Outside copy  | dashboard import / Worker version `635a73a2` | an outside tester's `workers.dev` URL  | 2026-09-28           | The first working deploy on a fresh account: imported from the dashboard with the deploy command `pnpm run deploy`, whose log ended `Attachments: off until R2 is enabled` and `BETTER_AUTH_SECRET: created`; health `ok` with `files: disabled`; `pnpm smoke -- --config default` passed; sign-up, the board, and an AI breakdown of seven subtasks worked. The first retry, still on `npx wrangler deploy`, showed the "database has no tables" notice                                                                                                                     |
@@ -198,10 +201,13 @@ None.
 
 ## Last known deployed commit
 
-Production runs merge commit `3080510` as Worker version `a0319a79`, deployed
-by Workers Build `11935b8f` at 2026-09-28 20:57 UTC with the task status label
-and the AI cost notes. Its post-deploy smoke passed, and a pinned smoke passed
-at 2026-09-29 08:19 UTC.
+Production runs merge commit `d490fd1` as Worker version `63b27e24`, deployed
+by Workers Build `9029201d` at 2026-09-29 08:41 UTC with a setup page that
+asks for nothing that can break (ADR-0022). Its post-deploy smoke passed, and
+a pinned smoke passed at 08:45 UTC.
+
+The task status label and the AI cost notes shipped in version `a0319a79`
+from `3080510`, deployed by Workers Build `11935b8f` at 2026-09-28 20:57 UTC.
 
 A first deploy that needs nothing set up (ADR-0021) shipped in version
 `143f0f56` from `197cbbb`, deployed by Workers Build `d65b30db` at 14:43 UTC.
